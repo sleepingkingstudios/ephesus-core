@@ -1,0 +1,37 @@
+require:
+  - rubocop-rspec
+  - ./spec/support/rubocop_patch
+
+AllCops:
+  TargetRubyVersion: 2.4
+  Exclude:
+    - 'tmp/**/*.rb'
+    - 'vendor/**/*'
+
+Layout/AlignParameters:
+  EnforcedStyle: with_fixed_indentation
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*.rb'
+
+RSpec/ExampleWording:
+  Enabled: false
+
+RSpec/HookArgument:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  # Checks the style of children definitions at classes and modules.
+  #
+  # Our preferred style is compact-plus-one, which does not match any of the
+  # existing styles, so we disable this cop.
+  Enabled: false
+
+Style/NestedParenthesizedCalls:
+  Exclude:
+    - 'spec/**/*.rb'
+
+Style/TrailingUnderscoreVariable:
+  # Prefer more explicit syntax when ignoring destructured results.
+  Enabled: false
