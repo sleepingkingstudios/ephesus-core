@@ -4,7 +4,7 @@ $LOAD_PATH << './lib'
 
 require 'ephesus/core/version'
 
-Gem::Specification.new do |gem|
+Gem::Specification.new do |gem| # rubocop:disable Metrics/BlockLength
   gem.name        = 'ephesus-core'
   gem.version     = Ephesus::Core::VERSION
   gem.date        = Time.now.utc.strftime '%Y-%m-%d'
