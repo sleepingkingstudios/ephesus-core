@@ -4,7 +4,7 @@ $LOAD_PATH << './lib'
 
 require 'ephesus/core/version'
 
-Gem::Specification.new do |gem|
+Gem::Specification.new do |gem| # rubocop:disable Metrics/BlockLength
   gem.name        = 'ephesus-core'
   gem.version     = Ephesus::Core::VERSION
   gem.date        = Time.now.utc.strftime '%Y-%m-%d'
@@ -24,6 +24,9 @@ Gem::Specification.new do |gem|
   gem.require_path = 'lib'
   gem.files        = Dir['lib/**/*.rb', 'LICENSE', '*.md']
 
+  gem.add_runtime_dependency 'bronze'
+  gem.add_runtime_dependency 'cuprum', '~> 0.7'
+  gem.add_runtime_dependency 'patina'
   gem.add_runtime_dependency 'sleeping_king_studios-tools', '~> 0.7'
 
   gem.add_development_dependency 'rspec', '~> 3.8'
