@@ -2,6 +2,8 @@
 
 require 'ephesus/core'
 
+require 'ephesus/core/events/event_builder'
+
 module Ephesus::Core
   # Object representing an application event, with a set type and optional data.
   # Used for communication between Ephesus components.
@@ -9,6 +11,12 @@ module Ephesus::Core
     class << self
       def keys
         Set.new
+      end
+
+      def subclass(subclass_type, *subclass_keys)
+        Ephesus::Core::Events::EventBuilder
+          .new(self)
+          .build(subclass_type, subclass_keys)
       end
 
       private
