@@ -103,6 +103,16 @@ RSpec.describe Ephesus::Core::Action do
         described_class.after(&block)
       end
 
+      it 'should evaluate the block in the context of the action instance' do
+        context = nil
+
+        define_hook { context = self }
+
+        instance.call
+
+        expect(context).to be instance
+      end
+
       include_examples 'should yield and return the last result'
 
       wrap_context 'when the action has chained commands' do
@@ -432,6 +442,16 @@ RSpec.describe Ephesus::Core::Action do
           instance.call
         end
           .to yield_with_args(an_instance_of Cuprum::Result)
+      end
+
+      it 'should evaluate the block in the context of the action instance' do
+        context = nil
+
+        define_hook { context = self }
+
+        instance.call
+
+        expect(context).to be instance
       end
 
       # rubocop:disable RSpec/ExampleLength

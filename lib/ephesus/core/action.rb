@@ -72,9 +72,12 @@ module Ephesus::Core
 
     # rubocop:disable Metrics/AbcSize
     # rubocop:disable Metrics/CyclomaticComplexity
+    # rubocop:disable Metrics/MethodLength
     # rubocop:disable Metrics/PerceivedComplexity
     def process_with_result(result, *args, &block)
-      self.class.send(:before_hooks).each { |proc| proc.call(result) }
+      self.class.send(:before_hooks).each do |proc|
+        instance_exec(result, &proc)
+      end
 
       super.tap do |returned|
         self.class.send(:after_hooks).each do |hsh|
@@ -83,12 +86,13 @@ module Ephesus::Core
           next if hsh[:if]     && !evaluate_conditional(returned, hsh[:if])
           next if hsh[:unless] &&  evaluate_conditional(returned, hsh[:unless])
 
-          hsh[:proc].call(returned)
+          instance_exec(returned, &hsh[:proc])
         end
       end
     end
     # rubocop:enable Metrics/AbcSize
     # rubocop:enable Metrics/CyclomaticComplexity
+    # rubocop:enable Metrics/MethodLength
     # rubocop:enable Metrics/PerceivedComplexity
   end
 end
