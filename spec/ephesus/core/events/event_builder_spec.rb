@@ -11,8 +11,9 @@ RSpec.describe Ephesus::Core::Events::EventBuilder do
   end
 
   shared_context 'when the parent class is an event subclass' do
-    let(:subclass_type) { 'spec.example_subclass' }
-    let(:subclass_keys) { %i[bantu chinese indonesian] }
+    let(:subclass_type)  { 'spec.example_subclass' }
+    let(:subclass_keys)  { %i[bantu chinese indonesian] }
+    let(:expected_types) { [subclass_type, event_type] }
     let(:parent_class) do
       described_class.new.build(subclass_type, subclass_keys)
     end
@@ -53,6 +54,8 @@ RSpec.describe Ephesus::Core::Events::EventBuilder do
 
     shared_examples 'should set the #event_type' do
       it { expect(event.event_type).to be == event_type }
+
+      it { expect(event.event_types).to be == expected_types }
     end
 
     shared_examples 'should set the #data' do
@@ -91,13 +94,14 @@ RSpec.describe Ephesus::Core::Events::EventBuilder do
       include_examples 'should set the #data'
     end
 
-    let(:event_type)    { 'spec.events.event_subclass' }
-    let(:event_keys)    { [] }
-    let(:subclass)      { instance.build(event_type, event_keys) }
-    let(:event_data)    { {} }
-    let(:event)         { subclass.new(event_data) }
-    let(:expected_keys) { event_keys }
-    let(:expected_data) { generate_expected_data(expected_keys) }
+    let(:event_type)     { 'spec.events.event_subclass' }
+    let(:event_keys)     { [] }
+    let(:subclass)       { instance.build(event_type, event_keys) }
+    let(:event_data)     { {} }
+    let(:event)          { subclass.new(event_data) }
+    let(:expected_types) { [event_type] }
+    let(:expected_keys)  { event_keys }
+    let(:expected_data)  { generate_expected_data(expected_keys) }
 
     def generate_expected_data(expected_keys)
       default_data =

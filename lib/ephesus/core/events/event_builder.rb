@@ -40,9 +40,15 @@ module Ephesus::Core::Events
     end
 
     def define_event_type
-      type = subclass_type
+      event_type = subclass_type
 
-      event_class.define_method(:event_type) { type }
+      event_class.define_method(:event_type) { event_type }
+
+      event_types = parent_event_types
+      event_types.push(event_type)
+
+      event_class.define_singleton_method(:event_types) { event_types }
+      event_class.define_method(:event_types) { event_types }
     end
 
     def define_key_reader(event_key)
@@ -82,8 +88,20 @@ module Ephesus::Core::Events
         .map(&:intern)
     end
 
+    def parent_default_data
+      return {} unless parent_class.respond_to?(:default_data)
+
+      parent_class.send(:default_data)
+    end
+
+    def parent_event_types
+      return [] unless parent_class.respond_to?(:event_types)
+
+      parent_class.send(:event_types)
+    end
+
     def set_default_data
-      default_data = parent_class.send(:default_data).dup
+      default_data = parent_default_data
 
       subclass_keys.each { |key| default_data[key] ||= nil }
 

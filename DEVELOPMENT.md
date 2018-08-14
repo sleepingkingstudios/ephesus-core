@@ -21,6 +21,8 @@ Core::Events namespace?
     - event_type = 'my.namespace.custom_event'
       - 1-1 correspondence bt event class name, event type
 
+Refactor EventBuilder => SubclassBuilder
+
 ```
 module Ephesus::Explorer::Events
   include Ephesus::Core::Events::EventRegistry
