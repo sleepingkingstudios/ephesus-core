@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'sleeping_king_studios/tools/toolbelt'
+
 require 'ephesus/core'
 
 require 'ephesus/core/events/event_builder'
@@ -9,6 +11,18 @@ module Ephesus::Core
   # Used for communication between Ephesus components.
   class Event
     class << self
+      def from_hash(hsh)
+        unless hsh.respond_to?(:to_hash)
+          raise ArgumentError, 'argument must be a Hash'
+        end
+
+        hsh   = tools.hash.convert_keys_to_symbols(hsh)
+        types = guard_event_types(hsh)
+        data  = hsh[:data] || {}
+
+        new(types, data)
+      end
+
       def keys
         Set.new
       end
@@ -18,6 +32,30 @@ module Ephesus::Core
           .new(self)
           .build(subclass_type, subclass_keys)
       end
+
+      private
+
+      def guard_event_types(hsh)
+        unless hsh.key?(:event_types)
+          raise ArgumentError, 'missing key :event_types'
+        end
+
+        types = hsh[:event_types]
+
+        raise ArgumentError, "event_types can't be nil" if types.nil?
+
+        types = types.compact if types.respond_to?(:compact)
+
+        if types.respond_to?(:empty?) && types.empty?
+          raise ArgumentError, "event_types can't be empty"
+        end
+
+        types
+      end
+
+      def tools
+        SleepingKingStudios::Tools::Toolbelt.instance
+      end
     end
 
     def initialize(event_type, **data)
@@ -25,6 +63,12 @@ module Ephesus::Core
       @event_type  = @event_types.last
       @data        = data
     end
+
+    attr_reader :data
+
+    attr_reader :event_type
+
+    attr_reader :event_types
 
     def <(other)
       raise ArgumentError, 'comparison of Event with nil failed' if other.nil?
@@ -58,11 +102,12 @@ module Ephesus::Core
       false
     end
 
-    attr_reader :data
-
-    attr_reader :event_type
-
-    attr_reader :event_types
+    def to_h
+      {
+        event_types: event_types.dup,
+        data:        data
+      }
+    end
 
     private
 

@@ -22,6 +22,7 @@ RSpec.describe Ephesus::Core::Event do
       Ephesus::Core::Event.subclass(subclass_type, *subclass_keys)
       # rubocop:enable RSpec/DescribedClass
     end
+    let(:instance) { described_class.new(**event_data) }
   end
 
   shared_context 'when the event has data' do
@@ -45,6 +46,97 @@ RSpec.describe Ephesus::Core::Event do
         .to be_constructible
         .with(1).argument
         .and_any_keywords
+    end
+  end
+
+  describe '::from_hash' do
+    it { expect(described_class).to respond_to(:from_hash).with(1).argument }
+
+    describe 'with nil' do
+      it 'should raise an error' do
+        expect { described_class.from_hash(nil) }
+          .to raise_error ArgumentError, 'argument must be a Hash'
+      end
+    end
+
+    describe 'with an Object' do
+      it 'should raise an error' do
+        expect { described_class.from_hash(Object.new) }
+          .to raise_error ArgumentError, 'argument must be a Hash'
+      end
+    end
+
+    describe 'with an empty Hash' do
+      it 'should raise an error' do
+        expect { described_class.from_hash({}) }
+          .to raise_error ArgumentError, 'missing key :event_types'
+      end
+    end
+
+    describe 'with a Hash with event_types: nil' do
+      it 'should raise an error' do
+        expect { described_class.from_hash(event_types: nil) }
+          .to raise_error ArgumentError, "event_types can't be nil"
+      end
+    end
+
+    describe 'with a Hash with event_types: ""' do
+      it 'should raise an error' do
+        expect { described_class.from_hash(event_types: '') }
+          .to raise_error ArgumentError, "event_types can't be empty"
+      end
+    end
+
+    describe 'with a Hash with event_types: []' do
+      it 'should raise an error' do
+        expect { described_class.from_hash(event_types: []) }
+          .to raise_error ArgumentError, "event_types can't be empty"
+      end
+    end
+
+    describe 'with a Hash with one event type' do
+      let(:hash)  { { event_types: ['spec.example_event'] } }
+      let(:event) { described_class.from_hash(hash) }
+
+      it { expect(event).to be_a described_class }
+
+      it { expect(event.event_type).to be == hash[:event_types].last }
+
+      it { expect(event.event_types).to be == hash[:event_types] }
+
+      it { expect(event.data).to be == {} }
+
+      wrap_context 'when the event has data' do
+        let(:hash) { super().merge(data: event_data) }
+
+        it { expect(event.data).to be == event_data }
+      end
+    end
+
+    describe 'with a Hash with many event types' do
+      let(:event_types) do
+        %w[
+          spec.events.grandparent_event
+          spec.events.parent_event
+          spec.events.custom_event
+        ]
+      end
+      let(:hash)  { { event_types: event_types } }
+      let(:event) { described_class.from_hash(hash) }
+
+      it { expect(event).to be_a described_class }
+
+      it { expect(event.event_type).to be == hash[:event_types].last }
+
+      it { expect(event.event_types).to be == hash[:event_types] }
+
+      it { expect(event.data).to be == {} }
+
+      wrap_context 'when the event has data' do
+        let(:hash) { super().merge(data: event_data) }
+
+        it { expect(event.data).to be == event_data }
+      end
     end
   end
 
@@ -269,6 +361,39 @@ RSpec.describe Ephesus::Core::Event do
 
     wrap_context 'with a hierarchy of event types' do
       it { expect(instance.event_types).to be == event_type }
+    end
+  end
+
+  describe '#to_h' do
+    let(:expected) do
+      {
+        event_types: instance.event_types,
+        data:        instance.data
+      }
+    end
+
+    it { expect(instance).to respond_to(:to_h).with(0).arguments }
+
+    it { expect(instance.to_h).to be == expected }
+
+    wrap_context 'when the event has data' do
+      it { expect(instance.to_h).to be == expected }
+    end
+
+    wrap_context 'with an event subclass' do
+      it { expect(instance.to_h).to be == expected }
+
+      wrap_context 'when the event has data' do
+        it { expect(instance.to_h).to be == expected }
+      end
+    end
+
+    wrap_context 'with a hierarchy of event types' do
+      it { expect(instance.to_h).to be == expected }
+
+      wrap_context 'when the event has data' do
+        it { expect(instance.to_h).to be == expected }
+      end
     end
   end
 end
