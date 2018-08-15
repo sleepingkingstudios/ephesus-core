@@ -40,15 +40,11 @@ module Ephesus::Core::Events
     end
 
     def define_event_type
-      event_type = subclass_type
+      event_types = parent_event_types + [subclass_type]
 
-      event_class.define_method(:event_type) { event_type }
-
-      event_types = parent_event_types
-      event_types.push(event_type)
-
-      event_class.define_singleton_method(:event_types) { event_types }
-      event_class.define_method(:event_types) { event_types }
+      event_class.define_singleton_method(:event_types) do
+        super() + event_types
+      end
     end
 
     def define_key_reader(event_key)

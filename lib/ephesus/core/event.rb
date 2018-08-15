@@ -10,6 +10,8 @@ module Ephesus::Core
   # Object representing an application event, with a set type and optional data.
   # Used for communication between Ephesus components.
   class Event
+    TYPE = 'ephesus.core.event'
+
     class << self
       def from_hash(hsh)
         unless hsh.respond_to?(:to_hash)
@@ -20,7 +22,7 @@ module Ephesus::Core
         types = guard_event_types(hsh)
         data  = hsh[:data] || {}
 
-        new(types, data)
+        new(*types, data)
       end
 
       def keys
@@ -35,19 +37,16 @@ module Ephesus::Core
 
       private
 
+      def event_types
+        [TYPE]
+      end
+
       def guard_event_types(hsh)
-        unless hsh.key?(:event_types)
-          raise ArgumentError, 'missing key :event_types'
-        end
+        types = hsh.fetch(:event_types, [])
 
-        types = hsh[:event_types]
-
-        raise ArgumentError, "event_types can't be nil" if types.nil?
-
-        types = types.compact if types.respond_to?(:compact)
-
-        if types.respond_to?(:empty?) && types.empty?
-          raise ArgumentError, "event_types can't be empty"
+        unless types.is_a?(Array)
+          raise ArgumentError,
+            "invalid key event_types - expected Array, was #{types.inspect}"
         end
 
         types
@@ -58,8 +57,8 @@ module Ephesus::Core
       end
     end
 
-    def initialize(event_type, **data)
-      @event_types = Array(event_type)
+    def initialize(*event_types, **data)
+      @event_types = ([TYPE] + event_types).compact.uniq
       @event_type  = @event_types.last
       @data        = data
     end

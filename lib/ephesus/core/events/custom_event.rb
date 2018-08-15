@@ -16,14 +16,12 @@ module Ephesus::Core::Events
           raise ArgumentError, 'argument must be a Hash'
         end
 
-        hsh   = tools.hash.convert_keys_to_symbols(hsh)
-        types = Array(guard_event_types(hsh))
-        data  = hsh[:data] || {}
-        event = new(data)
+        hsh  = tools.hash.convert_keys_to_symbols(hsh)
+        data = hsh[:data] || {}
 
-        set_event_types(event, types) if event_types.empty?
+        guard_event_types(hsh)
 
-        event
+        new(data)
       end
 
       private
@@ -32,34 +30,26 @@ module Ephesus::Core::Events
         {}
       end
 
-      def event_types
-        []
-      end
-
       def guard_event_types(hsh)
         types = super
 
-        return types if event_types.empty?
+        return if types.empty?
 
-        return if types.is_a?(Array) && event_types == types
+        return if event_types == types
 
-        return if !types.is_a?(Array) && event_types.include?(types)
+        return if types.count == 1 && event_types.last == types.last
 
         raise ArgumentError,
           "expected event types to be #{event_types.inspect}, but were " \
           "#{Array(types)}"
       end
-
-      def set_event_types(event, event_types)
-        event.instance_variable_set(:@event_type,  event_types.last)
-        event.instance_variable_set(:@event_types, event_types)
-
-        event
-      end
     end
 
     def initialize(**data)
-      super(nil, self.class.send(:default_data).merge(data))
+      event_types = self.class.send(:event_types)
+      event_data  = self.class.send(:default_data).merge(data)
+
+      super(*event_types, event_data)
     end
   end
 end

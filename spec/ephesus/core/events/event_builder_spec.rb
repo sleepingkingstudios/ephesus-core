@@ -11,9 +11,11 @@ RSpec.describe Ephesus::Core::Events::EventBuilder do
   end
 
   shared_context 'when the parent class is an event subclass' do
-    let(:subclass_type)  { 'spec.example_subclass' }
-    let(:subclass_keys)  { %i[bantu chinese indonesian] }
-    let(:expected_types) { [subclass_type, event_type] }
+    let(:subclass_type) { 'spec.example_subclass' }
+    let(:subclass_keys) { %i[bantu chinese indonesian] }
+    let(:expected_types) do
+      [Ephesus::Core::Event::TYPE, subclass_type, event_type]
+    end
     let(:parent_class) do
       described_class.new.build(subclass_type, subclass_keys)
     end
@@ -99,7 +101,7 @@ RSpec.describe Ephesus::Core::Events::EventBuilder do
     let(:subclass)       { instance.build(event_type, event_keys) }
     let(:event_data)     { {} }
     let(:event)          { subclass.new(event_data) }
-    let(:expected_types) { [event_type] }
+    let(:expected_types) { [Ephesus::Core::Event::TYPE, event_type] }
     let(:expected_keys)  { event_keys }
     let(:expected_data)  { generate_expected_data(expected_keys) }
 

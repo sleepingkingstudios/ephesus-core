@@ -14,7 +14,8 @@ RSpec.describe Ephesus::Core::Events::CustomEvent do
     end
   end
 
-  shared_context 'when the event has an event type' do
+  shared_context 'with a custom event subclass with defined event types' do
+    let(:described_class) { Spec::CustomEventWithTypes }
     let(:event_types) do
       %w[
         spec.events.grandparent_event
@@ -23,13 +24,18 @@ RSpec.describe Ephesus::Core::Events::CustomEvent do
       ]
     end
 
-    before(:example) do
+    example_class 'Spec::CustomEventWithTypes',
+      base_class: Ephesus::Core::Event \
+    do |klass|
       types = event_types
 
-      described_class.send(:define_method, :event_type)  { types.last }
-      described_class.send(:define_method, :event_types) { types }
+      # rubocop:disable RSpec/DescribedClass
+      klass.send(:include, Ephesus::Core::Events::CustomEvent)
+      # rubocop:enable RSpec/DescribedClass
 
-      described_class.send(:define_singleton_method, :event_types) { types }
+      klass.send(:define_singleton_method, :event_types) do
+        super() + types
+      end
     end
   end
 
@@ -71,42 +77,89 @@ RSpec.describe Ephesus::Core::Events::CustomEvent do
     end
 
     describe 'with an empty Hash' do
-      it 'should raise an error' do
-        expect { described_class.from_hash({}) }
-          .to raise_error ArgumentError, 'missing key :event_types'
+      let(:hash)  { {} }
+      let(:event) { described_class.from_hash(hash) }
+
+      it { expect(event).to be_a described_class }
+
+      it { expect(event.event_type).to be == Ephesus::Core::Event::TYPE }
+
+      it { expect(event.event_types).to be == [Ephesus::Core::Event::TYPE] }
+
+      it { expect(event.data).to be == {} }
+
+      wrap_context 'when the event has data' do
+        let(:hash) { super().merge(data: event_data) }
+
+        it { expect(event.data).to be == event_data }
       end
     end
 
     describe 'with a Hash with event_types: nil' do
+      let(:error_message) do
+        'invalid key event_types - expected Array, was nil'
+      end
+
       it 'should raise an error' do
         expect { described_class.from_hash(event_types: nil) }
-          .to raise_error ArgumentError, "event_types can't be nil"
+          .to raise_error ArgumentError, error_message
       end
     end
 
     describe 'with a Hash with event_types: ""' do
+      let(:error_message) do
+        'invalid key event_types - expected Array, was ""'
+      end
+
       it 'should raise an error' do
         expect { described_class.from_hash(event_types: '') }
-          .to raise_error ArgumentError, "event_types can't be empty"
+          .to raise_error ArgumentError, error_message
       end
     end
 
     describe 'with a Hash with event_types: []' do
+      let(:hash)  { { event_types: [] } }
+      let(:event) { described_class.from_hash(hash) }
+
+      it { expect(event).to be_a described_class }
+
+      it { expect(event.event_type).to be == Ephesus::Core::Event::TYPE }
+
+      it { expect(event.event_types).to be == [Ephesus::Core::Event::TYPE] }
+
+      it { expect(event.data).to be == {} }
+
+      wrap_context 'when the event has data' do
+        let(:hash) { super().merge(data: event_data) }
+
+        it { expect(event.data).to be == event_data }
+      end
+    end
+
+    describe 'with a Hash with a non-matching event type' do
+      let(:expected_types) { [Ephesus::Core::Event::TYPE] }
+      let(:hash)           { { event_types: ['spec.other_event'] } }
+      let(:error_message) do
+        "expected event types to be #{expected_types.inspect}, but were " \
+        "#{hash[:event_types]}"
+      end
+
       it 'should raise an error' do
-        expect { described_class.from_hash(event_types: []) }
-          .to raise_error ArgumentError, "event_types can't be empty"
+        expect { described_class.from_hash(hash) }
+          .to raise_error ArgumentError, error_message
       end
     end
 
-    describe 'with a Hash with one event type' do
-      let(:hash)  { { event_types: 'spec.event_from_hash' } }
-      let(:event) { described_class.from_hash(hash) }
+    describe 'with a Hash with a matching event type' do
+      let(:expected_types) { [Ephesus::Core::Event::TYPE] }
+      let(:hash)           { { event_types: [Ephesus::Core::Event::TYPE] } }
+      let(:event)          { described_class.from_hash(hash) }
 
       it { expect(event).to be_a described_class }
 
-      it { expect(event.event_type).to be == hash[:event_types] }
+      it { expect(event.event_type).to be == expected_types.last }
 
-      it { expect(event.event_types).to be == [hash[:event_types]] }
+      it { expect(event.event_types).to be == expected_types }
 
       it { expect(event.data).to be == {} }
 
@@ -117,66 +170,75 @@ RSpec.describe Ephesus::Core::Events::CustomEvent do
       end
     end
 
-    describe 'with a Hash with many event types' do
-      let(:event_types) do
-        %w[
-          spec.events.grandparent_event
-          spec.events.parent_event
-          spec.events.event_from_hash
-        ]
-      end
-      let(:hash)  { { event_types: event_types } }
-      let(:event) { described_class.from_hash(hash) }
-
-      it { expect(event).to be_a described_class }
-
-      it { expect(event.event_type).to be == hash[:event_types].last }
-
-      it { expect(event.event_types).to be == hash[:event_types] }
-
-      it { expect(event.data).to be == {} }
-
-      wrap_context 'when the event has data' do
-        let(:hash) { super().merge(data: event_data) }
-
-        it { expect(event.data).to be == event_data }
-      end
-    end
-
-    wrap_context 'when the event has an event type' do
+    wrap_context 'with a custom event subclass with defined event types' do
       describe 'with an empty Hash' do
-        it 'should raise an error' do
-          expect { described_class.from_hash({}) }
-            .to raise_error ArgumentError, 'missing key :event_types'
+        let(:expected_types) { [Ephesus::Core::Event::TYPE, *event_types] }
+        let(:hash)           { {} }
+        let(:event)          { described_class.from_hash(hash) }
+
+        it { expect(event).to be_a described_class }
+
+        it { expect(event.event_type).to be == expected_types.last }
+
+        it { expect(event.event_types).to be == expected_types }
+
+        it { expect(event.data).to be == {} }
+
+        wrap_context 'when the event has data' do
+          let(:hash) { super().merge(data: event_data) }
+
+          it { expect(event.data).to be == event_data }
         end
       end
 
       describe 'with a Hash with event_types: nil' do
+        let(:error_message) do
+          'invalid key event_types - expected Array, was nil'
+        end
+
         it 'should raise an error' do
           expect { described_class.from_hash(event_types: nil) }
-            .to raise_error ArgumentError, "event_types can't be nil"
+            .to raise_error ArgumentError, error_message
         end
       end
 
       describe 'with a Hash with event_types: ""' do
+        let(:error_message) do
+          'invalid key event_types - expected Array, was ""'
+        end
+
         it 'should raise an error' do
           expect { described_class.from_hash(event_types: '') }
-            .to raise_error ArgumentError, "event_types can't be empty"
+            .to raise_error ArgumentError, error_message
         end
       end
 
       describe 'with a Hash with event_types: []' do
-        it 'should raise an error' do
-          expect { described_class.from_hash(event_types: []) }
-            .to raise_error ArgumentError, "event_types can't be empty"
+        let(:expected_types) { [Ephesus::Core::Event::TYPE, *event_types] }
+        let(:hash)           { { event_types: [] } }
+        let(:event)          { described_class.from_hash(hash) }
+
+        it { expect(event).to be_a described_class }
+
+        it { expect(event.event_type).to be == expected_types.last }
+
+        it { expect(event.event_types).to be == expected_types }
+
+        it { expect(event.data).to be == {} }
+
+        wrap_context 'when the event has data' do
+          let(:hash) { super().merge(data: event_data) }
+
+          it { expect(event.data).to be == event_data }
         end
       end
 
       describe 'with a Hash with one non-matching event type' do
-        let(:hash) { { event_types: 'spec.other_event' } }
+        let(:expected_types) { [Ephesus::Core::Event::TYPE, *event_types] }
+        let(:hash)           { { event_types: ['spec.other_event'] } }
         let(:error_message) do
-          "expected event types to be #{event_types.inspect}, but were " \
-          "#{[hash[:event_types]]}"
+          "expected event types to be #{expected_types.inspect}, but were " \
+          "#{hash[:event_types]}"
         end
 
         it 'should raise an error' do
@@ -186,14 +248,15 @@ RSpec.describe Ephesus::Core::Events::CustomEvent do
       end
 
       describe 'with a Hash with one matching event type' do
-        let(:hash)  { { event_types: event_types.last } }
-        let(:event) { described_class.from_hash(hash) }
+        let(:expected_types) { [Ephesus::Core::Event::TYPE, *event_types] }
+        let(:hash)           { { event_types: [event_types.last] } }
+        let(:event)          { described_class.from_hash(hash) }
 
         it { expect(event).to be_a described_class }
 
-        it { expect(event.event_type).to be == event_types.last }
+        it { expect(event.event_type).to be == expected_types.last }
 
-        it { expect(event.event_types).to be == event_types }
+        it { expect(event.event_types).to be == expected_types }
 
         it { expect(event.data).to be == {} }
 
@@ -207,14 +270,15 @@ RSpec.describe Ephesus::Core::Events::CustomEvent do
       describe 'with a Hash with many non-matching event types' do
         let(:other_types) do
           %w[
-            spec.events.grandparent_event
-            spec.events.parent_event
-            spec.events.event_from_hash
+            spec.events.first_event
+            spec.events.second_event
+            spec.events.third_event
           ]
         end
-        let(:hash) { { event_types: other_types } }
+        let(:expected_types) { [Ephesus::Core::Event::TYPE, *event_types] }
+        let(:hash)           { { event_types: other_types } }
         let(:error_message) do
-          "expected event types to be #{event_types.inspect}, but were " \
+          "expected event types to be #{expected_types.inspect}, but were " \
           "#{hash[:event_types]}"
         end
 
@@ -226,15 +290,16 @@ RSpec.describe Ephesus::Core::Events::CustomEvent do
 
       describe 'with a Hash with a partially-matching event type' do
         let(:other_types) do
-          %i[
+          %w[
             spec.events.grandparent_event
-            spec.events.parent_event
-            spec.events.event_from_hash
+            spec.events.mystery_event
+            spec.events.custom_event
           ]
         end
-        let(:hash) { { event_types: other_types } }
+        let(:expected_types) { [Ephesus::Core::Event::TYPE, *event_types] }
+        let(:hash)           { { event_types: other_types } }
         let(:error_message) do
-          "expected event types to be #{event_types.inspect}, but were " \
+          "expected event types to be #{expected_types.inspect}, but were " \
           "#{hash[:event_types]}"
         end
 
@@ -245,14 +310,17 @@ RSpec.describe Ephesus::Core::Events::CustomEvent do
       end
 
       describe 'with a Hash with many matching event types' do
-        let(:hash)  { { event_types: event_types } }
+        let(:expected_types) { [Ephesus::Core::Event::TYPE, *event_types] }
+        let(:hash) do
+          { event_types: [Ephesus::Core::Event::TYPE, *event_types] }
+        end
         let(:event) { described_class.from_hash(hash) }
 
         it { expect(event).to be_a described_class }
 
-        it { expect(event.event_type).to be == event_types.last }
+        it { expect(event.event_type).to be == expected_types.last }
 
-        it { expect(event.event_types).to be == event_types }
+        it { expect(event.event_types).to be == expected_types }
 
         it { expect(event.data).to be == {} }
 
@@ -270,6 +338,28 @@ RSpec.describe Ephesus::Core::Events::CustomEvent do
 
     wrap_context 'when the event has data' do
       it { expect(instance.data).to be == event_data }
+    end
+  end
+
+  describe '#event_type' do
+    include_examples 'should have reader',
+      :event_type,
+      Ephesus::Core::Event::TYPE
+
+    wrap_context 'with a custom event subclass with defined event types' do
+      it { expect(instance.event_type).to be == event_types.last }
+    end
+  end
+
+  describe '#event_types' do
+    include_examples 'should have reader',
+      :event_types,
+      [Ephesus::Core::Event::TYPE]
+
+    wrap_context 'with a custom event subclass with defined event types' do
+      let(:expected) { [Ephesus::Core::Event::TYPE, *event_types] }
+
+      it { expect(instance.event_types).to be == expected }
     end
   end
 end
