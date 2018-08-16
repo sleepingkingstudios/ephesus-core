@@ -50,10 +50,9 @@ RSpec.describe Ephesus::Core::EventDispatcher do
   end
 
   describe '#add_event_listener' do
-    let(:event_type) { 'spec.events.example_event' }
-    let(:block)      { ->(_) {} }
-    let(:event)      { Ephesus::Core::Event.new(event_type) }
-    let(:listener)   { instance.add_event_listener(event_type, &block) }
+    let(:block)    { ->(_) {} }
+    let(:event)    { Ephesus::Core::Event.new(event_type) }
+    let(:listener) { instance.add_event_listener(event_type, &block) }
 
     it 'should define the method' do
       expect(instance)
@@ -62,16 +61,93 @@ RSpec.describe Ephesus::Core::EventDispatcher do
         .and_a_block
     end
 
-    it { expect(listener).to be_a Ephesus::Core::EventListener }
+    describe 'with nil' do
+      let(:error_message) do
+        'expected event_type to be an Event class, a String or a Symbol'
+      end
 
-    it { expect(listener.event_type).to be == event_type }
+      it 'should raise an error' do
+        expect { instance.add_event_listener nil }
+          .to raise_error ArgumentError, error_message
+      end
+    end
 
-    it 'should call the block on #update' do
-      allow(block).to receive(:call)
+    describe 'with an Object' do
+      let(:error_message) do
+        'expected event_type to be an Event class, a String or a Symbol'
+      end
 
-      listener.update(event)
+      it 'should raise an error' do
+        expect { instance.add_event_listener Object.new }
+          .to raise_error ArgumentError, error_message
+      end
+    end
 
-      expect(block).to have_received(:call).with(event)
+    describe 'with a class without a :TYPE constant' do
+      let(:error_message) do
+        'expected event_type to define ::TYPE constant'
+      end
+
+      it 'should raise an error' do
+        expect { instance.add_event_listener Class.new }
+          .to raise_error ArgumentError, error_message
+      end
+    end
+
+    describe 'with a string' do
+      let(:event_type) { 'spec.events.example_event' }
+
+      it { expect(listener).to be_a Ephesus::Core::EventListener }
+
+      it { expect(listener.event_type).to be == event_type }
+
+      it 'should call the block on #update' do
+        allow(block).to receive(:call)
+
+        listener.update(event)
+
+        expect(block).to have_received(:call).with(event)
+      end
+    end
+
+    describe 'with a symbol' do
+      let(:event_type) { :'spec.events.example_event' }
+
+      it { expect(listener).to be_a Ephesus::Core::EventListener }
+
+      it { expect(listener.event_type).to be == event_type }
+
+      it 'should call the block on #update' do
+        allow(block).to receive(:call)
+
+        listener.update(event)
+
+        expect(block).to have_received(:call).with(event)
+      end
+    end
+
+    describe 'with an Event class' do
+      let(:event_type) { Spec::Events::CustomEvent }
+      let(:event)      { event_type.new }
+
+      example_constant 'Spec::Events::CustomEvent' do
+        type        = :'spec.events.custom_event'
+        event_class = Ephesus::Core::Event.subclass(type)
+        event_class.const_set(:TYPE, type)
+        event_class
+      end
+
+      it { expect(listener).to be_a Ephesus::Core::EventListener }
+
+      it { expect(listener.event_type).to be == event_type::TYPE }
+
+      it 'should call the block on #update' do
+        allow(block).to receive(:call)
+
+        listener.update(event)
+
+        expect(block).to have_received(:call).with(event)
+      end
     end
   end
 

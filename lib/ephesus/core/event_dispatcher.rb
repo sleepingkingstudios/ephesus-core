@@ -11,7 +11,8 @@ module Ephesus::Core
     include Observable
 
     def add_event_listener(event_type, &block)
-      listener = Ephesus::Core::EventListener.new(event_type, &block)
+      event_type = guard_event_type(event_type)
+      listener   = Ephesus::Core::EventListener.new(event_type, &block)
 
       add_observer(listener)
 
@@ -26,6 +27,19 @@ module Ephesus::Core
       changed
 
       notify_observers(event)
+    end
+
+    def guard_event_type(event_type)
+      return event_type if event_type.is_a?(String) || event_type.is_a?(Symbol)
+
+      unless event_type.is_a?(Class)
+        raise ArgumentError,
+          'expected event_type to be an Event class, a String or a Symbol'
+      end
+
+      return event_type::TYPE if event_type.const_defined?(:TYPE)
+
+      raise ArgumentError, 'expected event_type to define ::TYPE constant'
     end
 
     def remove_all_listeners
