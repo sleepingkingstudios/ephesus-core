@@ -201,10 +201,10 @@ RSpec.describe Ephesus::Core::Event do
   end
 
   describe '::subclass' do
-    shared_examples 'should delegate to EventBuilder#build' do
+    shared_examples 'should delegate to Events::SubclassBuilder#build' do
       # rubocop:disable RSpec/ExampleLength
-      it 'should delegate to EventBuilder#build' do
-        allow(Ephesus::Core::Events::EventBuilder)
+      it 'should delegate to Events::SubclassBuilder#build' do
+        allow(Ephesus::Core::Events::SubclassBuilder)
           .to receive(:new)
           .with(described_class)
           .and_return(event_builder)
@@ -224,7 +224,7 @@ RSpec.describe Ephesus::Core::Event do
     let(:event_keys)     { %i[iroquois polynesian aztec] }
     let(:event_subclass) { Class.new(described_class) }
     let(:event_builder) do
-      Ephesus::Core::Events::EventBuilder.new(described_class)
+      Ephesus::Core::Events::SubclassBuilder.new(described_class)
     end
 
     it 'should define the class method' do
@@ -234,10 +234,10 @@ RSpec.describe Ephesus::Core::Event do
         .and_unlimited_arguments
     end
 
-    include_examples 'should delegate to EventBuilder#build'
+    include_examples 'should delegate to Events::SubclassBuilder#build'
 
     wrap_context 'with an event subclass' do
-      include_examples 'should delegate to EventBuilder#build'
+      include_examples 'should delegate to Events::SubclassBuilder#build'
     end
   end
 

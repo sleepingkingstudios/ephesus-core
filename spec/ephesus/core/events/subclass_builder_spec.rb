@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'ephesus/core/event'
-require 'ephesus/core/events/event_builder'
+require 'ephesus/core/events/subclass_builder'
 
-RSpec.describe Ephesus::Core::Events::EventBuilder do
+RSpec.describe Ephesus::Core::Events::SubclassBuilder do
   shared_context 'when the parent class is a custom event class' do
     let(:parent_class) { Spec::ExampleEvent }
 

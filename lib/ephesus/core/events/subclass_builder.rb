@@ -8,7 +8,7 @@ require 'ephesus/core/events/custom_event'
 module Ephesus::Core::Events
   # Builder class for generating subclasses of Ephesus::Event with a defined
   # event_type and, optionally, data keys with defined property accessors.
-  class EventBuilder
+  class SubclassBuilder
     def initialize(parent_class = nil)
       @parent_class = parent_class || Ephesus::Core::Event
     end

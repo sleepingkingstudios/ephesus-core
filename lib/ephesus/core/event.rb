@@ -4,7 +4,7 @@ require 'sleeping_king_studios/tools/toolbelt'
 
 require 'ephesus/core'
 
-require 'ephesus/core/events/event_builder'
+require 'ephesus/core/events/subclass_builder'
 
 module Ephesus::Core
   # Object representing an application event, with a set type and optional data.
@@ -30,7 +30,7 @@ module Ephesus::Core
       end
 
       def subclass(subclass_type, *subclass_keys)
-        Ephesus::Core::Events::EventBuilder
+        Ephesus::Core::Events::SubclassBuilder
           .new(self)
           .build(subclass_type, subclass_keys)
       end
