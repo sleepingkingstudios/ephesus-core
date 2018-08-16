@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require 'bronze/entities/entity'
+
 require 'ephesus/core/action'
+require 'ephesus/core/event_dispatcher'
 
 RSpec.describe Ephesus::Core::Action do
   shared_context 'when an action class is defined' do
@@ -35,14 +38,22 @@ RSpec.describe Ephesus::Core::Action do
     end
   end
 
-  subject(:instance) { described_class.new(session) }
+  subject(:instance) do
+    described_class.new(context, event_dispatcher: event_dispatcher)
+  end
 
-  let(:session) { Spec::ExampleSession.new }
+  let(:context)          { Spec::ExampleContext.new }
+  let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
 
-  example_class 'Spec::ExampleSession'
+  example_class 'Spec::ExampleContext', base_class: Bronze::Entities::Entity
 
   describe '::new' do
-    it { expect(described_class).to be_constructible.with(1).argument }
+    it 'should define the constructor' do
+      expect(described_class)
+        .to be_constructible
+        .with(1).argument
+        .and_keywords(:event_dispatcher)
+    end
   end
 
   describe '::after' do
@@ -489,7 +500,30 @@ RSpec.describe Ephesus::Core::Action do
     end
   end
 
-  describe '#session' do
-    include_examples 'should have reader', :session, -> { session }
+  describe '#context' do
+    include_examples 'should have reader', :context, -> { context }
+  end
+
+  describe '#dispatch_event' do
+    let(:event_type) { 'spec.events.example_event' }
+    let(:event)      { Ephesus::Core::Event.new(event_type) }
+
+    it 'should define the method' do
+      expect(instance).to respond_to(:dispatch_event).with(1).argument
+    end
+
+    it 'should delegate to the event dispatcher' do
+      allow(event_dispatcher).to receive(:dispatch_event)
+
+      instance.dispatch_event(event)
+
+      expect(event_dispatcher).to have_received(:dispatch_event).with(event)
+    end
+  end
+
+  describe '#event_dispatcher' do
+    include_examples 'should have reader',
+      :event_dispatcher,
+      -> { event_dispatcher }
   end
 end

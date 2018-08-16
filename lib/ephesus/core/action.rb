@@ -1,14 +1,18 @@
 # frozen_string_literal: true
 
+require 'sleeping_king_studios/tools/toolbox/delegator'
+
 require 'bronze/errors'
 require 'cuprum/command'
 
 require 'ephesus/core'
 
 module Ephesus::Core
-  # Abstract base class for Ephesus actions. Takes and stores a session object
+  # Abstract base class for Ephesus actions. Takes and stores a context object
   # representing the current game state.
   class Action < Cuprum::Command
+    extend SleepingKingStudios::Tools::Toolbox::Delegator
+
     class << self
       def after(status = nil, **options, &block)
         raise ArgumentError, 'must provide a block' unless block_given?
@@ -50,11 +54,16 @@ module Ephesus::Core
       end
     end
 
-    def initialize(session)
-      @session = session
+    def initialize(context, event_dispatcher:)
+      @context          = context
+      @event_dispatcher = event_dispatcher
     end
 
-    attr_reader :session
+    attr_reader :context
+
+    attr_reader :event_dispatcher
+
+    delegate :dispatch_event, to: :event_dispatcher
 
     private
 
