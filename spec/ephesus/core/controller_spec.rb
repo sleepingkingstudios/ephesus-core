@@ -224,6 +224,26 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
+  describe '#identifier' do
+    let(:expected) { SecureRandom.uuid }
+
+    include_examples 'should have reader',
+      :identifier,
+      -> { an_instance_of String }
+
+    it 'should return a random uuid' do
+      allow(SecureRandom).to receive(:uuid).and_return(expected)
+
+      expect(instance.identifier).to be == expected
+    end
+
+    it 'should cache the value' do
+      identifier = instance.identifier
+
+      3.times { expect(instance.identifier).to be identifier }
+    end
+  end
+
   describe '#start' do
     let(:error_message) { 'override #build_context in Controller subclasses' }
 
@@ -273,7 +293,7 @@ RSpec.describe Ephesus::Core::Controller do
         end
 
         it 'should set the #context' do
-          expect { instance.start }
+          expect { instance.start(**keywords) }
             .to change(instance, :context)
             .to be context
         end
@@ -286,6 +306,22 @@ RSpec.describe Ephesus::Core::Controller do
       it 'should raise an error' do
         expect { instance.start }
           .to raise_error RuntimeError, error_message
+      end
+    end
+  end
+
+  describe '#stop' do
+    it { expect(instance).to respond_to(:stop).with(0).arguments }
+
+    it { expect(instance.stop).to be instance }
+
+    wrap_context 'when the controller has a context' do
+      it { expect(instance.stop).to be instance }
+
+      it 'should clear the #context' do
+        expect { instance.stop }
+          .to change(instance, :context)
+          .to be nil
       end
     end
   end

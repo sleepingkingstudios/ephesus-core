@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'securerandom'
+
 require 'sleeping_king_studios/tools/toolbox/delegator'
 
 require 'cuprum/command_factory'
@@ -48,10 +50,20 @@ module Ephesus::Core
       send(action_name).call(*args)
     end
 
+    def identifier
+      @identifier ||= SecureRandom.uuid
+    end
+
     def start(**keywords)
       raise 'controller already has a context' unless context.nil?
 
       @context = build_context(keywords)
+
+      self
+    end
+
+    def stop
+      @context = nil
 
       self
     end
