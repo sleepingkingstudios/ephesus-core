@@ -6,12 +6,15 @@ module Ephesus::Core
   # Base class for Ephesus applications, which manage input controllers and
   # contexts.
   class Application
-    def initialize(event_dispatcher:)
+    def initialize(event_dispatcher:, repository: nil)
       @event_dispatcher = event_dispatcher
       @controllers      = []
+      @repository       = repository
     end
 
     attr_reader :event_dispatcher
+
+    attr_reader :repository
 
     def current_controller
       @controllers.last
@@ -49,7 +52,7 @@ module Ephesus::Core
 
     def build_controller(controller)
       Ephesus::Core::Controllers::ControllerBuilder
-        .new(event_dispatcher: event_dispatcher)
+        .new(event_dispatcher: event_dispatcher, repository: repository)
         .build(controller)
     end
 
