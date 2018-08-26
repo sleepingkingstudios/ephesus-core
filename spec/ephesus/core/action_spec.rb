@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'bronze/collections/repository'
 require 'bronze/entities/entity'
 
 require 'ephesus/core/action'
@@ -22,6 +23,14 @@ RSpec.describe Ephesus::Core::Action do
     end
   end
 
+  shared_context 'when the action has a repository' do
+    let(:repository) { Spec::ExampleRepository.new }
+
+    example_class 'Spec::ExampleRepository' do |klass|
+      klass.send(:include, Bronze::Collections::Repository)
+    end
+  end
+
   shared_context 'when the action has chained commands' do
     let(:chained_command) { Cuprum::Command.new }
     let(:chained_result)  { Cuprum::Result.new 'chained result' }
@@ -39,11 +48,16 @@ RSpec.describe Ephesus::Core::Action do
   end
 
   subject(:instance) do
-    described_class.new(context, event_dispatcher: event_dispatcher)
+    described_class.new(
+      context,
+      event_dispatcher: event_dispatcher,
+      repository:       repository
+    )
   end
 
   let(:context)          { Spec::ExampleContext.new }
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
+  let(:repository)       { nil }
 
   example_class 'Spec::ExampleContext', base_class: Bronze::Entities::Entity
 
@@ -52,7 +66,7 @@ RSpec.describe Ephesus::Core::Action do
       expect(described_class)
         .to be_constructible
         .with(1).argument
-        .and_keywords(:event_dispatcher)
+        .and_keywords(:event_dispatcher, :repository)
     end
   end
 
@@ -525,5 +539,13 @@ RSpec.describe Ephesus::Core::Action do
     include_examples 'should have reader',
       :event_dispatcher,
       -> { event_dispatcher }
+  end
+
+  describe '#repository' do
+    include_examples 'should have reader', :repository, nil
+
+    wrap_context 'when the action has a repository' do
+      it { expect(instance.repository).to be repository }
+    end
   end
 end
