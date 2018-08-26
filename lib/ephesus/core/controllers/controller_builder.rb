@@ -6,16 +6,22 @@ module Ephesus::Core::Controllers
   # Builder class for instantiating controller instances from a class or class
   # name.
   class ControllerBuilder
-    def initialize(event_dispatcher:)
+    def initialize(event_dispatcher:, repository: nil)
       @event_dispatcher = event_dispatcher
+      @repository       = repository
     end
 
     attr_reader :event_dispatcher
 
+    attr_reader :repository
+
     def build(controller)
       controller_class = resolve_controller(controller)
 
-      controller_class.new(event_dispatcher: event_dispatcher)
+      controller_class.new(
+        event_dispatcher: event_dispatcher,
+        repository: repository
+      )
     end
 
     private

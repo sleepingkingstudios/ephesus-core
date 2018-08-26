@@ -3,9 +3,23 @@
 require 'ephesus/core/controllers/controller_builder'
 
 RSpec.describe Ephesus::Core::Controllers::ControllerBuilder do
-  subject(:instance) { described_class.new(event_dispatcher: event_dispatcher) }
+  shared_context 'when the builder has a repository' do
+    let(:repository) { Spec::ExampleRepository.new }
+
+    example_class 'Spec::ExampleRepository' do |klass|
+      klass.send(:include, Bronze::Collections::Repository)
+    end
+  end
+
+  subject(:instance) do
+    described_class.new(
+      event_dispatcher: event_dispatcher,
+      repository:       repository
+    )
+  end
 
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
+  let(:repository)       { nil }
 
   example_class 'Spec::ExampleController', base_class: Ephesus::Core::Controller
 
@@ -14,7 +28,7 @@ RSpec.describe Ephesus::Core::Controllers::ControllerBuilder do
       expect(described_class)
         .to be_constructible
         .with(0).arguments
-        .and_keywords(:event_dispatcher)
+        .and_keywords(:event_dispatcher, :repository)
     end
   end
 
@@ -69,6 +83,20 @@ RSpec.describe Ephesus::Core::Controllers::ControllerBuilder do
 
         expect(controller.event_dispatcher).to be event_dispatcher
       end
+
+      it 'should set the repository' do
+        controller = instance.build(controller_class)
+
+        expect(controller.repository).to be nil
+      end
+
+      wrap_context 'when the builder has a repository' do
+        it 'should set the repository' do
+          controller = instance.build(controller_class)
+
+          expect(controller.repository).to be repository
+        end
+      end
     end
 
     describe 'with a controller name that is not a Class name' do
@@ -109,6 +137,20 @@ RSpec.describe Ephesus::Core::Controllers::ControllerBuilder do
 
         expect(controller.event_dispatcher).to be event_dispatcher
       end
+
+      it 'should set the repository' do
+        controller = instance.build(controller_class)
+
+        expect(controller.repository).to be nil
+      end
+
+      wrap_context 'when the builder has a repository' do
+        it 'should set the repository' do
+          controller = instance.build(controller_class)
+
+          expect(controller.repository).to be repository
+        end
+      end
     end
   end
 
@@ -116,5 +158,13 @@ RSpec.describe Ephesus::Core::Controllers::ControllerBuilder do
     include_examples 'should have reader',
       :event_dispatcher,
       -> { event_dispatcher }
+  end
+
+  describe '#repository' do
+    include_examples 'should have reader', :repository, nil
+
+    wrap_context 'when the builder has a repository' do
+      it { expect(instance.repository).to be repository }
+    end
   end
 end

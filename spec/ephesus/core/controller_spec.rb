@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'bronze/collections/repository'
 require 'bronze/entities/entity'
 
 require 'ephesus/core/action'
@@ -47,13 +48,17 @@ RSpec.describe Ephesus::Core::Controller do
       base_class: Ephesus::Core::Action \
     do |klass|
       klass.send :define_method, :initialize \
-      do |context, *rest, event_dispatcher:|
-        super(context, event_dispatcher: event_dispatcher)
+      do |context, *rest, event_dispatcher:, repository: nil|
+        super(
+          context,
+          event_dispatcher: event_dispatcher,
+          repository:       repository
+        )
 
-        @rest = *rest
+        @arguments = *rest
       end
 
-      klass.attr_reader :rest
+      klass.attr_reader :arguments
     end
   end
 
@@ -63,18 +68,30 @@ RSpec.describe Ephesus::Core::Controller do
     before(:example) { instance.start(keywords) }
   end
 
+  shared_context 'when the controller has a repository' do
+    let(:repository) { Spec::ExampleRepository.new }
+
+    example_class 'Spec::ExampleRepository' do |klass|
+      klass.send(:include, Bronze::Collections::Repository)
+    end
+  end
+
   subject(:instance) do
-    described_class.new(event_dispatcher: event_dispatcher)
+    described_class.new(
+      event_dispatcher: event_dispatcher,
+      repository:       repository
+    )
   end
 
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
+  let(:repository)       { nil }
 
   describe '::new' do
     it 'should define the constructor' do
       expect(described_class)
         .to be_constructible
         .with(0).arguments
-        .and_keywords(:event_dispatcher)
+        .and_keywords(:event_dispatcher, :repository)
     end
   end
 
@@ -95,19 +112,25 @@ RSpec.describe Ephesus::Core::Controller do
 
         it { expect(action.event_dispatcher).to be event_dispatcher }
 
+        it { expect(action.repository).to be nil }
+
         wrap_context 'when the action takes arguments' do
           let(:args)   { [:ichi, 'ni', san: 3] }
           let(:action) { instance.send action_name, *args }
-
-          it { expect(instance).to respond_to(action_name) }
 
           it { expect(action).to be_a action_class }
 
           it { expect(action.context).to be context }
 
-          it { expect(action.rest).to be == args }
+          it { expect(action.arguments).to be == args }
 
           it { expect(action.event_dispatcher).to be event_dispatcher }
+
+          it { expect(action.repository).to be nil }
+        end
+
+        wrap_context 'when the controller has a repository' do
+          it { expect(action.repository).to be repository }
         end
       end
     end
@@ -241,6 +264,14 @@ RSpec.describe Ephesus::Core::Controller do
       identifier = instance.identifier
 
       3.times { expect(instance.identifier).to be identifier }
+    end
+  end
+
+  describe '#repository' do
+    include_examples 'should have reader', :repository, nil
+
+    wrap_context 'when the controller has a repository' do
+      it { expect(instance.repository).to be repository }
     end
   end
 
