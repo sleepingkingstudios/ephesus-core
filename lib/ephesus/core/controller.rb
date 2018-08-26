@@ -21,19 +21,23 @@ module Ephesus::Core
             context,
             *args,
             event_dispatcher: event_dispatcher,
+            repository:       repository,
             &block
           )
         end
       end
     end
 
-    def initialize(event_dispatcher:)
+    def initialize(event_dispatcher:, repository: nil)
       @event_dispatcher = event_dispatcher
+      @repository       = repository
     end
 
     attr_reader :context
 
     attr_reader :event_dispatcher
+
+    attr_reader :repository
 
     delegate :dispatch_event, to: :event_dispatcher
 
