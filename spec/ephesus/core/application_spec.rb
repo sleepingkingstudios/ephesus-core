@@ -4,6 +4,7 @@ require 'bronze/entities/entity'
 
 require 'ephesus/core/application'
 require 'ephesus/core/controller'
+require 'ephesus/core/events/controller_events'
 
 RSpec.describe Ephesus::Core::Application do
   shared_context 'when the application has one controller' do
@@ -436,6 +437,130 @@ RSpec.describe Ephesus::Core::Application do
           expect { instance.stop_controller identifier }
             .not_to change(instance, :current_controller)
         end
+      end
+    end
+  end
+
+  describe 'when a START_CONTROLLER event is dispatched' do
+    let(:keywords) { {} }
+    let(:event) do
+      Ephesus::Core::Events::ControllerEvents::StartController
+        .new(controller_type: 'Spec::ExampleController', **keywords)
+    end
+
+    # rubocop:disable RSpec/SubjectStub
+    before(:example) { allow(instance).to receive(:start_controller) }
+    # rubocop:enable RSpec/SubjectStub
+
+    it 'should start the controller' do
+      event_dispatcher.dispatch_event(event)
+
+      expect(instance)
+        .to have_received(:start_controller)
+        .with('Spec::ExampleController', {})
+    end
+
+    describe 'with controller params' do
+      let(:params) do
+        {
+          pitch: '30 degrees',
+          yaw:   '5 degrees',
+          roll:  '15 degrees'
+        }
+      end
+      let(:keywords) { super().merge controller_params: params }
+
+      it 'should start the controller' do
+        event_dispatcher.dispatch_event(event)
+
+        expect(instance)
+          .to have_received(:start_controller)
+          .with('Spec::ExampleController', params)
+      end
+    end
+  end
+
+  describe 'when a STOP_CONTROLLER event is dispatched' do
+    # rubocop:disable RSpec/SubjectStub
+    before(:example) { allow(instance).to receive(:stop_controller) }
+    # rubocop:enable RSpec/SubjectStub
+
+    wrap_context 'when the application has one controller' do
+      describe 'with the identifier of the current controller' do
+        let(:event) do
+          Ephesus::Core::Events::ControllerEvents::StopController
+            .new(identifier: first_controller.identifier)
+        end
+
+        it 'should stop the current controller' do
+          event_dispatcher.dispatch_event(event)
+
+          expect(instance)
+            .to have_received(:stop_controller)
+            .with(first_controller.identifier)
+        end
+      end
+    end
+
+    wrap_context 'when the application has several controllers' do
+      describe 'with the identifier of the current controller' do
+        let(:event) do
+          Ephesus::Core::Events::ControllerEvents::StopController
+            .new(identifier: third_controller.identifier)
+        end
+
+        it 'should stop the current controller' do
+          event_dispatcher.dispatch_event(event)
+
+          expect(instance)
+            .to have_received(:stop_controller)
+            .with(third_controller.identifier)
+        end
+      end
+
+      describe 'with the identifier of the specified controller' do
+        let(:event) do
+          Ephesus::Core::Events::ControllerEvents::StopController
+            .new(identifier: second_controller.identifier)
+        end
+
+        it 'should stop the current controller' do
+          event_dispatcher.dispatch_event(event)
+
+          expect(instance)
+            .to have_received(:stop_controller)
+            .with(second_controller.identifier)
+        end
+      end
+    end
+  end
+
+  describe 'when a STOP_CURRENT_CONTROLLER event is dispatched' do
+    let(:event) do
+      Ephesus::Core::Events::ControllerEvents::StopCurrentController.new
+    end
+
+    # rubocop:disable RSpec/SubjectStub
+    before(:example) { allow(instance).to receive(:stop_controller) }
+    # rubocop:enable RSpec/SubjectStub
+
+    wrap_context 'when the application has one controller' do
+      it 'should stop the current controller' do
+        event_dispatcher.dispatch_event(event)
+
+        expect(instance)
+          .to have_received(:stop_controller)
+          .with(first_controller.identifier)
+      end
+    end
+
+    wrap_context 'when the application has several controllers' do
+      it 'should stop the current controller' do
+        event_dispatcher.dispatch_event(event)
+
+        expect(instance)
+          .to have_received(:stop_controller)
+          .with(third_controller.identifier)
       end
     end
   end
