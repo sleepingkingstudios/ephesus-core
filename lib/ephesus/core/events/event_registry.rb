@@ -16,20 +16,32 @@ module Ephesus::Core::Events
     # Class methods for creating a registry of events.
     module ClassMethods
       def event(event_name, *event_keys)
-        event_type     = generate_event_type(event_name)
-        parent_class   = event_keys.shift if event_keys.first.is_a?(Class)
-        parent_class ||= Ephesus::Core::Event
-        event_class    = parent_class.subclass(event_type, *event_keys)
-        const_name     = tools.string.camelize(event_name)
+        event_type = generate_event_type(event_name)
+        klass_name = tools.string.chain(event_name, :underscore, :camelize)
+        const_name = tools.string.underscore(event_name).upcase
 
-        event_class.const_set(:TYPE, event_type)
+        const_set(const_name, event_type)
 
-        const_set(const_name, event_class)
+        define_event_class(
+          keys: event_keys,
+          name: klass_name,
+          type: event_type
+        )
 
-        const_name.intern
+        klass_name.intern
       end
 
       private
+
+      def define_event_class(keys:, name:, type:)
+        parent_class   = keys.shift if keys.first.is_a?(Class)
+        parent_class ||= Ephesus::Core::Event
+        event_class    = parent_class.subclass(type, *keys)
+
+        event_class.const_set(:TYPE, type)
+
+        const_set(name, event_class)
+      end
 
       def generate_event_type(event_name)
         name

@@ -13,7 +13,7 @@ RSpec.describe Ephesus::Core::Events::EventRegistry do
 
   describe '::event' do
     shared_context 'when the event is defined' do
-      let(:event_class) { described_class.const_get(const_name) }
+      let(:event_class) { described_class.const_get(klass_name) }
       let(:event_data)  { {} }
       let(:event)       { event_class.new(event_data) }
 
@@ -26,7 +26,7 @@ RSpec.describe Ephesus::Core::Events::EventRegistry do
 
     shared_examples 'should define the event subclass' do
       wrap_context 'when the event is defined' do
-        it { expect(described_class).to have_constant(const_name) }
+        it { expect(described_class).to have_constant(klass_name) }
 
         it { expect(event_class).to be_a Class }
 
@@ -45,12 +45,19 @@ RSpec.describe Ephesus::Core::Events::EventRegistry do
         it { expect(event.event_types).to be == expected_types }
 
         it { expect(event.data).to be == expected_data }
+
+        it 'should define the event type constant' do
+          expect(described_class)
+            .to have_constant(const_name)
+            .with_value(event_type)
+        end
       end
     end
 
     let(:event_name)    { :custom_event }
     let(:event_keys)    { [] }
-    let(:const_name)    { 'CustomEvent' }
+    let(:klass_name)    { 'CustomEvent' }
+    let(:const_name)    { 'CUSTOM_EVENT' }
     let(:event_type)    { 'spec.event_registry.custom_event' }
     let(:parent_class)  { nil }
     let(:expected_keys) { Set.new(event_keys.sort) }
@@ -71,10 +78,44 @@ RSpec.describe Ephesus::Core::Events::EventRegistry do
     end
 
     it 'should return the constant name' do
-      expect(described_class.event event_name).to be const_name.intern
+      expect(described_class.event event_name).to be klass_name.intern
     end
 
-    include_examples 'should define the event subclass'
+    describe 'with a class name as a String' do
+      let(:event_name) { 'CustomEvent' }
+
+      include_examples 'should define the event subclass'
+    end
+
+    describe 'with a class name as a Symbol' do
+      let(:event_name) { :CustomEvent }
+
+      include_examples 'should define the event subclass'
+    end
+
+    describe 'with a constant name as a String' do
+      let(:event_name) { 'CUSTOM_EVENT' }
+
+      include_examples 'should define the event subclass'
+    end
+
+    describe 'with a constant name as a Symbol' do
+      let(:event_name) { :CUSTOM_EVENT }
+
+      include_examples 'should define the event subclass'
+    end
+
+    describe 'with an event type as a String' do
+      let(:event_name) { 'custom_event' }
+
+      include_examples 'should define the event subclass'
+    end
+
+    describe 'with an event type as a Symbol' do
+      let(:event_name) { 'custom_event' }
+
+      include_examples 'should define the event subclass'
+    end
 
     describe 'with event keys' do
       let(:event_keys) { %i[fire wood water] }
