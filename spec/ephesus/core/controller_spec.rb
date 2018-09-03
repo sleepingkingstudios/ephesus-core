@@ -7,7 +7,11 @@ require 'ephesus/core/action'
 require 'ephesus/core/controller'
 require 'ephesus/core/event_dispatcher'
 
+require 'support/examples/event_handlers_examples'
+
 RSpec.describe Ephesus::Core::Controller do
+  include Spec::Support::Examples::EventHandlersExamples
+
   shared_context 'when the #build_context method is defined' do
     let(:keywords) { defined?(super()) ? super() : {} }
     let(:context)  { Spec::ExampleContext.new(keywords) }
@@ -22,16 +26,11 @@ RSpec.describe Ephesus::Core::Controller do
   end
 
   shared_context 'when an action is defined' do
+    include_context 'with a controller subclass'
     include_context 'when the controller has a context'
 
-    let(:described_class) { Spec::ExampleController }
-    let(:action_name)     { :do_something }
-    let(:action_class)    { Spec::ExampleAction }
-
-    # rubocop:disable RSpec/DescribedClass
-    example_class 'Spec::ExampleController',
-      base_class: Ephesus::Core::Controller
-    # rubocop:enable RSpec/DescribedClass
+    let(:action_name)  { :do_something }
+    let(:action_class) { Spec::ExampleAction }
 
     example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Action
 
@@ -74,6 +73,15 @@ RSpec.describe Ephesus::Core::Controller do
     example_class 'Spec::ExampleRepository' do |klass|
       klass.send(:include, Bronze::Collections::Repository)
     end
+  end
+
+  shared_context 'with a controller subclass' do
+    let(:described_class) { Spec::ExampleController }
+
+    # rubocop:disable RSpec/DescribedClass
+    example_class 'Spec::ExampleController',
+      base_class: Ephesus::Core::Controller
+    # rubocop:enable RSpec/DescribedClass
   end
 
   subject(:instance) do
@@ -162,10 +170,18 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
-  describe '#event_dispatcher' do
-    include_examples 'should have reader',
-      :event_dispatcher,
-      -> { event_dispatcher }
+  describe '#dispatch_event' do
+    let(:event) { Ephesus::Core::Event.new }
+
+    it { expect(instance).to respond_to(:dispatch_event).with(1).argument }
+
+    it 'should delegate to the event dispatcher' do
+      allow(event_dispatcher).to receive(:dispatch_event)
+
+      instance.dispatch_event(event)
+
+      expect(event_dispatcher).to have_received(:dispatch_event).with(event)
+    end
   end
 
   describe '#execute_action' do
@@ -353,6 +369,15 @@ RSpec.describe Ephesus::Core::Controller do
         expect { instance.stop }
           .to change(instance, :context)
           .to be nil
+      end
+    end
+  end
+
+  wrap_context 'with a controller subclass' do
+    include_examples 'should implement the EventHandlers methods' do
+      let(:instance_class) { described_class }
+      let(:instance_args) do
+        [{ event_dispatcher: event_dispatcher, repository: repository }]
       end
     end
   end
