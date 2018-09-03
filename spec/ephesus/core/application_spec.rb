@@ -6,7 +6,11 @@ require 'ephesus/core/application'
 require 'ephesus/core/controller'
 require 'ephesus/core/events/controller_events'
 
+require 'support/examples/event_handlers_examples'
+
 RSpec.describe Ephesus::Core::Application do
+  include Spec::Support::Examples::EventHandlersExamples
+
   shared_context 'when the application has one controller' do
     let!(:first_controller) do
       instance.start_controller(Spec::ExampleController)
@@ -31,6 +35,15 @@ RSpec.describe Ephesus::Core::Application do
     example_class 'Spec::ExampleRepository' do |klass|
       klass.send(:include, Bronze::Collections::Repository)
     end
+  end
+
+  shared_context 'with an application subclass' do
+    let(:described_class) { Spec::ExampleApplication }
+
+    # rubocop:disable RSpec/DescribedClass
+    example_class 'Spec::ExampleApplication',
+      base_class: Ephesus::Core::Application
+    # rubocop:enable RSpec/DescribedClass
   end
 
   subject(:instance) do
@@ -70,12 +83,6 @@ RSpec.describe Ephesus::Core::Application do
     wrap_context 'when the application has several controllers' do
       it { expect(instance.current_controller).to be third_controller }
     end
-  end
-
-  describe '#event_dispatcher' do
-    include_examples 'should have reader',
-      :event_dispatcher,
-      -> { event_dispatcher }
   end
 
   describe '#execute_action' do
@@ -441,6 +448,15 @@ RSpec.describe Ephesus::Core::Application do
     end
   end
 
+  wrap_context 'with an application subclass' do
+    include_examples 'should implement the EventHandlers methods' do
+      let(:instance_class) { described_class }
+      let(:instance_args) do
+        [{ event_dispatcher: event_dispatcher, repository: repository }]
+      end
+    end
+  end
+
   describe 'when a START_CONTROLLER event is dispatched' do
     let(:keywords) { {} }
     let(:event) do
@@ -477,6 +493,42 @@ RSpec.describe Ephesus::Core::Application do
           .to have_received(:start_controller)
           .with('Spec::ExampleController', params)
       end
+    end
+  end
+
+  describe 'when a STOP_ALL_CONTROLLERS event is dispatched' do
+    let(:event) do
+      Ephesus::Core::Events::ControllerEvents::StopAllControllers.new
+    end
+
+    # rubocop:disable RSpec/SubjectStub
+    before(:example) { allow(instance).to receive(:stop_controller) }
+    # rubocop:enable RSpec/SubjectStub
+
+    wrap_context 'when the application has one controller' do
+      it 'should stop the current controller' do
+        event_dispatcher.dispatch_event(event)
+
+        expect(instance)
+          .to have_received(:stop_controller)
+          .with(first_controller.identifier)
+      end
+    end
+
+    wrap_context 'when the application has several controllers' do
+      # rubocop:disable RSpec/ExampleLength
+      it 'should stop each controller' do
+        event_dispatcher.dispatch_event(event)
+
+        [third_controller, second_controller, first_controller]
+          .each do |controller|
+            expect(instance)
+              .to have_received(:stop_controller)
+              .with(controller.identifier)
+              .ordered
+          end
+      end
+      # rubocop:enable RSpec/ExampleLength
     end
   end
 

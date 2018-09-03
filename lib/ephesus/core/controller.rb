@@ -6,13 +6,15 @@ require 'sleeping_king_studios/tools/toolbox/delegator'
 
 require 'cuprum/command_factory'
 
-require 'ephesus/core'
+require 'ephesus/core/events/event_handlers'
 
 module Ephesus::Core
   # Abstract base class for Ephesus controllers. Define actions that permit a
   # user to interact with the game state.
   class Controller < Cuprum::CommandFactory
     extend SleepingKingStudios::Tools::Toolbox::Delegator
+
+    include Ephesus::Core::Events::EventHandlers
 
     class << self
       def action(name, action_class)
@@ -29,8 +31,9 @@ module Ephesus::Core
     end
 
     def initialize(event_dispatcher:, repository: nil)
-      @event_dispatcher = event_dispatcher
-      @repository       = repository
+      super(event_dispatcher: event_dispatcher)
+
+      @repository = repository
     end
 
     attr_reader :context

@@ -7,8 +7,12 @@ module Ephesus::Core::Events
   module ControllerEvents
     include Ephesus::Core::Events::EventRegistry
 
-    event :start_controller, :controller_type, :controller_params
-    event :stop_controller,  :identifier
+    event :start_controller,
+      :controller_type,
+      :controller_params
+    event :stop_all_controllers
+    event :stop_controller,
+      :identifier
     event :stop_current_controller
   end
 end
