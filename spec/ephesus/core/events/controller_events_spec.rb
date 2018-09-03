@@ -29,6 +29,28 @@ RSpec.describe Ephesus::Core::Events::ControllerEvents do
     it { expect(event).to have_property(:controller_params) }
   end
 
+  describe '::StopAllControllers' do
+    let(:event_type) do
+      'ephesus.core.events.controller_events.stop_all_controllers'
+    end
+    let(:event_class) { described_class::StopAllControllers }
+    let(:event)       { event_class.new }
+
+    include_examples 'should have constant',
+      :STOP_ALL_CONTROLLERS,
+      -> { event_type }
+
+    include_examples 'should have constant',
+      :StopAllControllers,
+      -> { an_instance_of Class }
+
+    it { expect(event_class).to be < Ephesus::Core::Event }
+
+    it { expect(event_class::TYPE).to be == event_type }
+
+    it { expect(event.event_type).to be == event_type }
+  end
+
   describe '::StopController' do
     let(:event_type) do
       'ephesus.core.events.controller_events.stop_controller'
