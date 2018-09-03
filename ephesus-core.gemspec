@@ -30,7 +30,7 @@ Gem::Specification.new do |gem| # rubocop:disable Metrics/BlockLength
   gem.add_runtime_dependency 'sleeping_king_studios-tools', '~> 0.7'
 
   gem.add_development_dependency 'rspec', '~> 3.8'
-  gem.add_development_dependency 'rspec-sleeping_king_studios', '~> 2.3'
+  gem.add_development_dependency 'rspec-sleeping_king_studios', '2.4.0.rc.1'
   gem.add_development_dependency 'rubocop', '~> 0.58', '>= 0.58.2', '< 0.59'
   gem.add_development_dependency 'rubocop-rspec', '~> 1.21.0', '< 1.22'
   gem.add_development_dependency 'simplecov', '~> 0.16', '>= 0.16.1'
