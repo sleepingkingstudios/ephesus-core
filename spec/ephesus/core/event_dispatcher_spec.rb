@@ -261,6 +261,84 @@ RSpec.describe Ephesus::Core::EventDispatcher do
         end
       end
     end
+
+    context 'when the event listener adds an event listener' do
+      let(:event) { Ephesus::Core::Event.new(event_type) }
+      let(:error_message) do
+        "can't add an event listener while dispatching an event"
+      end
+
+      before(:example) do
+        instance.add_event_listener(event_type) do
+          instance.add_event_listener('spec.other_event') {}
+        end
+      end
+
+      it 'should raise an error' do
+        expect { instance.dispatch_event(event) }
+          .to raise_error RuntimeError, error_message
+      end
+    end
+
+    context 'when the event listener removes itself' do
+      let(:counter) { Struct.new(:count).new(0) }
+      let(:event)   { Ephesus::Core::Event.new(event_type) }
+
+      before(:example) do
+        listener = instance.add_event_listener(event_type) do
+          counter.count += 1
+
+          instance.remove_event_listener(listener)
+        end
+      end
+
+      it 'should not raise an error' do
+        expect { instance.dispatch_event(event) }.not_to raise_error
+      end
+
+      it 'should remove the listener' do
+        expect { 3.times { instance.dispatch_event(event) } }
+          .to change(counter, :count).by(1)
+      end
+    end
+
+    context 'when the event listener removes another event listener' do
+      let(:event) { Ephesus::Core::Event.new(event_type) }
+
+      before(:example) do
+        listener = instance.add_event_listener('spec.other_event') {}
+
+        instance.add_event_listener(event_type) do
+          instance.remove_event_listener(listener)
+        end
+      end
+
+      it 'should not raise an error' do
+        expect { instance.dispatch_event(event) }.not_to raise_error
+      end
+    end
+
+    context 'when the event listener removes all event listeners' do
+      let(:counter) { Struct.new(:count).new(0) }
+      let(:event)   { Ephesus::Core::Event.new(event_type) }
+
+      before(:example) do
+        instance.add_event_listener(event_type) do
+          counter.count += 1
+
+          instance.remove_all_listeners
+        end
+      end
+
+      it 'should not raise an error' do
+        expect { instance.dispatch_event(event) }.not_to raise_error
+      end
+
+      it 'should remove the listener' do
+        expect { 3.times { instance.dispatch_event(event) } }
+          .to change(counter, :count).by(1)
+      end
+    end
   end
 
   describe '#remove_all_listeners' do
