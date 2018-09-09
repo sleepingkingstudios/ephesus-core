@@ -10,6 +10,7 @@ module Ephesus::Core
   class EventDispatcher
     include Observable
 
+    # rubocop:disable Metrics/MethodLength
     def add_event_listener(event_type, &block)
       event_type = guard_event_type(event_type)
       listener   = Ephesus::Core::EventListener.new(event_type, &block)
@@ -17,7 +18,17 @@ module Ephesus::Core
       add_observer(listener)
 
       listener
+    rescue RuntimeError => exception
+      case exception.message
+      when "can't add a new key into hash during iteration"
+        raise "can't add an event listener while dispatching an event"
+      else
+        # :nocov:
+        raise
+        # :nocov:
+      end
     end
+    # rubocop:enable Metrics/MethodLength
 
     def dispatch_event(event)
       unless event.is_a?(Ephesus::Core::Event)
