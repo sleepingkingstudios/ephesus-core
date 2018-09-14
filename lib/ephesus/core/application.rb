@@ -3,6 +3,7 @@
 require 'ephesus/core/controllers/controller_builder'
 require 'ephesus/core/events/controller_events'
 require 'ephesus/core/events/event_handlers'
+require 'ephesus/core/utils/immutable'
 
 module Ephesus::Core
   # Base class for Ephesus applications, which manage input controllers and
@@ -28,11 +29,14 @@ module Ephesus::Core
 
       @controllers = []
       @repository  = repository
+      @state       = Ephesus::Core::Utils::Immutable::from_hash(initial_state)
     end
 
     attr_reader :event_dispatcher
 
     attr_reader :repository
+
+    attr_reader :state
 
     def current_controller
       @controllers.last
@@ -76,6 +80,10 @@ module Ephesus::Core
 
     def find_controller_by_identifier(identifier)
       controllers.find { |controller| controller.identifier == identifier }
+    end
+
+    def initial_state
+      {}
     end
 
     def start_controller_handler(event)

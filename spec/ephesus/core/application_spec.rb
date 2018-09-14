@@ -37,6 +37,24 @@ RSpec.describe Ephesus::Core::Application do
     end
   end
 
+  shared_context 'when the initial state is defined' do
+    include_context 'with an application subclass'
+
+    let(:initial_state) do
+      {
+        era:      :renaissance,
+        firearms: false,
+        genre:    'High Fantasy'
+      }
+    end
+
+    before(:example) do
+      hsh = initial_state
+
+      Spec::ExampleApplication.define_method(:initial_state) { hsh }
+    end
+  end
+
   shared_context 'with an application subclass' do
     let(:described_class) { Spec::ExampleApplication }
 
@@ -317,6 +335,20 @@ RSpec.describe Ephesus::Core::Application do
       wrap_context 'when the application has several controllers' do
         include_context 'should create and start the controller'
       end
+    end
+  end
+
+  describe '#state' do
+    include_examples 'should have reader', :state
+
+    it { expect(instance.state).to be_a Hamster::Hash }
+
+    it { expect(instance.state).to be_empty }
+
+    wrap_context 'when the initial state is defined' do
+      it { expect(instance.state).to be_a Hamster::Hash }
+
+      it { expect(instance.state).to be == initial_state }
     end
   end
 
