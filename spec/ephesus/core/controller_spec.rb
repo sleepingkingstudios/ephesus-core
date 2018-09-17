@@ -94,7 +94,7 @@ RSpec.describe Ephesus::Core::Controller do
 
         it { expect(action).to be_a action_class }
 
-        it { expect(action.context).to be state }
+        it { expect(action.state).to be state }
 
         it { expect(action.event_dispatcher).to be event_dispatcher }
 
@@ -106,7 +106,7 @@ RSpec.describe Ephesus::Core::Controller do
 
           it { expect(action).to be_a action_class }
 
-          it { expect(action.context).to be state }
+          it { expect(action.state).to be state }
 
           it { expect(action.arguments).to be == args }
 
