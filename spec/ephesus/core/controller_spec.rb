@@ -7,11 +7,7 @@ require 'ephesus/core/action'
 require 'ephesus/core/controller'
 require 'ephesus/core/event_dispatcher'
 
-require 'support/examples/event_handlers_examples'
-
 RSpec.describe Ephesus::Core::Controller do
-  include Spec::Support::Examples::EventHandlersExamples
-
   shared_context 'when the #build_context method is defined' do
     let(:keywords) { defined?(super()) ? super() : {} }
     let(:context)  { Spec::ExampleContext.new(keywords) }
@@ -263,6 +259,12 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
+  describe '#event_dispatcher' do
+    include_examples 'should have reader',
+      :event_dispatcher,
+      -> { event_dispatcher }
+  end
+
   describe '#identifier' do
     let(:expected) { SecureRandom.uuid }
 
@@ -369,15 +371,6 @@ RSpec.describe Ephesus::Core::Controller do
         expect { instance.stop }
           .to change(instance, :context)
           .to be nil
-      end
-    end
-  end
-
-  wrap_context 'with a controller subclass' do
-    include_examples 'should implement the EventHandlers methods' do
-      let(:instance_class) { described_class }
-      let(:instance_args) do
-        [{ event_dispatcher: event_dispatcher, repository: repository }]
       end
     end
   end

@@ -26,6 +26,7 @@ Gem::Specification.new do |gem| # rubocop:disable Metrics/BlockLength
 
   gem.add_runtime_dependency 'bronze'
   gem.add_runtime_dependency 'cuprum', '~> 0.7'
+  gem.add_runtime_dependency 'hamster', '~> 3.0'
   gem.add_runtime_dependency 'patina'
   gem.add_runtime_dependency 'sleeping_king_studios-tools', '~> 0.7'
 
