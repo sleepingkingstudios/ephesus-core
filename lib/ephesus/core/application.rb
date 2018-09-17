@@ -14,6 +14,8 @@ module Ephesus::Core
       @repository       = repository
       @state            =
         Ephesus::Core::Utils::Immutable.from_hash(initial_state)
+
+      initialize_reducers!
     end
 
     attr_reader :event_dispatcher
@@ -62,6 +64,10 @@ module Ephesus::Core
       controller.stop
     end
 
+    protected
+
+    attr_writer :state
+
     private
 
     attr_reader :controllers
@@ -98,12 +104,34 @@ module Ephesus::Core
         .build(controller)
     end
 
+    def build_reducer(definition)
+      if definition.is_a?(Proc)
+        return lambda do |event|
+          self.state = instance_exec(state, event, &definition)
+        end
+      end
+
+      ->(event) { self.state = send(definition, state, event) }
+    end
+
     def find_controller_by_identifier(identifier)
       controllers.find { |controller| controller.identifier == identifier }
     end
 
     def initial_state
       {}
+    end
+
+    def initialize_reducers!
+      reducers.each do |reducer|
+        reducer.listeners.each do |event_type, definition|
+          add_event_listener(event_type, &build_reducer(definition))
+        end
+      end
+    end
+
+    def reducers
+      self.class.ancestors.select { |mod| mod.is_a?(Ephesus::Core::Reducer) }
     end
   end
 end
