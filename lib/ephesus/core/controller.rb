@@ -1,17 +1,11 @@
 # frozen_string_literal: true
 
-require 'securerandom'
-
-require 'sleeping_king_studios/tools/toolbox/delegator'
-
 require 'cuprum/command_factory'
 
 module Ephesus::Core
   # Abstract base class for Ephesus controllers. Define actions that permit a
   # user to interact with the game state.
   class Controller < Cuprum::CommandFactory
-    extend SleepingKingStudios::Tools::Toolbox::Delegator
-
     class << self
       def action(name, action_class)
         command(name) do |*args, &block|
