@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
+require 'ephesus/core/event_dispatcher'
 require 'ephesus/core/utils/immutable'
 
 module Ephesus::Core
   # Base class for Ephesus applications. An application has a single state, and
   # is referenced by one or many sessions.
   class Application
-    def initialize(event_dispatcher:, repository: nil)
-      @event_dispatcher = event_dispatcher
+    def initialize(event_dispatcher: nil, repository: nil)
+      @event_dispatcher = event_dispatcher || Ephesus::Core::EventDispatcher.new
       @repository       = repository
       @state            =
         Ephesus::Core::Utils::Immutable.from_hash(initial_state)

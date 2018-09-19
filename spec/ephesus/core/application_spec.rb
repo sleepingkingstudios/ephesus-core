@@ -5,6 +5,10 @@ require 'bronze/entities/entity'
 require 'ephesus/core/application'
 
 RSpec.describe Ephesus::Core::Application do
+  shared_context 'when the application has an event dispatcher' do
+    let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
+  end
+
   shared_context 'when the application has a repository' do
     let(:repository) { Spec::ExampleRepository.new }
 
@@ -47,7 +51,7 @@ RSpec.describe Ephesus::Core::Application do
     )
   end
 
-  let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
+  let(:event_dispatcher) { nil }
   let(:repository)       { nil }
 
   describe '::new' do
@@ -56,6 +60,17 @@ RSpec.describe Ephesus::Core::Application do
         .to be_constructible
         .with(0).arguments
         .and_keywords(:event_dispatcher, :repository)
+    end
+
+    describe 'with an event dispatcher' do
+      let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
+      let(:instance) do
+        described_class.new(event_dispatcher: event_dispatcher)
+      end
+
+      it 'should inject the event dispatcher' do
+        expect(instance.event_dispatcher).to be event_dispatcher
+      end
     end
   end
 
@@ -88,7 +103,7 @@ RSpec.describe Ephesus::Core::Application do
 
         instance.add_event_listener(event_type, &block)
 
-        event_dispatcher.dispatch_event(event)
+        instance.event_dispatcher.dispatch_event(event)
 
         expect(called).to be true
       end
@@ -101,7 +116,7 @@ RSpec.describe Ephesus::Core::Application do
 
         instance.add_event_listener(event_type, &block)
 
-        event_dispatcher.dispatch_event(event)
+        instance.event_dispatcher.dispatch_event(event)
 
         expect(args).to contain_exactly(event)
       end
@@ -129,7 +144,7 @@ RSpec.describe Ephesus::Core::Application do
 
         instance.add_event_listener(event_type, method_name)
 
-        event_dispatcher.dispatch_event(event)
+        instance.event_dispatcher.dispatch_event(event)
 
         expect(called).to be true
       end
@@ -148,7 +163,7 @@ RSpec.describe Ephesus::Core::Application do
 
         instance.add_event_listener(event_type, method_name)
 
-        event_dispatcher.dispatch_event(event)
+        instance.event_dispatcher.dispatch_event(event)
 
         expect(arguments).to be == [event]
       end
@@ -159,7 +174,11 @@ RSpec.describe Ephesus::Core::Application do
   describe '#event_dispatcher' do
     include_examples 'should have reader',
       :event_dispatcher,
-      -> { event_dispatcher }
+      -> { an_instance_of Ephesus::Core::EventDispatcher }
+
+    wrap_context 'when the application has an event dispatcher' do
+      it { expect(instance.event_dispatcher).to be event_dispatcher }
+    end
   end
 
   describe '#repository' do

@@ -1,39 +1,35 @@
 # Ephesus::Core Development Notes
 
-Context
-- inherits from Bronze entity
-- information about the current game state scoped to a controller
+## Core
 
-Controller
-- constructor takes an event dispatcher (required)
-- constructor takes or creates a context
-- has actions, which modify the context and dispatch events
-- #identifier - UUID ?
-- #action_info
+- Autoload top-level classes.
 
-```ruby
-controller.action_info #=>
+## Applications
+
+- Update Application#initialize :
+  If no event_dispatcher is given, initialize a new EventDispatcher.
+
+## Controllers
+
+- #available_actions :
   {
-    build => {
-      arguments: [],
-      about: [],
-      help: []
+    radio: {},
+    takeoff: {},
+    taxi: {
+      aliases: [],
+      arguments: [
+        {
+          name: 'to',
+          aliases: [],
+          type: String,
+          description:
+            'The destination to taxi to. Can be "hangar", "tarmac" or "runway".'
+        }
+      ],
+      description:
+        'Taxis your aircraft to another location in the airport.'
     }
   }
-```
+- Conditional actions:
 
-Application
-- constructor takes or creates an event dispatcher
-- has a stack of controllers (inject event dispatcher)
-- manages controller stack (default controller)
-- process input and forward to current controller
-- ::new(event_dispatcher:)
-- #execute_action(action_name, \*\*options)
-- #current_controller
-- #start_controller(name, \*args) - builds, then pushes controller
-- private #build_controller(name, \*args)
-- #stop_controller(name)
-
-Events
-- Event mixins? - can append event type(s), add data keys
-- Event helpers
+  action :taxi, TaxiAction, if: ->(state) { state.get(:landed) }
