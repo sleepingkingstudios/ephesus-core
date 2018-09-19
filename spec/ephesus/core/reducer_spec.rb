@@ -8,7 +8,6 @@ RSpec.describe Ephesus::Core::Reducer do
   shared_context 'when included in an application' do
     include_context 'with a reducer instance'
 
-    let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
     let(:initial_state) do
       {
         era:      :renaissance,
@@ -16,9 +15,7 @@ RSpec.describe Ephesus::Core::Reducer do
         genre:    'High Fantasy'
       }
     end
-    let(:application) do
-      Spec::Application.new(event_dispatcher: event_dispatcher)
-    end
+    let(:application) { Spec::Application.new }
 
     example_class 'Spec::Application',
       base_class: Ephesus::Core::Application \
