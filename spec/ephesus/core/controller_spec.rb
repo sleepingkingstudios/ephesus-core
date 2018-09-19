@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'bronze/collections/repository'
-require 'bronze/entities/entity'
+require 'hamster'
 
 require 'ephesus/core/action'
 require 'ephesus/core/controller'

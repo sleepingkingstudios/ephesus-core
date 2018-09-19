@@ -2,6 +2,7 @@
 
 require 'bronze/collections/repository'
 require 'bronze/entities/entity'
+require 'hamster'
 
 require 'ephesus/core/action'
 require 'ephesus/core/event_dispatcher'

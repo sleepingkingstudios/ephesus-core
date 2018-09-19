@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'bronze/entities/entity'
+require 'bronze/collections/repository'
 
 require 'ephesus/core/application'
 

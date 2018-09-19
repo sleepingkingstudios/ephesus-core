@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'bronze/collections/repository'
+
 require 'ephesus/core/application'
 require 'ephesus/core/controller'
 require 'ephesus/core/event_dispatcher'

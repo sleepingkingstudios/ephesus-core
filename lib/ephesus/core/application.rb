@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'ephesus/core/event_dispatcher'
+require 'ephesus/core/reducer'
 require 'ephesus/core/utils/immutable'
 
 module Ephesus::Core
