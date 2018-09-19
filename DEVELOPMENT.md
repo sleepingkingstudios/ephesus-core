@@ -2,12 +2,7 @@
 
 ## Core
 
-- Autoload top-level classes.
-
 ## Applications
-
-- Update Application#initialize :
-  If no event_dispatcher is given, initialize a new EventDispatcher.
 
 ## Controllers
 
