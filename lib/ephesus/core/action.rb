@@ -8,7 +8,7 @@ require 'cuprum/command'
 require 'ephesus/core'
 
 module Ephesus::Core
-  # Abstract base class for Ephesus actions. Takes and stores a context object
+  # Abstract base class for Ephesus actions. Takes and stores a state object
   # representing the current game state.
   class Action < Cuprum::Command
     extend SleepingKingStudios::Tools::Toolbox::Delegator
@@ -54,17 +54,17 @@ module Ephesus::Core
       end
     end
 
-    def initialize(context, event_dispatcher:, repository: nil)
-      @context          = context
+    def initialize(state, event_dispatcher:, repository: nil)
+      @state            = state
       @event_dispatcher = event_dispatcher
       @repository       = repository
     end
 
-    attr_reader :context
-
     attr_reader :event_dispatcher
 
     attr_reader :repository
+
+    attr_reader :state
 
     delegate :dispatch_event, to: :event_dispatcher
 

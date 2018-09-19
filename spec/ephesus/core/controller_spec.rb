@@ -8,22 +8,8 @@ require 'ephesus/core/controller'
 require 'ephesus/core/event_dispatcher'
 
 RSpec.describe Ephesus::Core::Controller do
-  shared_context 'when the #build_context method is defined' do
-    let(:keywords) { defined?(super()) ? super() : {} }
-    let(:context)  { Spec::ExampleContext.new(keywords) }
-
-    example_class 'Spec::ExampleContext', base_class: Bronze::Entities::Entity
-
-    before(:example) do
-      # rubocop:disable RSpec/SubjectStub
-      allow(instance).to receive(:build_context).and_return(context)
-      # rubocop:enable RSpec/SubjectStub
-    end
-  end
-
   shared_context 'when an action is defined' do
     include_context 'with a controller subclass'
-    include_context 'when the controller has a context'
 
     let(:action_name)  { :do_something }
     let(:action_class) { Spec::ExampleAction }
@@ -43,9 +29,9 @@ RSpec.describe Ephesus::Core::Controller do
       base_class: Ephesus::Core::Action \
     do |klass|
       klass.send :define_method, :initialize \
-      do |context, *rest, event_dispatcher:, repository: nil|
+      do |state, *rest, event_dispatcher:, repository: nil|
         super(
-          context,
+          state,
           event_dispatcher: event_dispatcher,
           repository:       repository
         )
@@ -55,12 +41,6 @@ RSpec.describe Ephesus::Core::Controller do
 
       klass.attr_reader :arguments
     end
-  end
-
-  shared_context 'when the controller has a context' do
-    include_context 'when the #build_context method is defined'
-
-    before(:example) { instance.start(keywords) }
   end
 
   shared_context 'when the controller has a repository' do
@@ -82,6 +62,7 @@ RSpec.describe Ephesus::Core::Controller do
 
   subject(:instance) do
     described_class.new(
+      state,
       event_dispatcher: event_dispatcher,
       repository:       repository
     )
@@ -89,12 +70,13 @@ RSpec.describe Ephesus::Core::Controller do
 
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
   let(:repository)       { nil }
+  let(:state)            { Hamster::Hash.new }
 
   describe '::new' do
     it 'should define the constructor' do
       expect(described_class)
         .to be_constructible
-        .with(0).arguments
+        .with(1).argument
         .and_keywords(:event_dispatcher, :repository)
     end
   end
@@ -112,7 +94,7 @@ RSpec.describe Ephesus::Core::Controller do
 
         it { expect(action).to be_a action_class }
 
-        it { expect(action.context).to be context }
+        it { expect(action.state).to be state }
 
         it { expect(action.event_dispatcher).to be event_dispatcher }
 
@@ -124,7 +106,7 @@ RSpec.describe Ephesus::Core::Controller do
 
           it { expect(action).to be_a action_class }
 
-          it { expect(action.context).to be context }
+          it { expect(action.state).to be state }
 
           it { expect(action.arguments).to be == args }
 
@@ -158,31 +140,7 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
-  describe '#context' do
-    include_examples 'should have reader', :context, nil
-
-    wrap_context 'when the controller has a context' do
-      it { expect(instance.context).to be context }
-    end
-  end
-
-  describe '#dispatch_event' do
-    let(:event) { Ephesus::Core::Event.new }
-
-    it { expect(instance).to respond_to(:dispatch_event).with(1).argument }
-
-    it 'should delegate to the event dispatcher' do
-      allow(event_dispatcher).to receive(:dispatch_event)
-
-      instance.dispatch_event(event)
-
-      expect(event_dispatcher).to have_received(:dispatch_event).with(event)
-    end
-  end
-
   describe '#execute_action' do
-    let(:error_message) { 'controller does not have a context' }
-
     it 'should define the method' do
       expect(instance)
         .to respond_to(:execute_action)
@@ -190,20 +148,13 @@ RSpec.describe Ephesus::Core::Controller do
         .and_unlimited_arguments
     end
 
-    it 'should raise an error' do
-      expect { instance.execute_action(:action_name) }
-        .to raise_error RuntimeError, error_message
-    end
+    describe 'with an invalid action name' do
+      let(:invalid_name)  { :defenestrate }
+      let(:error_message) { "invalid action name #{invalid_name.inspect}" }
 
-    wrap_context 'when the controller has a context' do
-      describe 'with an invalid action name' do
-        let(:invalid_name)  { :defenestrate }
-        let(:error_message) { "invalid action name #{invalid_name.inspect}" }
-
-        it 'should raise an error' do
-          expect { instance.execute_action(invalid_name) }
-            .to raise_error ArgumentError, error_message
-        end
+      it 'should raise an error' do
+        expect { instance.execute_action(invalid_name) }
+          .to raise_error ArgumentError, error_message
       end
     end
 
@@ -220,7 +171,7 @@ RSpec.describe Ephesus::Core::Controller do
 
       describe 'with a valid action name' do
         let(:action) do
-          action_class.new(context, event_dispatcher: event_dispatcher)
+          action_class.new(state, event_dispatcher: event_dispatcher)
         end
 
         before(:example) do
@@ -239,7 +190,7 @@ RSpec.describe Ephesus::Core::Controller do
       wrap_context 'when the action takes arguments' do
         describe 'with a valid action name' do
           let(:action) do
-            action_class.new(context, event_dispatcher: event_dispatcher)
+            action_class.new(state, event_dispatcher: event_dispatcher)
           end
           let(:arguments) { [:one, :two, { three: 3 }] }
 
@@ -265,26 +216,6 @@ RSpec.describe Ephesus::Core::Controller do
       -> { event_dispatcher }
   end
 
-  describe '#identifier' do
-    let(:expected) { SecureRandom.uuid }
-
-    include_examples 'should have reader',
-      :identifier,
-      -> { an_instance_of String }
-
-    it 'should return a random uuid' do
-      allow(SecureRandom).to receive(:uuid).and_return(expected)
-
-      expect(instance.identifier).to be == expected
-    end
-
-    it 'should cache the value' do
-      identifier = instance.identifier
-
-      3.times { expect(instance.identifier).to be identifier }
-    end
-  end
-
   describe '#repository' do
     include_examples 'should have reader', :repository, nil
 
@@ -293,85 +224,7 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
-  describe '#start' do
-    let(:error_message) { 'override #build_context in Controller subclasses' }
-
-    it 'should define the method' do
-      expect(instance).to respond_to(:start).with(0).arguments.and_any_keywords
-    end
-
-    it 'should raise an error' do
-      expect { instance.start }
-        .to raise_error NotImplementedError, error_message
-    end
-
-    wrap_context 'when the #build_context method is defined' do
-      describe 'with no keywords' do
-        it { expect(instance.start).to be instance }
-
-        it 'should delegate to #build_context' do
-          instance.start
-
-          expect(instance).to have_received(:build_context).with({})
-        end
-
-        it 'should set the #context' do
-          expect { instance.start }
-            .to change(instance, :context)
-            .to be context
-        end
-      end
-
-      describe 'with many keywords' do
-        let(:keywords) do
-          {
-            luck:           0.1,
-            skill:          0.2,
-            power_and_will: 0.15,
-            pleasure:       0.05,
-            pain:           0.5
-          }
-        end
-
-        it { expect(instance.start(**keywords)).to be instance }
-
-        it 'should delegate to #build_context' do
-          instance.start(**keywords)
-
-          expect(instance).to have_received(:build_context).with(keywords)
-        end
-
-        it 'should set the #context' do
-          expect { instance.start(**keywords) }
-            .to change(instance, :context)
-            .to be context
-        end
-      end
-    end
-
-    wrap_context 'when the controller has a context' do
-      let(:error_message) { 'controller already has a context' }
-
-      it 'should raise an error' do
-        expect { instance.start }
-          .to raise_error RuntimeError, error_message
-      end
-    end
-  end
-
-  describe '#stop' do
-    it { expect(instance).to respond_to(:stop).with(0).arguments }
-
-    it { expect(instance.stop).to be instance }
-
-    wrap_context 'when the controller has a context' do
-      it { expect(instance.stop).to be instance }
-
-      it 'should clear the #context' do
-        expect { instance.stop }
-          .to change(instance, :context)
-          .to be nil
-      end
-    end
+  describe '#state' do
+    include_examples 'should have reader', :state, -> { state }
   end
 end

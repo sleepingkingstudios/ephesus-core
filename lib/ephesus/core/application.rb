@@ -1,15 +1,12 @@
 # frozen_string_literal: true
 
-require 'ephesus/core/controllers/controller_builder'
-require 'ephesus/core/events/controller_events'
 require 'ephesus/core/utils/immutable'
 
 module Ephesus::Core
-  # Base class for Ephesus applications, which manage input controllers and
-  # contexts.
+  # Base class for Ephesus applications. An application has a single state, and
+  # is referenced by one or many sessions.
   class Application
     def initialize(event_dispatcher:, repository: nil)
-      @controllers      = []
       @event_dispatcher = event_dispatcher
       @repository       = repository
       @state            =
@@ -34,43 +31,11 @@ module Ephesus::Core
       end
     end
 
-    def current_controller
-      @controllers.last
-    end
-
-    def execute_action(action_name, *args)
-      raise 'application does not have a controller' unless current_controller
-
-      current_controller.execute_action(action_name, *args)
-    end
-
-    def start_controller(controller, **keywords)
-      controller = build_controller(controller)
-
-      controllers << controller.start(keywords)
-
-      controller
-    end
-
-    def stop_controller(identifier)
-      controller = find_controller_by_identifier(identifier)
-
-      unless controller
-        raise ArgumentError, "invalid identifier #{identifier.inspect}"
-      end
-
-      controllers.delete(controller)
-
-      controller.stop
-    end
-
     protected
 
     attr_writer :state
 
     private
-
-    attr_reader :controllers
 
     def add_block_listener(event_type, &block)
       if block.arity.zero?
@@ -98,12 +63,6 @@ module Ephesus::Core
       end
     end
 
-    def build_controller(controller)
-      Ephesus::Core::Controllers::ControllerBuilder
-        .new(event_dispatcher: event_dispatcher, repository: repository)
-        .build(controller)
-    end
-
     def build_reducer(definition)
       if definition.is_a?(Proc)
         return lambda do |event|
@@ -112,10 +71,6 @@ module Ephesus::Core
       end
 
       ->(event) { self.state = send(definition, state, event) }
-    end
-
-    def find_controller_by_identifier(identifier)
-      controllers.find { |controller| controller.identifier == identifier }
     end
 
     def initial_state

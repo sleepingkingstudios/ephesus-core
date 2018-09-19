@@ -49,17 +49,15 @@ RSpec.describe Ephesus::Core::Action do
 
   subject(:instance) do
     described_class.new(
-      context,
+      state,
       event_dispatcher: event_dispatcher,
       repository:       repository
     )
   end
 
-  let(:context)          { Spec::ExampleContext.new }
+  let(:state)            { Hamster::Hash.new }
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
   let(:repository)       { nil }
-
-  example_class 'Spec::ExampleContext', base_class: Bronze::Entities::Entity
 
   describe '::new' do
     it 'should define the constructor' do
@@ -514,10 +512,6 @@ RSpec.describe Ephesus::Core::Action do
     end
   end
 
-  describe '#context' do
-    include_examples 'should have reader', :context, -> { context }
-  end
-
   describe '#dispatch_event' do
     let(:event_type) { 'spec.events.example_event' }
     let(:event)      { Ephesus::Core::Event.new(event_type) }
@@ -547,5 +541,9 @@ RSpec.describe Ephesus::Core::Action do
     wrap_context 'when the action has a repository' do
       it { expect(instance.repository).to be repository }
     end
+  end
+
+  describe '#state' do
+    include_examples 'should have reader', :state, -> { state }
   end
 end
