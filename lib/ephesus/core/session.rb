@@ -11,6 +11,25 @@ module Ephesus::Core
   class Session
     extend SleepingKingStudios::Tools::Toolbox::Delegator
 
+    class << self
+      def controller(controller_type, **conditionals)
+        hsh = { type: controller_type }
+        hsh = hsh.merge(if: conditionals[:if]) if conditionals.key?(:if)
+
+        if conditionals.key?(:unless)
+          hsh = hsh.merge(unless: conditionals[:unless])
+        end
+
+        controllers << hsh
+      end
+
+      private
+
+      def controllers
+        @controllers ||= []
+      end
+    end
+
     def initialize(application)
       @application = application
     end
@@ -22,15 +41,21 @@ module Ephesus::Core
       :state,
       to: :@application
 
-    def current_controller
-      controller_type = controller_for(state)
+    delegate \
+      :execute_action,
+      to: :controller
+
+    def controller
+      return @controller if @controller && @controller.state == state
+
+      controller_type = current_controller
 
       if controller_type.nil?
         raise NotImplementedError,
           "unknown controller for state #{state.inspect}"
       end
 
-      build_controller(controller_type)
+      @controller = build_controller(controller_type)
     end
 
     private
@@ -49,8 +74,19 @@ module Ephesus::Core
       Object.const_get(controller_type)
     end
 
-    def controller_for(_state)
-      nil
+    def current_controller
+      self
+        .class
+        .send(:controllers)
+        .find { |hsh| match_controller?(hsh) }
+        &.yield_self { |hsh| hsh[:type] }
+    end
+
+    def match_controller?(hsh)
+      return false if hsh.key?(:if)     && !hsh[:if].call(state)
+      return false if hsh.key?(:unless) && hsh[:unless].call(state)
+
+      true
     end
   end
 end
