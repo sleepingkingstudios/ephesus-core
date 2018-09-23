@@ -181,6 +181,20 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
+  describe '#available_actions' do
+    include_examples 'should have reader', :available_actions
+
+    it { expect(instance.available_actions).to be == {} }
+
+    wrap_context 'when an action is defined' do
+      it { expect(instance.available_actions).to be == { do_something: {} } }
+    end
+
+    wrap_context 'when a command is defined' do
+      it { expect(instance.available_actions).to be == {} }
+    end
+  end
+
   describe '#command?' do
     it { expect(instance).to respond_to(:command?).with(1).argument }
 

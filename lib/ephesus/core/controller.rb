@@ -46,6 +46,12 @@ module Ephesus::Core
         .keys
     end
 
+    def available_actions
+      actions.each.with_object({}) do |action_name, hsh|
+        hsh[action_name] = {}
+      end
+    end
+
     def execute_action(action_name, *args)
       unless action?(action_name)
         raise ArgumentError, "invalid action name #{action_name.inspect}"
