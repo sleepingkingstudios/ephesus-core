@@ -8,7 +8,7 @@ module Ephesus::Core
   class Controller < Cuprum::CommandFactory
     class << self
       def action(name, action_class)
-        command(name) do |*args, &block|
+        command(name, action: true) do |*args, &block|
           action_class.new(
             state,
             *args,
@@ -32,8 +32,19 @@ module Ephesus::Core
 
     attr_reader :state
 
-    alias action? command?
-    alias actions commands
+    def action?(action_name)
+      action_name = normalize_command_name(action_name)
+
+      actions.include?(action_name)
+    end
+
+    def actions
+      self
+        .class
+        .send(:command_definitions)
+        .select { |_, hsh| hsh.fetch(:action, false) }
+        .keys
+    end
 
     def execute_action(action_name, *args)
       unless action?(action_name)

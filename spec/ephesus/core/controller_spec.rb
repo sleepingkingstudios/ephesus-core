@@ -43,6 +43,19 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
+  shared_context 'when a command is defined' do
+    include_context 'with a controller subclass'
+
+    let(:command_name)  { :calculate_something }
+    let(:command_class) { Spec::ExampleCommand }
+
+    example_class 'Spec::ExampleCommand', base_class: Cuprum::Command
+
+    before(:example) do
+      described_class.command command_name, command_class
+    end
+  end
+
   shared_context 'when the controller has a repository' do
     let(:repository) { Spec::ExampleRepository.new }
 
@@ -87,6 +100,26 @@ RSpec.describe Ephesus::Core::Controller do
     end
 
     wrap_context 'when an action is defined' do
+      let(:definition) do
+        described_class.send(:command_definitions)[action_name.intern]
+      end
+      let(:expected_metadata) do
+        { action: true }
+      end
+
+      it 'should set the definition' do
+        expect(definition).to be_a Hash
+      end
+
+      it 'should not set a class definition' do
+        expect(definition[:__const_defn__]).to be nil
+      end
+
+      it 'should set the metadata' do
+        expect(definition.reject { |k, _| k == :__const_defn__ })
+          .to be == expected_metadata
+      end
+
       describe '#${action_name}' do
         let(:action) { instance.send action_name }
 
@@ -130,6 +163,10 @@ RSpec.describe Ephesus::Core::Controller do
     wrap_context 'when an action is defined' do
       it { expect(instance.action? :do_something).to be true }
     end
+
+    wrap_context 'when a command is defined' do
+      it { expect(instance.action? :calculate_something).to be false }
+    end
   end
 
   describe '#actions' do
@@ -137,6 +174,36 @@ RSpec.describe Ephesus::Core::Controller do
 
     wrap_context 'when an action is defined' do
       it { expect(instance.actions).to include :do_something }
+    end
+
+    wrap_context 'when a command is defined' do
+      it { expect(instance.actions).not_to include :calculate_something }
+    end
+  end
+
+  describe '#command?' do
+    it { expect(instance).to respond_to(:command?).with(1).argument }
+
+    it { expect(instance.command? :do_nothing).to be false }
+
+    wrap_context 'when an action is defined' do
+      it { expect(instance.command? :do_something).to be true }
+    end
+
+    wrap_context 'when a command is defined' do
+      it { expect(instance.command? :calculate_something).to be true }
+    end
+  end
+
+  describe '#commands' do
+    include_examples 'should have reader', :commands, []
+
+    wrap_context 'when an action is defined' do
+      it { expect(instance.commands).to include :do_something }
+    end
+
+    wrap_context 'when a command is defined' do
+      it { expect(instance.commands).to include :calculate_something }
     end
   end
 
