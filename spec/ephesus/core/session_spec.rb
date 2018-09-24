@@ -386,6 +386,38 @@ RSpec.describe Ephesus::Core::Session do
     include_examples 'should have reader', :application, -> { application }
   end
 
+  describe '#available_actions' do
+    it { expect(instance).to respond_to(:available_actions).with(0).arguments }
+
+    wrap_context 'with a non-conditional controller' do
+      include_context 'with a session subclass'
+
+      let(:actions) do
+        {
+          build: {},
+          fly:   {},
+          dream: {}
+        }
+      end
+
+      before(:example) do
+        allow(instance.controller)
+          .to receive(:available_actions)
+          .and_return(actions)
+      end
+
+      it { expect(instance.available_actions).to be actions }
+
+      it 'should delegate to the controller' do
+        instance.available_actions
+
+        expect(instance.controller)
+          .to have_received(:available_actions)
+          .with(no_args)
+      end
+    end
+  end
+
   describe '#controller' do
     let(:error_message) do
       "unknown controller for state #{application.state.inspect}"

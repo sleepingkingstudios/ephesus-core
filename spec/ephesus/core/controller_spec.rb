@@ -11,13 +11,14 @@ RSpec.describe Ephesus::Core::Controller do
   shared_context 'when an action is defined' do
     include_context 'with a controller subclass'
 
+    let(:metadata)     { {} }
     let(:action_name)  { :do_something }
     let(:action_class) { Spec::ExampleAction }
 
     example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Action
 
     before(:example) do
-      described_class.action action_name, action_class
+      described_class.action action_name, action_class, **metadata
     end
   end
 
@@ -40,6 +41,19 @@ RSpec.describe Ephesus::Core::Controller do
       end
 
       klass.attr_reader :arguments
+    end
+  end
+
+  shared_context 'when a command is defined' do
+    include_context 'with a controller subclass'
+
+    let(:command_name)  { :calculate_something }
+    let(:command_class) { Spec::ExampleCommand }
+
+    example_class 'Spec::ExampleCommand', base_class: Cuprum::Command
+
+    before(:example) do
+      described_class.command command_name, command_class
     end
   end
 
@@ -70,7 +84,7 @@ RSpec.describe Ephesus::Core::Controller do
 
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
   let(:repository)       { nil }
-  let(:state)            { Hamster::Hash.new }
+  let(:state)            { Hamster::Hash.new(landed: true, location: :hangar) }
 
   describe '::new' do
     it 'should define the constructor' do
@@ -83,10 +97,50 @@ RSpec.describe Ephesus::Core::Controller do
 
   describe '::action' do
     it 'should define the class method' do
-      expect(described_class).to respond_to(:action).with(2).arguments
+      expect(described_class)
+        .to respond_to(:action)
+        .with(2).arguments
+        .and_any_keywords
     end
 
     wrap_context 'when an action is defined' do
+      let(:definition) do
+        described_class.send(:command_definitions)[action_name.intern]
+      end
+      let(:expected_metadata) do
+        metadata.merge(action: true)
+      end
+
+      it 'should set the definition' do
+        expect(definition).to be_a Hash
+      end
+
+      it 'should not set a class definition' do
+        expect(definition[:__const_defn__]).to be nil
+      end
+
+      it 'should set the metadata' do
+        expect(definition.reject { |k, _| k == :__const_defn__ })
+          .to be == expected_metadata
+      end
+
+      describe 'with metadata' do
+        let(:metadata) { { key: 'value', opt: 5 } }
+
+        it 'should set the definition' do
+          expect(definition).to be_a Hash
+        end
+
+        it 'should not set a class definition' do
+          expect(definition[:__const_defn__]).to be nil
+        end
+
+        it 'should set the metadata' do
+          expect(definition.reject { |k, _| k == :__const_defn__ })
+            .to be == expected_metadata
+        end
+      end
+
       describe '#${action_name}' do
         let(:action) { instance.send action_name }
 
@@ -130,6 +184,10 @@ RSpec.describe Ephesus::Core::Controller do
     wrap_context 'when an action is defined' do
       it { expect(instance.action? :do_something).to be true }
     end
+
+    wrap_context 'when a command is defined' do
+      it { expect(instance.action? :calculate_something).to be false }
+    end
   end
 
   describe '#actions' do
@@ -137,6 +195,108 @@ RSpec.describe Ephesus::Core::Controller do
 
     wrap_context 'when an action is defined' do
       it { expect(instance.actions).to include :do_something }
+    end
+
+    wrap_context 'when a command is defined' do
+      it { expect(instance.actions).not_to include :calculate_something }
+    end
+  end
+
+  describe '#available_actions' do
+    include_examples 'should have reader', :available_actions
+
+    it { expect(instance.available_actions).to be == {} }
+
+    wrap_context 'when an action is defined' do
+      it { expect(instance.available_actions).to be == { do_something: {} } }
+
+      context 'with an if conditional' do
+        let(:arguments) { [] }
+        let(:metadata) do
+          { if: ->(state) { arguments << state } }
+        end
+
+        it 'should yield the state to the conditional' do
+          expect { instance.available_actions }
+            .to change { arguments }
+            .to be == [state]
+        end
+      end
+
+      context 'with a non-matching :if conditional' do
+        let(:metadata) do
+          { if: ->(state) { state.get(:location) == :tarmac } }
+        end
+
+        it { expect(instance.available_actions).to be == {} }
+      end
+
+      context 'with a matching :if conditional' do
+        let(:metadata) do
+          { if: ->(state) { state.get(:landed) } }
+        end
+
+        it { expect(instance.available_actions).to be == { do_something: {} } }
+      end
+
+      context 'with an unless conditional' do
+        let(:arguments) { [] }
+        let(:metadata) do
+          { unless: ->(state) { arguments << state } }
+        end
+
+        it 'should yield the state to the conditional' do
+          expect { instance.available_actions }
+            .to change { arguments }
+            .to be == [state]
+        end
+      end
+
+      context 'with a non-matching :unless conditional' do
+        let(:metadata) do
+          { unless: ->(state) { state.get(:location) == :tarmac } }
+        end
+
+        it { expect(instance.available_actions).to be == { do_something: {} } }
+      end
+
+      context 'with a matching :unless conditional' do
+        let(:metadata) do
+          { unless: ->(state) { state.get(:landed) } }
+        end
+
+        it { expect(instance.available_actions).to be == {} }
+      end
+    end
+
+    wrap_context 'when a command is defined' do
+      it { expect(instance.available_actions).to be == {} }
+    end
+  end
+
+  describe '#command?' do
+    it { expect(instance).to respond_to(:command?).with(1).argument }
+
+    it { expect(instance.command? :do_nothing).to be false }
+
+    wrap_context 'when an action is defined' do
+      it { expect(instance.command? :do_something).to be true }
+    end
+
+    wrap_context 'when a command is defined' do
+      it { expect(instance.command? :calculate_something).to be true }
+    end
+  end
+
+  describe '#commands' do
+    include_examples 'should have reader', :commands, []
+
+    wrap_context 'when an action is defined' do
+      it { expect(instance.commands).to include :do_something }
+    end
+
+    wrap_context 'when a command is defined' do
+      it { expect(instance.commands).to include :calculate_something }
     end
   end
 
@@ -170,21 +330,70 @@ RSpec.describe Ephesus::Core::Controller do
       end
 
       describe 'with a valid action name' do
+        let(:error_message) { "unavailable action name #{action_name.inspect}" }
         let(:action) do
           action_class.new(state, event_dispatcher: event_dispatcher)
         end
 
         before(:example) do
           allow(action_class).to receive(:new).and_return(action)
+
+          allow(action).to receive(:call)
         end
 
         it 'should call the action' do
-          allow(action).to receive(:call)
-
           instance.execute_action(action_name)
 
           expect(action).to have_received(:call).with(no_args)
         end
+
+        # rubocop:disable RSpec/NestedGroups
+        describe 'with a non-matching if conditional' do
+          let(:metadata) do
+            { if: ->(state) { state.get(:location) == :tarmac } }
+          end
+
+          it 'should raise an error' do
+            expect { instance.execute_action(action_name) }
+              .to raise_error ArgumentError, error_message
+          end
+        end
+
+        describe 'with a matching if conditional' do
+          let(:metadata) do
+            { if: ->(state) { state.get(:landed) } }
+          end
+
+          it 'should call the action' do
+            instance.execute_action(action_name)
+
+            expect(action).to have_received(:call).with(no_args)
+          end
+        end
+
+        describe 'with a non-matching unless conditional' do
+          let(:metadata) do
+            { unless: ->(state) { state.get(:location) == :tarmac } }
+          end
+
+          it 'should call the action' do
+            instance.execute_action(action_name)
+
+            expect(action).to have_received(:call).with(no_args)
+          end
+        end
+
+        describe 'with a matching unless conditional' do
+          let(:metadata) do
+            { unless: ->(state) { state.get(:landed) } }
+          end
+
+          it 'should raise an error' do
+            expect { instance.execute_action(action_name) }
+              .to raise_error ArgumentError, error_message
+          end
+        end
+        # rubocop:enable RSpec/NestedGroups
       end
 
       wrap_context 'when the action takes arguments' do

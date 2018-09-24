@@ -42,6 +42,7 @@ module Ephesus::Core
       to: :@application
 
     delegate \
+      :available_actions,
       :execute_action,
       to: :controller
 
