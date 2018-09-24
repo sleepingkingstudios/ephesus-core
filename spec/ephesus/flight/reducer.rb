@@ -5,6 +5,9 @@ require 'ephesus/flight/events'
 
 module Ephesus::Flight
   Reducer = Ephesus::Core::Reducer.new do
+    update Ephesus::Flight::Events::RADIO_OFF do |state, _event|
+      state.put(:radio, false)
+    end
     update Ephesus::Flight::Events::RADIO_ON do |state, _event|
       state.put(:radio, true)
     end
