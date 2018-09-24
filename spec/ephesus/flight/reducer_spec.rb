@@ -16,5 +16,17 @@ RSpec.describe Ephesus::Flight::Reducer do
     klass.define_method(:initial_state) { hsh }
   end
 
-  pending
+  describe 'when a TAXI event is dispatched' do
+    let(:destination) { 'runway' }
+    let(:event)       { Ephesus::Flight::Events::Taxi.new to: destination }
+    let(:expected) do
+      initial_state.merge location: destination
+    end
+
+    it 'should update the state' do
+      expect { application.event_dispatcher.dispatch_event event }
+        .to change(application, :state)
+        .to be == expected
+    end
+  end
 end

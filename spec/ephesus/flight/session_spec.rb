@@ -8,5 +8,10 @@ RSpec.describe Ephesus::Flight::Session do
 
   let(:application) { Ephesus::Flight::Application.new }
 
-  pending
+  describe '#controller' do
+    it 'should return the default controller' do
+      expect(instance.controller)
+        .to be_a Ephesus::Flight::Controllers::LandedController
+    end
+  end
 end
