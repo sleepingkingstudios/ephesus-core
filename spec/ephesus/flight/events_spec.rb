@@ -3,6 +3,20 @@
 require 'ephesus/flight/events'
 
 RSpec.describe Ephesus::Flight::Events do
+  describe '::GrantTakeoffClearance' do
+    let(:params) { {} }
+    let(:event)  { described_class::GrantTakeoffClearance.new(params) }
+
+    it { expect(described_class).to have_constant :GrantTakeoffClearance }
+
+    it { expect(described_class::GrantTakeoffClearance).to be_a Class }
+
+    it 'should be an Event subclass' do
+      expect(described_class::GrantTakeoffClearance)
+        .to be < Ephesus::Core::Event
+    end
+  end
+
   describe '::RadioOff' do
     let(:params) { {} }
     let(:event)  { described_class::RadioOff.new(params) }
