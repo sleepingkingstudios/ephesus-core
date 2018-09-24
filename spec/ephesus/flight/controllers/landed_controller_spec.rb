@@ -29,11 +29,15 @@ RSpec.describe Ephesus::Flight::Controllers::LandedController do
   describe '#action?' do
     it { expect(instance.action? :do_something).to be false }
 
+    it { expect(instance.action? :radio_tower).to be true }
+
     it { expect(instance.action? :taxi).to be true }
   end
 
   describe '#actions' do
     it { expect(instance.actions).not_to include :do_something }
+
+    it { expect(instance.actions).to include :radio_tower }
 
     it { expect(instance.actions).to include :taxi }
   end
@@ -41,7 +45,15 @@ RSpec.describe Ephesus::Flight::Controllers::LandedController do
   describe '#available_actions' do
     it { expect(instance.available_actions).not_to have_key :do_something }
 
+    it { expect(instance.available_actions[:radio_tower]).to be == {} }
+
     it { expect(instance.available_actions[:taxi]).to be == {} }
+  end
+
+  describe '#radio_tower' do
+    include_examples 'should define action',
+      :radio_tower,
+      Ephesus::Flight::Actions::RadioOn
   end
 
   describe '#taxi' do

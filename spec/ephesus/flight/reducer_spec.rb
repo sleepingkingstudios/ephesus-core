@@ -16,6 +16,19 @@ RSpec.describe Ephesus::Flight::Reducer do
     klass.define_method(:initial_state) { hsh }
   end
 
+  describe 'when a RADIO_ON event is dispatched' do
+    let(:event) { Ephesus::Flight::Events::RadioOn.new }
+    let(:expected) do
+      initial_state.merge radio: true
+    end
+
+    it 'should update the state' do
+      expect { application.event_dispatcher.dispatch_event event }
+        .to change(application, :state)
+        .to be == expected
+    end
+  end
+
   describe 'when a TAXI event is dispatched' do
     let(:destination) { 'runway' }
     let(:event)       { Ephesus::Flight::Events::Taxi.new to: destination }
