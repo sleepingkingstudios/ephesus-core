@@ -56,6 +56,23 @@ RSpec.describe Ephesus::Flight::Reducer do
     end
   end
 
+  describe 'when a TAKEOFF event is dispatched' do
+    let(:initial_state) { super().merge takeoff_clearance: true }
+    let(:event)         { Ephesus::Flight::Events::Takeoff.new }
+    let(:expected) do
+      initial_state
+        .tap { |hsh| hsh.delete(:location) }
+        .tap { |hsh| hsh.delete(:takeoff_clearance) }
+        .merge(landed: false)
+    end
+
+    it 'should update the state' do
+      expect { application.event_dispatcher.dispatch_event event }
+        .to change(application, :state)
+        .to be == expected
+    end
+  end
+
   describe 'when a TAXI event is dispatched' do
     let(:destination) { 'runway' }
     let(:event)       { Ephesus::Flight::Events::Taxi.new to: destination }

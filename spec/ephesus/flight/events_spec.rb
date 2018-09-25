@@ -39,6 +39,17 @@ RSpec.describe Ephesus::Flight::Events do
     it { expect(described_class::RadioOn).to be < Ephesus::Core::Event }
   end
 
+  describe '::Takeoff' do
+    let(:params) { {} }
+    let(:event)  { described_class::Takeoff.new(params) }
+
+    it { expect(described_class).to have_constant :Takeoff }
+
+    it { expect(described_class::Takeoff).to be_a Class }
+
+    it { expect(described_class::Takeoff).to be < Ephesus::Core::Event }
+  end
+
   describe '::Taxi' do
     let(:params) { { to: 'runway' } }
     let(:event)  { described_class::Taxi.new(params) }

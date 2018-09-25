@@ -11,6 +11,8 @@ module Ephesus::Flight
     event :RadioOff
     event :RadioOn
 
+    event :Takeoff
+
     event :Taxi, :to
   end
 end

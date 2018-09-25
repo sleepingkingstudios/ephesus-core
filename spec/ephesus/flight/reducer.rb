@@ -15,7 +15,15 @@ module Ephesus::Flight
       state.put(:radio, true)
     end
 
+    update Ephesus::Flight::Events::TAKEOFF, :take_off
     update Ephesus::Flight::Events::TAXI, :taxi
+
+    def take_off(state, _event)
+      state
+        .delete(:location)
+        .delete(:takeoff_clearance)
+        .put(:landed, false)
+    end
 
     def taxi(state, event)
       state.put(:location, event.to)
