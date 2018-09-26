@@ -10,6 +10,12 @@ RSpec.describe Ephesus::Flight::Session do
     end
   end
 
+  shared_context 'when the state is flying' do
+    before(:example) do
+      application.send :state=, application.state.put(:landed, false)
+    end
+  end
+
   subject(:instance) { described_class.new(application) }
 
   let(:application) { Ephesus::Flight::Application.new }
@@ -24,6 +30,20 @@ RSpec.describe Ephesus::Flight::Session do
       it 'should return the radio controller' do
         expect(instance.controller)
           .to be_a Ephesus::Flight::Controllers::RadioController
+      end
+    end
+
+    wrap_context 'when the state is flying' do
+      it 'should return the flying controller' do
+        expect(instance.controller)
+          .to be_a Ephesus::Flight::Controllers::FlyingController
+      end
+
+      wrap_context 'when the radio is on' do
+        it 'should return the radio controller' do
+          expect(instance.controller)
+            .to be_a Ephesus::Flight::Controllers::RadioController
+        end
       end
     end
   end
