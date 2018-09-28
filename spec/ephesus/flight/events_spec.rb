@@ -31,6 +31,17 @@ RSpec.describe Ephesus::Flight::Events do
     end
   end
 
+  describe '::Land' do
+    let(:params) { {} }
+    let(:event)  { described_class::Land.new(params) }
+
+    it { expect(described_class).to have_constant :Land }
+
+    it { expect(described_class::Land).to be_a Class }
+
+    it { expect(described_class::Land).to be < Ephesus::Core::Event }
+  end
+
   describe '::RadioOff' do
     let(:params) { {} }
     let(:event)  { described_class::RadioOff.new(params) }

@@ -4,6 +4,14 @@ require 'ephesus/core/application'
 require 'ephesus/flight/reducer'
 
 RSpec.describe Ephesus::Flight::Reducer do
+  shared_context 'when the state is flying' do
+    before(:example) do
+      initial_state
+        .update(landed: false)
+        .tap { |hsh| hsh.delete(:location) }
+    end
+  end
+
   let(:initial_state) { { landed: true, location: 'hangar' } }
   let(:application)   { Spec::ApplicationWithReducer.new }
 
@@ -17,8 +25,9 @@ RSpec.describe Ephesus::Flight::Reducer do
   end
 
   describe 'when a GRANT_LANDING_CLEARANCE event is dispatched' do
-    let(:initial_state) { super().merge landed: false }
-    let(:event)         { Ephesus::Flight::Events::GrantLandingClearance.new }
+    include_context 'when the state is flying'
+
+    let(:event) { Ephesus::Flight::Events::GrantLandingClearance.new }
     let(:expected) do
       initial_state.merge landing_clearance: true
     end
@@ -43,6 +52,27 @@ RSpec.describe Ephesus::Flight::Reducer do
     end
   end
 
+  describe 'when a LAND event is dispatched' do
+    include_context 'when the state is flying'
+
+    let(:initial_state) { super().merge landing_clearance: true }
+    let(:event)         { Ephesus::Flight::Events::Land.new }
+    let(:expected) do
+      initial_state
+        .merge(
+          landed: true,
+          location: 'runway'
+        )
+        .tap { |hsh| hsh.delete(:landing_clearance) }
+    end
+
+    it 'should update the state' do
+      expect { application.event_dispatcher.dispatch_event event }
+        .to change(application, :state)
+        .to be == expected
+    end
+  end
+
   describe 'when a RADIO_OFF event is dispatched' do
     let(:initial_state) { super().merge radio: true }
     let(:event)         { Ephesus::Flight::Events::RadioOff.new }
@@ -54,6 +84,14 @@ RSpec.describe Ephesus::Flight::Reducer do
       expect { application.event_dispatcher.dispatch_event event }
         .to change(application, :state)
         .to be == expected
+    end
+
+    wrap_context 'when the state is flying' do
+      it 'should update the state' do
+        expect { application.event_dispatcher.dispatch_event event }
+          .to change(application, :state)
+          .to be == expected
+      end
     end
   end
 
@@ -67,6 +105,14 @@ RSpec.describe Ephesus::Flight::Reducer do
       expect { application.event_dispatcher.dispatch_event event }
         .to change(application, :state)
         .to be == expected
+    end
+
+    wrap_context 'when the state is flying' do
+      it 'should update the state' do
+        expect { application.event_dispatcher.dispatch_event event }
+          .to change(application, :state)
+          .to be == expected
+      end
     end
   end
 

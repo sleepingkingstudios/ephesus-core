@@ -9,6 +9,8 @@ module Ephesus::Flight
     event :GrantLandingClearance
     event :GrantTakeoffClearance
 
+    event :Land
+
     event :RadioOff
     event :RadioOn
 

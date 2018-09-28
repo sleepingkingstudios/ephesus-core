@@ -18,8 +18,16 @@ module Ephesus::Flight
       state.put(:radio, true)
     end
 
+    update Ephesus::Flight::Events::LAND,    :land
     update Ephesus::Flight::Events::TAKEOFF, :take_off
-    update Ephesus::Flight::Events::TAXI, :taxi
+    update Ephesus::Flight::Events::TAXI,    :taxi
+
+    def land(state, _event)
+      state
+        .delete(:landing_clearance)
+        .put(:landed,   true)
+        .put(:location, 'runway')
+    end
 
     def take_off(state, _event)
       state

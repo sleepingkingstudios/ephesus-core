@@ -6,6 +6,10 @@ require 'ephesus/core/event_dispatcher'
 require 'ephesus/flight/controllers/flying_controller'
 
 RSpec.describe Ephesus::Flight::Controllers::FlyingController do
+  shared_context 'when landing clearance has been granted' do
+    let(:initial_state) { super().merge landing_clearance: true }
+  end
+
   shared_examples 'should define action' do |action_name, action_class|
     let(:action) { instance.send(action_name) }
 
@@ -29,11 +33,15 @@ RSpec.describe Ephesus::Flight::Controllers::FlyingController do
   describe '#action?' do
     it { expect(instance.action? :do_something).to be false }
 
+    it { expect(instance.action? :land).to be true }
+
     it { expect(instance.action? :radio_tower).to be true }
   end
 
   describe '#actions' do
     it { expect(instance.actions).not_to include :do_something }
+
+    it { expect(instance.actions).to include :land }
 
     it { expect(instance.actions).to include :radio_tower }
   end
@@ -41,7 +49,19 @@ RSpec.describe Ephesus::Flight::Controllers::FlyingController do
   describe '#available_actions' do
     it { expect(instance.available_actions).not_to have_key :do_something }
 
+    it { expect(instance.available_actions).not_to have_key :land }
+
     it { expect(instance.available_actions[:radio_tower]).to be == {} }
+
+    wrap_context 'when landing clearance has been granted' do
+      it { expect(instance.available_actions[:land]).to be == {} }
+    end
+  end
+
+  describe '#land' do
+    include_examples 'should define action',
+      :land,
+      Ephesus::Flight::Actions::Land
   end
 
   describe '#radio_tower' do
