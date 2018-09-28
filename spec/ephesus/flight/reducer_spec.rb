@@ -16,6 +16,20 @@ RSpec.describe Ephesus::Flight::Reducer do
     klass.define_method(:initial_state) { hsh }
   end
 
+  describe 'when a GRANT_LANDING_CLEARANCE event is dispatched' do
+    let(:initial_state) { super().merge landed: false }
+    let(:event)         { Ephesus::Flight::Events::GrantLandingClearance.new }
+    let(:expected) do
+      initial_state.merge landing_clearance: true
+    end
+
+    it 'should update the state' do
+      expect { application.event_dispatcher.dispatch_event event }
+        .to change(application, :state)
+        .to be == expected
+    end
+  end
+
   describe 'when a GRANT_TAKEOFF_CLEARANCE event is dispatched' do
     let(:event) { Ephesus::Flight::Events::GrantTakeoffClearance.new }
     let(:expected) do

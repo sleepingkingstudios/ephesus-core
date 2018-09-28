@@ -8,10 +8,16 @@ module Ephesus::Flight::Actions
   class RequestClearance < Ephesus::Core::Action
     private
 
-    def process
-      event = Ephesus::Flight::Events::GrantTakeoffClearance.new
+    def clearance_event
+      if state.get(:landed)
+        return Ephesus::Flight::Events::GrantTakeoffClearance.new
+      end
 
-      dispatch_event(event)
+      Ephesus::Flight::Events::GrantLandingClearance.new
+    end
+
+    def process
+      dispatch_event(clearance_event)
     end
   end
 end

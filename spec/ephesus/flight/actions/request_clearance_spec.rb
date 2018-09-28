@@ -11,24 +11,50 @@ RSpec.describe Ephesus::Flight::Actions::RequestClearance do
   end
 
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
-  let(:state)            { Hamster::Hash.new }
+  let(:initial_state)    { {} }
+  let(:state)            { Hamster::Hash.new(initial_state) }
 
   describe '#call' do
-    let(:result) { instance.call }
-    let(:event)  { Ephesus::Flight::Events::GrantTakeoffClearance.new }
+    context 'when the state is flying' do
+      let(:initial_state) { { landed: false } }
 
-    it { expect(result.success?).to be true }
+      let(:result) { instance.call }
+      let(:event)  { Ephesus::Flight::Events::GrantLandingClearance.new }
 
-    it { expect(result.errors).to be_empty }
+      it { expect(result.success?).to be true }
 
-    it 'should dispatch a GRANT_TAKEOFF_CLEARANCE event' do
-      allow(event_dispatcher).to receive(:dispatch_event)
+      it { expect(result.errors).to be_empty }
 
-      instance.call
+      it 'should dispatch a GRANT_LANDING_CLEARANCE event' do
+        allow(event_dispatcher).to receive(:dispatch_event)
 
-      expect(event_dispatcher)
-        .to have_received(:dispatch_event)
-        .with(be == event)
+        instance.call
+
+        expect(event_dispatcher)
+          .to have_received(:dispatch_event)
+          .with(be == event)
+      end
+    end
+
+    context 'when the state is landed' do
+      let(:initial_state) { { landed: true } }
+
+      let(:result) { instance.call }
+      let(:event)  { Ephesus::Flight::Events::GrantTakeoffClearance.new }
+
+      it { expect(result.success?).to be true }
+
+      it { expect(result.errors).to be_empty }
+
+      it 'should dispatch a GRANT_TAKEOFF_CLEARANCE event' do
+        allow(event_dispatcher).to receive(:dispatch_event)
+
+        instance.call
+
+        expect(event_dispatcher)
+          .to have_received(:dispatch_event)
+          .with(be == event)
+      end
     end
   end
 end

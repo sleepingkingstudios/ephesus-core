@@ -6,6 +6,14 @@ require 'ephesus/core/event_dispatcher'
 require 'ephesus/flight/controllers/radio_controller'
 
 RSpec.describe Ephesus::Flight::Controllers::RadioController do
+  shared_context 'when flying' do
+    let(:initial_state) { super().merge landed: false }
+  end
+
+  shared_context 'when landing clearance has been granted' do
+    let(:initial_state) { super().merge landing_clearance: true }
+  end
+
   shared_context 'when takeoff clearance has been granted' do
     let(:initial_state) { super().merge takeoff_clearance: true }
   end
@@ -27,7 +35,7 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
   end
 
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
-  let(:initial_state)    { { radio: true } }
+  let(:initial_state)    { { landed: true, radio: true } }
   let(:state)            { Hamster::Hash.new(initial_state) }
 
   describe '#action?' do
@@ -52,6 +60,16 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
     it { expect(instance.available_actions[:request_clearance]).to be == {} }
 
     it { expect(instance.available_actions[:turn_off_radio]).to be == {} }
+
+    wrap_context 'when flying' do
+      it { expect(instance.available_actions[:request_clearance]).to be == {} }
+
+      wrap_context 'when landing clearance has been granted' do
+        it 'should not include :request_clearance' do
+          expect(instance.available_actions).not_to have_key :request_clearance
+        end
+      end
+    end
 
     wrap_context 'when takeoff clearance has been granted' do
       it 'should not include :request_clearance' do

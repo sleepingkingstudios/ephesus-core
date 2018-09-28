@@ -6,6 +6,7 @@ module Ephesus::Flight
   module Events
     include Ephesus::Core::Events::EventRegistry
 
+    event :GrantLandingClearance
     event :GrantTakeoffClearance
 
     event :RadioOff

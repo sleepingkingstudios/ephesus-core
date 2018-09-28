@@ -6,25 +6,6 @@
 
 ## Controllers
 
-- #available_actions :
-  {
-    radio: {},
-    takeoff: {},
-    taxi: {
-      aliases: [],
-      arguments: [
-        {
-          name: 'to',
-          aliases: [],
-          type: String,
-          description:
-            'The destination to taxi to. Can be "hangar", "tarmac" or "runway".'
-        }
-      ],
-      description:
-        'Taxis your aircraft to another location in the airport.'
-    }
-  }
-- Conditional actions:
+- conditional actions with method names:
 
-  action :taxi, TaxiAction, if: ->(state) { state.get(:landed) }
+  action :request_clearance, RequestClearance, if: :can_request_clearance?

@@ -9,7 +9,10 @@ module Ephesus::Flight::Controllers
   class RadioController < Ephesus::Core::Controller
     action :request_clearance,
       Ephesus::Flight::Actions::RequestClearance,
-      if: ->(state) { !state.get(:takeoff_clearance) }
+      if: lambda { |state|
+        (state.get(:landed) && !state.get(:takeoff_clearance)) ||
+          (!state.get(:landed) && !state.get(:landing_clearance))
+      }
 
     action :turn_off_radio, Ephesus::Flight::Actions::RadioOff
   end
