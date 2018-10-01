@@ -135,7 +135,7 @@ RSpec.describe Ephesus::Flight::Reducer do
 
   describe 'when a TAXI event is dispatched' do
     let(:destination) { 'runway' }
-    let(:event)       { Ephesus::Flight::Events::Taxi.new to: destination }
+    let(:event)       { Ephesus::Flight::Events::Taxi.new(to: destination) }
     let(:expected) do
       initial_state.merge location: destination
     end
@@ -144,6 +144,31 @@ RSpec.describe Ephesus::Flight::Reducer do
       expect { application.event_dispatcher.dispatch_event event }
         .to change(application, :state)
         .to be == expected
+    end
+  end
+
+  describe 'when an UPDATE_SCORE event is dispatched' do
+    let(:amount) { 5 }
+    let(:event)  { Ephesus::Flight::Events::UpdateScore.new(by: amount) }
+    let(:expected) do
+      initial_state.merge score: amount
+    end
+
+    it 'should update the state' do
+      expect { application.event_dispatcher.dispatch_event event }
+        .to change(application, :state)
+        .to be == expected
+    end
+
+    context 'when the state has a score' do
+      let(:initial_state) { super().merge score: 20 }
+      let(:expected)      { initial_state.merge(score: 20 + amount) }
+
+      it 'should update the state' do
+        expect { application.event_dispatcher.dispatch_event event }
+          .to change(application, :state)
+          .to be == expected
+      end
     end
   end
 end

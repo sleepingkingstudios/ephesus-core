@@ -17,5 +17,7 @@ module Ephesus::Flight
     event :Takeoff
 
     event :Taxi, :to
+
+    event :UpdateScore, :by
   end
 end

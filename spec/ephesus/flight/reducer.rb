@@ -18,9 +18,10 @@ module Ephesus::Flight
       state.put(:radio, true)
     end
 
-    update Ephesus::Flight::Events::LAND,    :land
-    update Ephesus::Flight::Events::TAKEOFF, :take_off
-    update Ephesus::Flight::Events::TAXI,    :taxi
+    update Ephesus::Flight::Events::LAND,         :land
+    update Ephesus::Flight::Events::TAKEOFF,      :take_off
+    update Ephesus::Flight::Events::TAXI,         :taxi
+    update Ephesus::Flight::Events::UPDATE_SCORE, :update_score
 
     def land(state, _event)
       state
@@ -38,6 +39,12 @@ module Ephesus::Flight
 
     def taxi(state, event)
       state.put(:location, event.to)
+    end
+
+    def update_score(state, event)
+      score = state.fetch(:score, 0)
+
+      state.put(:score, score + event.by)
     end
   end
 end

@@ -87,4 +87,17 @@ RSpec.describe Ephesus::Flight::Events do
 
     it { expect(event).to have_reader(:to).with_value(params[:to]) }
   end
+
+  describe '::UpdateScore' do
+    let(:params) { { by: 5 } }
+    let(:event)  { described_class::UpdateScore.new(params) }
+
+    it { expect(described_class).to have_constant :UpdateScore }
+
+    it { expect(described_class::UpdateScore).to be_a Class }
+
+    it { expect(described_class::UpdateScore).to be < Ephesus::Core::Event }
+
+    it { expect(event).to have_reader(:by).with_value(params[:by]) }
+  end
 end
