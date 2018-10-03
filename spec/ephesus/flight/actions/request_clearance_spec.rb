@@ -1,0 +1,60 @@
+# frozen_string_literal: true
+
+require 'hamster'
+
+require 'ephesus/core/event_dispatcher'
+require 'ephesus/flight/actions/request_clearance'
+
+RSpec.describe Ephesus::Flight::Actions::RequestClearance do
+  subject(:instance) do
+    described_class.new(state, event_dispatcher: event_dispatcher)
+  end
+
+  let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
+  let(:initial_state)    { {} }
+  let(:state)            { Hamster::Hash.new(initial_state) }
+
+  describe '#call' do
+    context 'when the state is flying' do
+      let(:initial_state) { { landed: false } }
+
+      let(:result) { instance.call }
+      let(:event)  { Ephesus::Flight::Events::GrantLandingClearance.new }
+
+      it { expect(result.success?).to be true }
+
+      it { expect(result.errors).to be_empty }
+
+      it 'should dispatch a GRANT_LANDING_CLEARANCE event' do
+        allow(event_dispatcher).to receive(:dispatch_event)
+
+        instance.call
+
+        expect(event_dispatcher)
+          .to have_received(:dispatch_event)
+          .with(be == event)
+      end
+    end
+
+    context 'when the state is landed' do
+      let(:initial_state) { { landed: true } }
+
+      let(:result) { instance.call }
+      let(:event)  { Ephesus::Flight::Events::GrantTakeoffClearance.new }
+
+      it { expect(result.success?).to be true }
+
+      it { expect(result.errors).to be_empty }
+
+      it 'should dispatch a GRANT_TAKEOFF_CLEARANCE event' do
+        allow(event_dispatcher).to receive(:dispatch_event)
+
+        instance.call
+
+        expect(event_dispatcher)
+          .to have_received(:dispatch_event)
+          .with(be == event)
+      end
+    end
+  end
+end
