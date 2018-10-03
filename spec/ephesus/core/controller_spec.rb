@@ -331,6 +331,7 @@ RSpec.describe Ephesus::Core::Controller do
 
       describe 'with a valid action name' do
         let(:error_message) { "unavailable action name #{action_name.inspect}" }
+        let(:result) { Cuprum::Result.new }
         let(:action) do
           action_class.new(state, event_dispatcher: event_dispatcher)
         end
@@ -338,13 +339,17 @@ RSpec.describe Ephesus::Core::Controller do
         before(:example) do
           allow(action_class).to receive(:new).and_return(action)
 
-          allow(action).to receive(:call)
+          allow(action).to receive(:call).and_return(result)
         end
 
         it 'should call the action' do
           instance.execute_action(action_name)
 
           expect(action).to have_received(:call).with(no_args)
+        end
+
+        it 'should return the result' do
+          expect(instance.execute_action(action_name)).to be result
         end
 
         # rubocop:disable RSpec/NestedGroups
@@ -369,6 +374,10 @@ RSpec.describe Ephesus::Core::Controller do
 
             expect(action).to have_received(:call).with(no_args)
           end
+
+          it 'should return the result' do
+            expect(instance.execute_action(action_name)).to be result
+          end
         end
 
         describe 'with a non-matching unless conditional' do
@@ -380,6 +389,10 @@ RSpec.describe Ephesus::Core::Controller do
             instance.execute_action(action_name)
 
             expect(action).to have_received(:call).with(no_args)
+          end
+
+          it 'should return the result' do
+            expect(instance.execute_action(action_name)).to be result
           end
         end
 
@@ -398,6 +411,7 @@ RSpec.describe Ephesus::Core::Controller do
 
       wrap_context 'when the action takes arguments' do
         describe 'with a valid action name' do
+          let(:result) { Cuprum::Result.new }
           let(:action) do
             action_class.new(state, event_dispatcher: event_dispatcher)
           end
@@ -405,14 +419,19 @@ RSpec.describe Ephesus::Core::Controller do
 
           before(:example) do
             allow(action_class).to receive(:new).and_return(action)
+
+            allow(action).to receive(:call).and_return(result)
           end
 
           it 'should call the action' do
-            allow(action).to receive(:call)
-
             instance.execute_action(action_name, *arguments)
 
             expect(action).to have_received(:call).with(*arguments)
+          end
+
+          it 'should return the result' do
+            expect(instance.execute_action(action_name, *arguments))
+              .to be result
           end
         end
       end

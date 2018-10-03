@@ -6,6 +6,35 @@
 
 ## Controllers
 
+- #available_actions :
+  ```
+  {
+    cast: {
+      aliases: ['incant'],
+      arguments: [
+        {
+          name: 'spell',
+          type: String,
+          description:
+            'The spell to cast.'
+        }
+      ],
+      keywords: {
+        targets: {
+          names: ['at', 'on'],
+          type: Array[String],
+          description:
+            'The target of the spell.',
+          optional: true
+        }
+      },
+      description: 'Casts a spell at the specified target.'
+    },
+    go: {},
+    look: {}
+  }
+  ```
+
 - execute_action should return the Result (may only need tests)
 - return a failing Result when no matching action (instead of raising error)
   - if the action exists but is unavailable, "you can't do that right now"
