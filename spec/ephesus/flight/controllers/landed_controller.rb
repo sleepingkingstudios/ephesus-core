@@ -11,7 +11,9 @@ module Ephesus::Flight::Controllers
     action :radio_tower, Ephesus::Flight::Actions::RadioOn
     action :take_off,
       Ephesus::Flight::Actions::Takeoff,
-      if: ->(state) { state.get(:takeoff_clearance) }
+      if: lambda { |state|
+        state.get(:location) == 'runway' && state.get(:takeoff_clearance)
+      }
     action :taxi, Ephesus::Flight::Actions::Taxi
   end
 end

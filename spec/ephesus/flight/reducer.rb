@@ -25,16 +25,16 @@ module Ephesus::Flight
 
     def land(state, _event)
       state
-        .delete(:landing_clearance)
-        .put(:landed,   true)
+        .put(:landed, true)
+        .put(:landing_clearance, false)
         .put(:location, 'runway')
     end
 
     def take_off(state, _event)
       state
-        .delete(:location)
-        .delete(:takeoff_clearance)
         .put(:landed, false)
+        .put(:location, nil)
+        .put(:takeoff_clearance, false)
     end
 
     def taxi(state, event)

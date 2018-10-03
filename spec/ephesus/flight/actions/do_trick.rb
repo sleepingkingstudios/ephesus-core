@@ -16,8 +16,8 @@ module Ephesus::Flight::Actions
 
     private
 
-    def process(trick:)
-      key = tools.string.underscore(trick).gsub(/\s+/, '_').intern
+    def process(trick)
+      key = tools.string.underscore(trick).downcase.gsub(/\s+/, '_').intern
 
       unless TRICK_VALUES.key?(key)
         result.errors[:trick].add(:invalid, trick: trick)

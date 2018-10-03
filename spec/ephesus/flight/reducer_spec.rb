@@ -60,10 +60,10 @@ RSpec.describe Ephesus::Flight::Reducer do
     let(:expected) do
       initial_state
         .merge(
-          landed: true,
-          location: 'runway'
+          landed:            true,
+          landing_clearance: false,
+          location:          'runway'
         )
-        .tap { |hsh| hsh.delete(:landing_clearance) }
     end
 
     it 'should update the state' do
@@ -121,9 +121,11 @@ RSpec.describe Ephesus::Flight::Reducer do
     let(:event)         { Ephesus::Flight::Events::Takeoff.new }
     let(:expected) do
       initial_state
-        .tap { |hsh| hsh.delete(:location) }
-        .tap { |hsh| hsh.delete(:takeoff_clearance) }
-        .merge(landed: false)
+        .merge(
+          landed:            false,
+          location:          nil,
+          takeoff_clearance: false
+        )
     end
 
     it 'should update the state' do

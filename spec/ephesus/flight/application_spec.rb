@@ -8,8 +8,11 @@ RSpec.describe Ephesus::Flight::Application do
 
   let(:initial_state) do
     {
-      landed:   true,
-      location: 'hangar'
+      landed:            true,
+      landing_clearance: false,
+      location:          'hangar',
+      radio:             false,
+      takeoff_clearance: false
     }
   end
 

@@ -11,8 +11,11 @@ module Ephesus::Flight
 
     def initial_state
       {
-        landed:   true,
-        location: 'hangar'
+        landed:            true,
+        landing_clearance: false,
+        location:          'hangar',
+        radio:             false,
+        takeoff_clearance: false
       }
     end
   end

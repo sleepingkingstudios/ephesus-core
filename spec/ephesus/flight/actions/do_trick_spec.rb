@@ -16,7 +16,7 @@ RSpec.describe Ephesus::Flight::Actions::DoTrick do
   describe '#call' do
     describe 'with an invalid trick' do
       let(:trick)  { 'explode' }
-      let(:result) { instance.call(trick: trick) }
+      let(:result) { instance.call(trick) }
       let(:error) do
         {
           type:   :invalid,
@@ -31,7 +31,7 @@ RSpec.describe Ephesus::Flight::Actions::DoTrick do
       it 'should not dispatch an event' do
         allow(event_dispatcher).to receive(:dispatch_event)
 
-        instance.call(trick: trick)
+        instance.call(trick)
 
         expect(event_dispatcher).not_to have_received(:dispatch_event)
       end
@@ -39,7 +39,7 @@ RSpec.describe Ephesus::Flight::Actions::DoTrick do
 
     describe 'with "barrel roll"' do
       let(:trick)  { 'barrel roll' }
-      let(:result) { instance.call(trick: trick) }
+      let(:result) { instance.call(trick) }
       let(:event)  { Ephesus::Flight::Events::UpdateScore.new(by: 10) }
 
       it { expect(result.success?).to be true }
@@ -49,7 +49,7 @@ RSpec.describe Ephesus::Flight::Actions::DoTrick do
       it 'should dispatch an UPDATE_SCORE event' do
         allow(event_dispatcher).to receive(:dispatch_event)
 
-        instance.call(trick: trick)
+        instance.call(trick)
 
         expect(event_dispatcher)
           .to have_received(:dispatch_event)
@@ -59,7 +59,7 @@ RSpec.describe Ephesus::Flight::Actions::DoTrick do
 
     describe 'with "immelmann turn"' do
       let(:trick)  { 'immelmann turn' }
-      let(:result) { instance.call(trick: trick) }
+      let(:result) { instance.call(trick) }
       let(:event)  { Ephesus::Flight::Events::UpdateScore.new(by: 30) }
 
       it { expect(result.success?).to be true }
@@ -69,7 +69,7 @@ RSpec.describe Ephesus::Flight::Actions::DoTrick do
       it 'should dispatch an UPDATE_SCORE event' do
         allow(event_dispatcher).to receive(:dispatch_event)
 
-        instance.call(trick: trick)
+        instance.call(trick)
 
         expect(event_dispatcher)
           .to have_received(:dispatch_event)
@@ -79,7 +79,7 @@ RSpec.describe Ephesus::Flight::Actions::DoTrick do
 
     describe 'with "loop"' do
       let(:trick)  { 'loop' }
-      let(:result) { instance.call(trick: trick) }
+      let(:result) { instance.call(trick) }
       let(:event)  { Ephesus::Flight::Events::UpdateScore.new(by: 20) }
 
       it { expect(result.success?).to be true }
@@ -89,7 +89,7 @@ RSpec.describe Ephesus::Flight::Actions::DoTrick do
       it 'should dispatch an UPDATE_SCORE event' do
         allow(event_dispatcher).to receive(:dispatch_event)
 
-        instance.call(trick: trick)
+        instance.call(trick)
 
         expect(event_dispatcher)
           .to have_received(:dispatch_event)
