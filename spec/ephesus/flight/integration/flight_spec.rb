@@ -165,9 +165,9 @@ RSpec.describe Ephesus::Flight::Application do
       end
 
       describe 'taking off' do
-        it 'should raise an error' do
+        it 'should not update the state' do
           expect { session.execute_action :take_off }
-            .to raise_error ArgumentError, 'unavailable action name :take_off'
+            .not_to change(application, :state)
         end
       end
 
@@ -229,9 +229,9 @@ RSpec.describe Ephesus::Flight::Application do
         end
 
         describe 'taking off' do
-          it 'should raise an error' do
+          it 'should not update the state' do
             expect { session.execute_action :take_off }
-              .to raise_error ArgumentError, 'unavailable action name :take_off'
+              .not_to change(application, :state)
           end
         end
 
@@ -284,9 +284,9 @@ RSpec.describe Ephesus::Flight::Application do
       end
 
       describe 'taking off' do
-        it 'should raise an error' do
+        it 'should not update the state' do
           expect { session.execute_action :take_off }
-            .to raise_error ArgumentError, 'unavailable action name :take_off'
+            .not_to change(application, :state)
         end
       end
 
@@ -406,9 +406,9 @@ RSpec.describe Ephesus::Flight::Application do
       end
 
       describe 'taking off' do
-        it 'should raise an error' do
+        it 'should not update the state' do
           expect { session.execute_action :take_off }
-            .to raise_error ArgumentError, 'unavailable action name :take_off'
+            .not_to change(application, :state)
         end
       end
 
@@ -464,9 +464,9 @@ RSpec.describe Ephesus::Flight::Application do
         end
 
         describe 'taking off' do
-          it 'should raise an error' do
+          it 'should not update the state' do
             expect { session.execute_action :take_off }
-              .to raise_error ArgumentError, 'unavailable action name :take_off'
+              .not_to change(application, :state)
           end
         end
 
@@ -537,10 +537,9 @@ RSpec.describe Ephesus::Flight::Application do
         it { expect(application.state).to be == initial_state }
 
         describe 'requesting takeoff clearance' do
-          it 'should raise an error' do
+          it 'should not update the state' do
             expect { session.execute_action :request_clearance }
-              .to raise_error ArgumentError,
-                'unavailable action name :request_clearance'
+              .not_to change(application, :state)
           end
         end
 
@@ -594,9 +593,9 @@ RSpec.describe Ephesus::Flight::Application do
       end
 
       describe 'landing' do
-        it 'should raise an error' do
+        it 'should not update the state' do
           expect { session.execute_action :land }
-            .to raise_error ArgumentError, 'unavailable action name :land'
+            .not_to change(application, :state)
         end
       end
 
@@ -711,10 +710,9 @@ RSpec.describe Ephesus::Flight::Application do
         before(:example) { session.execute_action :request_clearance }
 
         describe 'requesting landing clearance' do
-          it 'should raise an error' do
+          it 'should not update the state' do
             expect { session.execute_action :request_clearance }
-              .to raise_error ArgumentError,
-                'unavailable action name :request_clearance'
+              .not_to change(application, :state)
           end
         end
 

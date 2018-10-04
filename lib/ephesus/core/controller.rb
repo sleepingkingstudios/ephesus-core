@@ -62,12 +62,14 @@ module Ephesus::Core
 
     def execute_action(action_name, *args)
       unless action?(action_name)
-        raise ArgumentError, "invalid action name #{action_name.inspect}"
+        return invalid_action_result(action_name, args)
       end
 
       defn = definition_for(action_name)
       unless defn && available?(defn)
-        raise ArgumentError, "unavailable action name #{action_name.inspect}"
+        return invalid_action_result(action_name, args) if defn[:secret]
+
+        return unavailable_action_result(action_name, args)
       end
 
       send(action_name).call(*args)
@@ -84,6 +86,30 @@ module Ephesus::Core
 
     def definition_for(action_name)
       self.class.send(:command_definitions)[action_name]
+    end
+
+    def invalid_action_result(action_name, args)
+      errors = Bronze::Errors.new
+
+      errors.add(
+        :invalid_action,
+        action_name: action_name,
+        arguments:   args
+      )
+
+      Cuprum::Result.new(nil, errors: errors)
+    end
+
+    def unavailable_action_result(action_name, args)
+      errors = Bronze::Errors.new
+
+      errors.add(
+        :unavailable_action,
+        action_name: action_name,
+        arguments:   args
+      )
+
+      Cuprum::Result.new(nil, errors: errors)
     end
   end
 end
