@@ -2,6 +2,10 @@
 
 ## Core
 
+## Actions
+
+- DSL: set options for Controller#available_actions (see below)
+
 ## Applications
 
 ## Controllers
@@ -21,28 +25,31 @@
       ],
       keywords: {
         targets: {
-          names: ['at', 'on'],
+          name: 'on',
+          aliases: ['at'],
           type: Array[String],
           description:
             'The target of the spell.',
           optional: true
         }
       },
-      description: 'Casts a spell at the specified target.'
+      description: 'Casts a spell at the specified target.',
+      examples: [
+        {
+          command: 'cast mage armor',
+          description: 'Casts the "mage armor" spell'
+        },
+        {
+          header: 'Casting a spell with a target',
+          command: 'cast magic missile on goblin',
+          description: 'Casts the "magic missile" spell at the goblin'
+        }
+      ]
     },
     go: {},
     look: {}
   }
   ```
-
-- execute_action should return the Result (may only need tests)
-- return a failing Result when no matching action (instead of raising error)
-  - if the action exists but is unavailable, "you can't do that right now"
-  - if the action does not exist, "I don't know how to X"
-
-- secret actions:
-  - action :do_something, secret: true
-  - if the action exists but is unavailable, display message as does not exist
 
 - conditional actions with method names:
 

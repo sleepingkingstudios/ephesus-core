@@ -67,6 +67,8 @@ module Ephesus::Core
 
       defn = definition_for(action_name)
       unless defn && available?(defn)
+        return invalid_action_result(action_name, args) if defn[:secret]
+
         return unavailable_action_result(action_name, args)
       end
 

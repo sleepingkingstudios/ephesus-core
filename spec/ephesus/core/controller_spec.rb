@@ -22,6 +22,10 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
+  shared_context 'when the action is secret' do
+    let(:metadata) { super().merge secret: true }
+  end
+
   shared_context 'when the action takes arguments' do
     let(:action_name)     { :do_something_else }
     let(:action_class)    { Spec::ExampleActionWithArgs }
@@ -448,6 +452,29 @@ RSpec.describe Ephesus::Core::Controller do
             expect(result.errors).to include(expected_error)
           end
 
+          wrap_context 'when the action is secret' do
+            let(:expected_error) do
+              {
+                type:   :invalid_action,
+                params: { action_name: action_name, arguments: arguments }
+              }
+            end
+
+            it 'should not call the action' do
+              instance.execute_action(action_name)
+
+              expect(action).not_to have_received(:call)
+            end
+
+            it { expect(result).to be_a Cuprum::Result }
+
+            it { expect(result.success?).to be false }
+
+            it 'should set the errors' do
+              expect(result.errors).to include(expected_error)
+            end
+          end
+
           wrap_context 'when the action takes arguments' do
             let(:arguments) { [:one, :two, { three: 3 }] }
 
@@ -556,6 +583,29 @@ RSpec.describe Ephesus::Core::Controller do
 
           it 'should set the errors' do
             expect(result.errors).to include(expected_error)
+          end
+
+          wrap_context 'when the action is secret' do
+            let(:expected_error) do
+              {
+                type:   :invalid_action,
+                params: { action_name: action_name, arguments: arguments }
+              }
+            end
+
+            it 'should not call the action' do
+              instance.execute_action(action_name)
+
+              expect(action).not_to have_received(:call)
+            end
+
+            it { expect(result).to be_a Cuprum::Result }
+
+            it { expect(result.success?).to be false }
+
+            it 'should set the errors' do
+              expect(result.errors).to include(expected_error)
+            end
           end
 
           wrap_context 'when the action takes arguments' do
