@@ -413,12 +413,7 @@ RSpec.describe Ephesus::Core::Controller do
           let(:result) do
             instance.execute_action(action_name, *arguments)
           end
-          let(:expected_error) do
-            {
-              type:   :unavailable_action,
-              params: { action_name: action_name, arguments: arguments }
-            }
-          end
+          let(:expected_error) { :unavailable_action }
 
           it 'should not call the action' do
             instance.execute_action(action_name)
@@ -426,7 +421,9 @@ RSpec.describe Ephesus::Core::Controller do
             expect(action).not_to have_received(:call)
           end
 
-          it { expect(result).to be_a Cuprum::Result }
+          it { expect(result).to be_a Ephesus::Core::Actions::Result }
+
+          it { expect(result.action_name).to be action_name }
 
           it { expect(result.success?).to be false }
 
@@ -457,19 +454,7 @@ RSpec.describe Ephesus::Core::Controller do
           wrap_context 'when the action takes arguments' do
             let(:arguments) { [:one, :two, { three: 3 }] }
 
-            it 'should not call the action' do
-              instance.execute_action(action_name)
-
-              expect(action).not_to have_received(:call)
-            end
-
-            it { expect(result).to be_a Cuprum::Result }
-
-            it { expect(result.success?).to be false }
-
-            it 'should set the errors' do
-              expect(result.errors).to include(expected_error)
-            end
+            it { expect(result.action_name).to be action_name }
           end
         end
 
@@ -543,12 +528,7 @@ RSpec.describe Ephesus::Core::Controller do
           let(:result) do
             instance.execute_action(action_name, *arguments)
           end
-          let(:expected_error) do
-            {
-              type:   :unavailable_action,
-              params: { action_name: action_name, arguments: arguments }
-            }
-          end
+          let(:expected_error) { :unavailable_action }
 
           it 'should not call the action' do
             instance.execute_action(action_name)
@@ -556,7 +536,9 @@ RSpec.describe Ephesus::Core::Controller do
             expect(action).not_to have_received(:call)
           end
 
-          it { expect(result).to be_a Cuprum::Result }
+          it { expect(result).to be_a Ephesus::Core::Actions::Result }
+
+          it { expect(result.action_name).to be action_name }
 
           it { expect(result.success?).to be false }
 
@@ -587,19 +569,7 @@ RSpec.describe Ephesus::Core::Controller do
           wrap_context 'when the action takes arguments' do
             let(:arguments) { [:one, :two, { three: 3 }] }
 
-            it 'should not call the action' do
-              instance.execute_action(action_name)
-
-              expect(action).not_to have_received(:call)
-            end
-
-            it { expect(result).to be_a Cuprum::Result }
-
-            it { expect(result.success?).to be false }
-
-            it 'should set the errors' do
-              expect(result.errors).to include(expected_error)
-            end
+            it { expect(result.action_name).to be action_name }
           end
         end
         # rubocop:enable RSpec/NestedGroups

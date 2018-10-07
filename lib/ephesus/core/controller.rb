@@ -3,6 +3,7 @@
 require 'cuprum/command_factory'
 
 require 'ephesus/core/actions/invalid_action_result'
+require 'ephesus/core/actions/unavailable_action_result'
 
 module Ephesus::Core
   # Abstract base class for Ephesus controllers. Define actions that permit a
@@ -70,7 +71,9 @@ module Ephesus::Core
         return Ephesus::Core::Actions::InvalidActionResult.new(action_name)
       end
 
-      return unavailable_action_result(action_name, args) unless available
+      unless available
+        return Ephesus::Core::Actions::UnavailableActionResult.new(action_name)
+      end
 
       send(action_name).call(*args)
     end
@@ -88,18 +91,6 @@ module Ephesus::Core
 
     def definition_for(action_name)
       self.class.send(:command_definitions)[action_name]
-    end
-
-    def unavailable_action_result(action_name, args)
-      errors = Bronze::Errors.new
-
-      errors.add(
-        :unavailable_action,
-        action_name: action_name,
-        arguments:   args
-      )
-
-      Cuprum::Result.new(nil, errors: errors)
     end
   end
 end
