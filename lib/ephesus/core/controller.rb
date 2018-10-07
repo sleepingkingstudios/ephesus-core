@@ -2,6 +2,8 @@
 
 require 'cuprum/command_factory'
 
+require 'ephesus/core/actions/invalid_action_result'
+
 module Ephesus::Core
   # Abstract base class for Ephesus controllers. Define actions that permit a
   # user to interact with the game state.
@@ -61,16 +63,14 @@ module Ephesus::Core
     end
 
     def execute_action(action_name, *args)
-      unless action?(action_name)
-        return invalid_action_result(action_name, args)
+      definition = definition_for(action_name)
+      available  = available?(definition)
+
+      if definition.nil? || (!available && definition[:secret])
+        return Ephesus::Core::Actions::InvalidActionResult.new(action_name)
       end
 
-      defn = definition_for(action_name)
-      unless defn && available?(defn)
-        return invalid_action_result(action_name, args) if defn[:secret]
-
-        return unavailable_action_result(action_name, args)
-      end
+      return unavailable_action_result(action_name, args) unless available
 
       send(action_name).call(*args)
     end
@@ -78,6 +78,8 @@ module Ephesus::Core
     private
 
     def available?(defn)
+      return false unless defn
+
       return false if defn.key?(:if)     && !defn[:if].call(state)
       return false if defn.key?(:unless) && defn[:unless].call(state)
 
@@ -86,18 +88,6 @@ module Ephesus::Core
 
     def definition_for(action_name)
       self.class.send(:command_definitions)[action_name]
-    end
-
-    def invalid_action_result(action_name, args)
-      errors = Bronze::Errors.new
-
-      errors.add(
-        :invalid_action,
-        action_name: action_name,
-        arguments:   args
-      )
-
-      Cuprum::Result.new(nil, errors: errors)
     end
 
     def unavailable_action_result(action_name, args)
