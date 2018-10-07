@@ -2,10 +2,10 @@
 
 require 'sleeping_king_studios/tools/toolbox/delegator'
 
-require 'bronze/errors'
 require 'cuprum/command'
 
 require 'ephesus/core'
+require 'ephesus/core/actions/result'
 
 module Ephesus::Core
   # Abstract base class for Ephesus actions. Takes and stores a state object
@@ -70,8 +70,8 @@ module Ephesus::Core
 
     private
 
-    def build_errors
-      Bronze::Errors.new
+    def build_result(value = nil, **options)
+      Ephesus::Core::Actions::Result.new(value, options)
     end
 
     def evaluate_conditional(result, conditional)

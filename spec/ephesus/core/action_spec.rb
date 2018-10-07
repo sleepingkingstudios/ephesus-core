@@ -465,7 +465,7 @@ RSpec.describe Ephesus::Core::Action do
 
           instance.call
         end
-          .to yield_with_args(an_instance_of Cuprum::Result)
+          .to yield_with_args(an_instance_of Ephesus::Core::Actions::Result)
       end
 
       it 'should evaluate the block in the context of the action instance' do
@@ -499,17 +499,30 @@ RSpec.describe Ephesus::Core::Action do
     end
   end
 
-  describe '#build_errors' do
-    it 'should create an instance of Bronze::Errors' do
-      # rubocop:disable RSpec/SubjectStub
-      allow(instance).to receive(:process) do
-        errors = instance.send(:result).errors
+  describe '#build_result' do
+    it { expect(instance).not_to respond_to(:build_result) }
 
-        expect(errors).to be_a Bronze::Errors
-      end
-      # rubocop:enable RSpec/SubjectStub
+    it 'should define the private method' do
+      expect(instance)
+        .to respond_to(:build_result, true)
+        .with(0..1).arguments
+        .and_any_keywords
+    end
 
-      instance.call
+    it 'should return a result' do
+      expect(instance.send :build_result).to be_a Ephesus::Core::Actions::Result
+    end
+
+    it { expect(instance.send(:build_result).value).to be nil }
+
+    it { expect(instance.send(:build_result).errors).to be_a Bronze::Errors }
+
+    it { expect(instance.send(:build_result).errors).to be_empty }
+
+    describe 'with a value' do
+      let(:value) { 'result value' }
+
+      it { expect(instance.send(:build_result, value).value).to be value }
     end
   end
 
