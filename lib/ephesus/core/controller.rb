@@ -73,17 +73,12 @@ module Ephesus::Core
 
     def execute_action(action_name, *args)
       definition = definition_for(action_name)
-      available  = available?(definition)
+      arguments, keywords = split_arguments(args)
 
-      if definition.nil? || (!available && definition[:secret])
-        return Ephesus::Core::Actions::InvalidActionResult.new(action_name)
-      end
-
-      unless available
-        return Ephesus::Core::Actions::UnavailableActionResult.new(action_name)
-      end
-
-      send(action_name).call(*args)
+      handle_invalid_action(action_name, definition) ||
+        handle_unavailable_action(action_name, definition) ||
+        handle_invalid_arguments(definition, arguments, keywords) ||
+        send(action_name).call(*args)
     end
 
     private
@@ -99,6 +94,35 @@ module Ephesus::Core
 
     def definition_for(action_name)
       self.class.send(:command_definitions)[action_name]
+    end
+
+    def handle_invalid_action(action_name, definition)
+      return nil if definition
+
+      Ephesus::Core::Actions::InvalidActionResult.new(action_name)
+    end
+
+    def handle_invalid_arguments(definition, arguments, keywords)
+      signature = definition[:signature]
+      success, error_result = signature.match(*arguments, **keywords)
+
+      success ? nil : error_result
+    end
+
+    def handle_unavailable_action(action_name, definition)
+      return nil if available?(definition)
+
+      if definition[:secret]
+        return Ephesus::Core::Actions::InvalidActionResult.new(action_name)
+      end
+
+      Ephesus::Core::Actions::UnavailableActionResult.new(action_name)
+    end
+
+    def split_arguments(arguments)
+      return [arguments, {}] unless arguments.last.is_a?(Hash)
+
+      [arguments[0...-1], arguments.last]
     end
   end
 end

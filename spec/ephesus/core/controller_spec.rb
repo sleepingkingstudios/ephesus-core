@@ -26,7 +26,7 @@ RSpec.describe Ephesus::Core::Controller do
     let(:metadata) { super().merge secret: true }
   end
 
-  shared_context 'when the action takes arguments' do
+  shared_context 'when the action constructor takes arguments' do
     let(:action_name)     { :do_something_else }
     let(:action_class)    { Spec::ExampleActionWithArgs }
 
@@ -45,6 +45,23 @@ RSpec.describe Ephesus::Core::Controller do
       end
 
       klass.attr_reader :arguments
+    end
+  end
+
+  shared_context 'when the action takes arguments' do
+    let(:action_name)     { :do_something_else }
+    let(:action_class)    { Spec::ExampleActionWithArgs }
+
+    example_class 'Spec::ExampleActionWithArgs',
+      base_class: Ephesus::Core::Action \
+    do |klass|
+      klass.send :argument, :first_arg
+      klass.send :argument, :second_arg
+      klass.send :argument, :third_arg, required: false
+
+      klass.send :keyword, :first_key
+      klass.send :keyword, :second_key, required: true
+      klass.send :keyword, :third_key
     end
   end
 
@@ -163,7 +180,7 @@ RSpec.describe Ephesus::Core::Controller do
 
         it { expect(action.repository).to be nil }
 
-        wrap_context 'when the action takes arguments' do
+        wrap_context 'when the action constructor takes arguments' do
           let(:args)   { [:ichi, 'ni', san: 3] }
           let(:action) { instance.send action_name, *args }
 
@@ -381,7 +398,7 @@ RSpec.describe Ephesus::Core::Controller do
       end
 
       describe 'with a valid action name' do
-        let(:expected_result) { Cuprum::Result.new }
+        let(:expected_result) { Ephesus::Core::Actions::Result.new }
         let(:action) do
           action_class.new(state, event_dispatcher: event_dispatcher)
         end
@@ -402,30 +419,323 @@ RSpec.describe Ephesus::Core::Controller do
           expect(instance.execute_action(action_name)).to be expected_result
         end
 
-        wrap_context 'when the action takes arguments' do
-          let(:arguments) { [:one, :two, { three: 3 }] }
+        # rubocop:disable RSpec/NestedGroups
+        describe 'with too many arguments' do
+          let(:arguments) { %w[ichi ni san] }
+          let(:result) do
+            instance.execute_action(action_name, *arguments)
+          end
+          let(:expected_error) { :invalid_arguments }
+          let(:arguments_error) do
+            {
+              type: :too_many_arguments,
+              params: {
+                actual:   3,
+                expected: 0
+              }
+            }
+          end
 
-          it 'should call the action' do
+          it 'should not call the action' do
             instance.execute_action(action_name, *arguments)
 
-            expect(action).to have_received(:call).with(*arguments)
+            expect(action).not_to have_received(:call)
           end
 
-          it 'should return the result' do
-            expect(instance.execute_action(action_name, *arguments))
-              .to be expected_result
+          it { expect(result).to be_a Ephesus::Core::Actions::Result }
+
+          it { expect(result.success?).to be false }
+
+          it 'should set the errors' do
+            expect(result.errors).to include(expected_error)
+          end
+
+          it 'should set the arguments error' do
+            expect(result.errors[:arguments]).to include(arguments_error)
           end
         end
+        # rubocop:enable RSpec/NestedGroups
+
+        # rubocop:disable RSpec/NestedGroups
+        describe 'with invalid keywords' do
+          let(:keywords) { { yon: 4, go: 5, roku: 6 } }
+          let(:result) do
+            instance.execute_action(action_name, **keywords)
+          end
+          let(:expected_error) { :invalid_arguments }
+          let(:keywords_error) do
+            {
+              type: :invalid_keywords,
+              params: {
+                actual:   %i[yon go roku],
+                expected: [],
+                invalid:  %i[yon go roku]
+              }
+            }
+          end
+
+          it 'should not call the action' do
+            instance.execute_action(action_name, **keywords)
+
+            expect(action).not_to have_received(:call)
+          end
+
+          it { expect(result).to be_a Ephesus::Core::Actions::Result }
+
+          it { expect(result.success?).to be false }
+
+          it 'should set the errors' do
+            expect(result.errors).to include(expected_error)
+          end
+
+          it 'should set the keywords error' do
+            expect(result.errors[:arguments]).to include(keywords_error)
+          end
+        end
+        # rubocop:enable RSpec/NestedGroups
+
+        # rubocop:disable RSpec/NestedGroups
+        wrap_context 'when the action takes arguments' do
+          describe 'with valid arguments and keywords' do
+            let(:arguments) { %w[ichi ni san] }
+            let(:keywords)  { { second_key: 'value' } }
+
+            it 'should call the action' do
+              instance.execute_action(action_name, *arguments, **keywords)
+
+              expect(action)
+                .to have_received(:call).with(*arguments, **keywords)
+            end
+
+            it 'should return the result' do
+              expect(
+                instance.execute_action(action_name, *arguments, **keywords)
+              )
+                .to be expected_result
+            end
+          end
+
+          describe 'with not enough arguments' do
+            let(:arguments) { %w[ichi] }
+            let(:keywords)  { { second_key: 'value' } }
+            let(:result) do
+              instance.execute_action(action_name, *arguments, **keywords)
+            end
+            let(:expected_error) { :invalid_arguments }
+            let(:arguments_error) do
+              {
+                type: :not_enough_arguments,
+                params: {
+                  actual:   1,
+                  expected: 2
+                }
+              }
+            end
+
+            it 'should not call the action' do
+              instance.execute_action(action_name, *arguments, **keywords)
+
+              expect(action).not_to have_received(:call)
+            end
+
+            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+
+            it { expect(result.success?).to be false }
+
+            it 'should set the errors' do
+              expect(result.errors).to include(expected_error)
+            end
+
+            it 'should set the arguments error' do
+              expect(result.errors[:arguments]).to include(arguments_error)
+            end
+          end
+
+          describe 'with too many arguments' do
+            let(:arguments) { %w[ichi ni san yon go roku] }
+            let(:keywords)  { { second_key: 'value' } }
+            let(:result) do
+              instance.execute_action(action_name, *arguments, **keywords)
+            end
+            let(:expected_error) { :invalid_arguments }
+            let(:arguments_error) do
+              {
+                type: :too_many_arguments,
+                params: {
+                  actual:   6,
+                  expected: 3
+                }
+              }
+            end
+
+            it 'should not call the action' do
+              instance.execute_action(action_name, *arguments, **keywords)
+
+              expect(action).not_to have_received(:call)
+            end
+
+            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+
+            it { expect(result.success?).to be false }
+
+            it 'should set the errors' do
+              expect(result.errors).to include(expected_error)
+            end
+
+            it 'should set the arguments error' do
+              expect(result.errors[:arguments]).to include(arguments_error)
+            end
+          end
+
+          describe 'with invalid keywords' do
+            let(:arguments) { %w[ichi ni san] }
+            let(:keywords)  { { second_key: 'value', yon: 4, go: 5, roku: 6 } }
+            let(:result) do
+              instance.execute_action(action_name, **keywords)
+            end
+            let(:expected_error) { :invalid_arguments }
+            let(:keywords_error) do
+              {
+                type: :invalid_keywords,
+                params: {
+                  actual:   %i[second_key yon go roku],
+                  expected: %i[first_key second_key third_key],
+                  invalid:  %i[yon go roku]
+                }
+              }
+            end
+
+            it 'should not call the action' do
+              instance.execute_action(action_name, **keywords)
+
+              expect(action).not_to have_received(:call)
+            end
+
+            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+
+            it { expect(result.success?).to be false }
+
+            it 'should set the errors' do
+              expect(result.errors).to include(expected_error)
+            end
+
+            it 'should set the keywords error' do
+              expect(result.errors[:arguments]).to include(keywords_error)
+            end
+          end
+
+          describe 'with missing keywords' do
+            let(:arguments) { %w[ichi ni san] }
+            let(:keywords)  { { first_key: 'value' } }
+            let(:result) do
+              instance.execute_action(action_name, **keywords)
+            end
+            let(:expected_error) { :invalid_arguments }
+            let(:keywords_error) do
+              {
+                type: :missing_keywords,
+                params: {
+                  actual:   %i[first_key],
+                  expected: %i[second_key],
+                  missing:  %i[second_key]
+                }
+              }
+            end
+
+            it 'should not call the action' do
+              instance.execute_action(action_name, **keywords)
+
+              expect(action).not_to have_received(:call)
+            end
+
+            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+
+            it { expect(result.success?).to be false }
+
+            it 'should set the errors' do
+              expect(result.errors).to include(expected_error)
+            end
+
+            it 'should set the keywords error' do
+              expect(result.errors[:arguments]).to include(keywords_error)
+            end
+          end
+
+          describe 'with too many arguments and invalid and missing keywords' \
+          do
+            let(:arguments) { %w[ichi ni san yon go roku] }
+            let(:keywords)  { { first_key: 'value', yon: 4, go: 5, roku: 6 } }
+            let(:result) do
+              instance.execute_action(action_name, *arguments, **keywords)
+            end
+            let(:expected_error) { :invalid_arguments }
+            let(:arguments_error) do
+              {
+                type: :too_many_arguments,
+                params: {
+                  actual:   6,
+                  expected: 3
+                }
+              }
+            end
+            let(:invalid_keywords_error) do
+              {
+                type: :invalid_keywords,
+                params: {
+                  actual:   %i[first_key yon go roku],
+                  expected: %i[first_key second_key third_key],
+                  invalid:  %i[yon go roku]
+                }
+              }
+            end
+            let(:missing_keywords_error) do
+              {
+                type: :missing_keywords,
+                params: {
+                  actual:   %i[first_key yon go roku],
+                  expected: %i[second_key],
+                  missing:  %i[second_key]
+                }
+              }
+            end
+
+            it 'should not call the action' do
+              instance.execute_action(action_name, *arguments, **keywords)
+
+              expect(action).not_to have_received(:call)
+            end
+
+            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+
+            it { expect(result.success?).to be false }
+
+            it 'should set the errors' do
+              expect(result.errors).to include(expected_error)
+            end
+
+            it 'should set the arguments error' do
+              expect(result.errors[:arguments]).to include(arguments_error)
+            end
+
+            it 'should set the invalid keywords error' do
+              expect(result.errors[:arguments])
+                .to include(invalid_keywords_error)
+            end
+
+            it 'should set the missing keywords error' do
+              expect(result.errors[:arguments])
+                .to include(missing_keywords_error)
+            end
+          end
+        end
+        # rubocop:enable RSpec/NestedGroups
 
         # rubocop:disable RSpec/NestedGroups
         describe 'with a non-matching if conditional' do
           let(:metadata) do
             { if: ->(state) { state.get(:location) == :tarmac } }
           end
-          let(:arguments) { [] }
-          let(:result) do
-            instance.execute_action(action_name, *arguments)
-          end
+          let(:result)         { instance.execute_action(action_name) }
           let(:expected_error) { :unavailable_action }
 
           it 'should not call the action' do
@@ -462,12 +772,6 @@ RSpec.describe Ephesus::Core::Controller do
             it 'should set the errors' do
               expect(result.errors).to include(expected_error)
             end
-          end
-
-          wrap_context 'when the action takes arguments' do
-            let(:arguments) { [:one, :two, { three: 3 }] }
-
-            it { expect(result.action_name).to be action_name }
           end
         end
 
@@ -485,21 +789,6 @@ RSpec.describe Ephesus::Core::Controller do
           it 'should return the result' do
             expect(instance.execute_action(action_name)).to be expected_result
           end
-
-          wrap_context 'when the action takes arguments' do
-            let(:arguments) { [:one, :two, { three: 3 }] }
-
-            it 'should call the action' do
-              instance.execute_action(action_name, *arguments)
-
-              expect(action).to have_received(:call).with(*arguments)
-            end
-
-            it 'should return the result' do
-              expect(instance.execute_action(action_name, *arguments))
-                .to be expected_result
-            end
-          end
         end
 
         describe 'with a non-matching unless conditional' do
@@ -516,31 +805,13 @@ RSpec.describe Ephesus::Core::Controller do
           it 'should return the result' do
             expect(instance.execute_action(action_name)).to be expected_result
           end
-
-          wrap_context 'when the action takes arguments' do
-            let(:arguments) { [:one, :two, { three: 3 }] }
-
-            it 'should call the action' do
-              instance.execute_action(action_name, *arguments)
-
-              expect(action).to have_received(:call).with(*arguments)
-            end
-
-            it 'should return the result' do
-              expect(instance.execute_action(action_name, *arguments))
-                .to be expected_result
-            end
-          end
         end
 
         describe 'with a matching unless conditional' do
           let(:metadata) do
             { unless: ->(state) { state.get(:landed) } }
           end
-          let(:arguments) { [] }
-          let(:result) do
-            instance.execute_action(action_name, *arguments)
-          end
+          let(:result)         { instance.execute_action(action_name) }
           let(:expected_error) { :unavailable_action }
 
           it 'should not call the action' do
@@ -577,12 +848,6 @@ RSpec.describe Ephesus::Core::Controller do
             it 'should set the errors' do
               expect(result.errors).to include(expected_error)
             end
-          end
-
-          wrap_context 'when the action takes arguments' do
-            let(:arguments) { [:one, :two, { three: 3 }] }
-
-            it { expect(result.action_name).to be action_name }
           end
         end
         # rubocop:enable RSpec/NestedGroups
