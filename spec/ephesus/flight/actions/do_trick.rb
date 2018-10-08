@@ -14,6 +14,8 @@ module Ephesus::Flight::Actions
       immelmann_turn: 30
     }.freeze
 
+    argument :trick
+
     private
 
     def process(trick)

@@ -10,6 +10,13 @@ RSpec.describe Ephesus::Flight::Controllers::FlyingController do
     let(:initial_state) { super().merge landing_clearance: true }
   end
 
+  shared_examples 'should be available' do |action_name, action_class|
+    it 'should return the action properties' do
+      expect(instance.available_actions[action_name])
+        .to be == action_class.properties
+    end
+  end
+
   shared_examples 'should define action' do |action_name, action_class|
     let(:action) { instance.send(action_name) }
 
@@ -55,12 +62,18 @@ RSpec.describe Ephesus::Flight::Controllers::FlyingController do
 
     it { expect(instance.available_actions).not_to have_key :land }
 
-    it { expect(instance.available_actions[:do_trick]).to be == {} }
+    include_examples 'should be available',
+      :do_trick,
+      Ephesus::Flight::Actions::DoTrick
 
-    it { expect(instance.available_actions[:radio_tower]).to be == {} }
+    include_examples 'should be available',
+      :radio_tower,
+      Ephesus::Flight::Actions::RadioOn
 
     wrap_context 'when landing clearance has been granted' do
-      it { expect(instance.available_actions[:land]).to be == {} }
+      include_examples 'should be available',
+        :land,
+        Ephesus::Flight::Actions::Land
     end
   end
 

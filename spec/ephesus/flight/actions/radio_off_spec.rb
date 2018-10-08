@@ -13,6 +13,20 @@ RSpec.describe Ephesus::Flight::Actions::RadioOff do
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
   let(:state)            { Hamster::Hash.new }
 
+  describe '::properties' do
+    let(:expected) { { arguments: [], keywords: {} } }
+
+    it { expect(described_class.properties).to be == expected }
+  end
+
+  describe '::signature' do
+    let(:signature) { described_class.signature }
+
+    it { expect(signature).to be_a Ephesus::Core::Actions::Signature }
+
+    it { expect(signature.action_class).to be described_class }
+  end
+
   describe '#call' do
     let(:result) { instance.call }
     let(:event)  { Ephesus::Flight::Events::RadioOff.new }

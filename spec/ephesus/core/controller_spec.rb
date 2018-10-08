@@ -112,7 +112,12 @@ RSpec.describe Ephesus::Core::Controller do
         described_class.send(:command_definitions)[action_name.intern]
       end
       let(:expected_metadata) do
-        metadata.merge(action: true)
+        metadata
+          .merge(
+            action:     true,
+            properties: action_class.properties,
+            signature:  action_class.signature
+          )
       end
 
       it 'should set the definition' do
@@ -212,7 +217,11 @@ RSpec.describe Ephesus::Core::Controller do
     it { expect(instance.available_actions).to be == {} }
 
     wrap_context 'when an action is defined' do
-      it { expect(instance.available_actions).to be == { do_something: {} } }
+      let(:expected) { action_class.properties }
+
+      it 'should return the actions and properties' do
+        expect(instance.available_actions).to be == { do_something: expected }
+      end
 
       context 'with an if conditional' do
         let(:arguments) { [] }
@@ -240,7 +249,9 @@ RSpec.describe Ephesus::Core::Controller do
           { if: ->(state) { state.get(:landed) } }
         end
 
-        it { expect(instance.available_actions).to be == { do_something: {} } }
+        it 'should return the actions and properties' do
+          expect(instance.available_actions).to be == { do_something: expected }
+        end
       end
 
       context 'with an unless conditional' do
@@ -261,7 +272,9 @@ RSpec.describe Ephesus::Core::Controller do
           { unless: ->(state) { state.get(:location) == :tarmac } }
         end
 
-        it { expect(instance.available_actions).to be == { do_something: {} } }
+        it 'should return the actions and properties' do
+          expect(instance.available_actions).to be == { do_something: expected }
+        end
       end
 
       context 'with a matching :unless conditional' do

@@ -18,6 +18,13 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
     let(:initial_state) { super().merge takeoff_clearance: true }
   end
 
+  shared_examples 'should be available' do |action_name, action_class|
+    it 'should return the action properties' do
+      expect(instance.available_actions[action_name])
+        .to be == action_class.properties
+    end
+  end
+
   shared_examples 'should define action' do |action_name, action_class|
     let(:action) { instance.send(action_name) }
 
@@ -57,12 +64,18 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
   describe '#available_actions' do
     it { expect(instance.available_actions).not_to have_key :do_something }
 
-    it { expect(instance.available_actions[:request_clearance]).to be == {} }
+    include_examples 'should be available',
+      :request_clearance,
+      Ephesus::Flight::Actions::RequestClearance
 
-    it { expect(instance.available_actions[:turn_off_radio]).to be == {} }
+    include_examples 'should be available',
+      :turn_off_radio,
+      Ephesus::Flight::Actions::RadioOff
 
     wrap_context 'when flying' do
-      it { expect(instance.available_actions[:request_clearance]).to be == {} }
+      include_examples 'should be available',
+        :request_clearance,
+        Ephesus::Flight::Actions::RequestClearance
 
       wrap_context 'when landing clearance has been granted' do
         it 'should not include :request_clearance' do

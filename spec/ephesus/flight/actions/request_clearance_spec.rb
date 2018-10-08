@@ -14,6 +14,20 @@ RSpec.describe Ephesus::Flight::Actions::RequestClearance do
   let(:initial_state)    { {} }
   let(:state)            { Hamster::Hash.new(initial_state) }
 
+  describe '::properties' do
+    let(:expected) { { arguments: [], keywords: {} } }
+
+    it { expect(described_class.properties).to be == expected }
+  end
+
+  describe '::signature' do
+    let(:signature) { described_class.signature }
+
+    it { expect(signature).to be_a Ephesus::Core::Actions::Signature }
+
+    it { expect(signature.action_class).to be described_class }
+  end
+
   describe '#call' do
     context 'when the state is flying' do
       let(:initial_state) { { landed: false } }
