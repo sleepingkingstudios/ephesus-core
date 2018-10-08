@@ -3,7 +3,7 @@
 require 'ephesus/core/actions/invalid_arguments_result'
 
 RSpec.describe Ephesus::Core::Actions::InvalidArgumentsResult do
-  subject(:instance) { described_class.new(action_name) }
+  subject(:instance) { described_class.new }
 
   let(:action_name) { :do_something }
 
@@ -17,7 +17,13 @@ RSpec.describe Ephesus::Core::Actions::InvalidArgumentsResult do
   end
 
   describe '#action_name' do
-    it { expect(instance.action_name).to be action_name }
+    it { expect(instance.action_name).to be nil }
+
+    context 'when initialized with an action name' do
+      let(:instance) { described_class.new(action_name) }
+
+      it { expect(instance.action_name).to be action_name }
+    end
   end
 
   describe '#errors' do

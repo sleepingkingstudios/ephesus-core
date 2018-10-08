@@ -402,6 +402,7 @@ RSpec.describe Ephesus::Core::Controller do
         let(:action) do
           action_class.new(state, event_dispatcher: event_dispatcher)
         end
+        let(:result) { instance.execute_action(action_name) }
 
         before(:example) do
           allow(action_class).to receive(:new).and_return(action)
@@ -416,8 +417,14 @@ RSpec.describe Ephesus::Core::Controller do
         end
 
         it 'should return the result' do
-          expect(instance.execute_action(action_name)).to be expected_result
+          expect(result).to be expected_result
         end
+
+        it { expect(result.action_name).to be action_name }
+
+        it { expect(result.arguments).to be == [] }
+
+        it { expect(result.keywords).to be == {} }
 
         # rubocop:disable RSpec/NestedGroups
         describe 'with too many arguments' do
@@ -445,6 +452,12 @@ RSpec.describe Ephesus::Core::Controller do
           it { expect(result).to be_a Ephesus::Core::Actions::Result }
 
           it { expect(result.success?).to be false }
+
+          it { expect(result.action_name).to be action_name }
+
+          it { expect(result.arguments).to be == arguments }
+
+          it { expect(result.keywords).to be == {} }
 
           it 'should set the errors' do
             expect(result.errors).to include(expected_error)
@@ -484,6 +497,12 @@ RSpec.describe Ephesus::Core::Controller do
 
           it { expect(result.success?).to be false }
 
+          it { expect(result.action_name).to be action_name }
+
+          it { expect(result.arguments).to be == [] }
+
+          it { expect(result.keywords).to be == keywords }
+
           it 'should set the errors' do
             expect(result.errors).to include(expected_error)
           end
@@ -499,6 +518,9 @@ RSpec.describe Ephesus::Core::Controller do
           describe 'with valid arguments and keywords' do
             let(:arguments) { %w[ichi ni san] }
             let(:keywords)  { { second_key: 'value' } }
+            let(:result) do
+              instance.execute_action(action_name, *arguments, **keywords)
+            end
 
             it 'should call the action' do
               instance.execute_action(action_name, *arguments, **keywords)
@@ -513,6 +535,16 @@ RSpec.describe Ephesus::Core::Controller do
               )
                 .to be expected_result
             end
+
+            it { expect(result.success?).to be true }
+
+            it { expect(result.errors).to be_empty }
+
+            it { expect(result.action_name).to be action_name }
+
+            it { expect(result.arguments).to be == arguments }
+
+            it { expect(result.keywords).to be == keywords }
           end
 
           describe 'with not enough arguments' do
@@ -541,6 +573,12 @@ RSpec.describe Ephesus::Core::Controller do
             it { expect(result).to be_a Ephesus::Core::Actions::Result }
 
             it { expect(result.success?).to be false }
+
+            it { expect(result.action_name).to be action_name }
+
+            it { expect(result.arguments).to be == arguments }
+
+            it { expect(result.keywords).to be == keywords }
 
             it 'should set the errors' do
               expect(result.errors).to include(expected_error)
@@ -578,6 +616,12 @@ RSpec.describe Ephesus::Core::Controller do
 
             it { expect(result.success?).to be false }
 
+            it { expect(result.action_name).to be action_name }
+
+            it { expect(result.arguments).to be == arguments }
+
+            it { expect(result.keywords).to be == keywords }
+
             it 'should set the errors' do
               expect(result.errors).to include(expected_error)
             end
@@ -591,7 +635,7 @@ RSpec.describe Ephesus::Core::Controller do
             let(:arguments) { %w[ichi ni san] }
             let(:keywords)  { { second_key: 'value', yon: 4, go: 5, roku: 6 } }
             let(:result) do
-              instance.execute_action(action_name, **keywords)
+              instance.execute_action(action_name, *arguments, **keywords)
             end
             let(:expected_error) { :invalid_arguments }
             let(:keywords_error) do
@@ -606,7 +650,7 @@ RSpec.describe Ephesus::Core::Controller do
             end
 
             it 'should not call the action' do
-              instance.execute_action(action_name, **keywords)
+              instance.execute_action(action_name, *arguments, **keywords)
 
               expect(action).not_to have_received(:call)
             end
@@ -614,6 +658,12 @@ RSpec.describe Ephesus::Core::Controller do
             it { expect(result).to be_a Ephesus::Core::Actions::Result }
 
             it { expect(result.success?).to be false }
+
+            it { expect(result.action_name).to be action_name }
+
+            it { expect(result.arguments).to be == arguments }
+
+            it { expect(result.keywords).to be == keywords }
 
             it 'should set the errors' do
               expect(result.errors).to include(expected_error)
@@ -628,7 +678,7 @@ RSpec.describe Ephesus::Core::Controller do
             let(:arguments) { %w[ichi ni san] }
             let(:keywords)  { { first_key: 'value' } }
             let(:result) do
-              instance.execute_action(action_name, **keywords)
+              instance.execute_action(action_name, *arguments, **keywords)
             end
             let(:expected_error) { :invalid_arguments }
             let(:keywords_error) do
@@ -643,7 +693,7 @@ RSpec.describe Ephesus::Core::Controller do
             end
 
             it 'should not call the action' do
-              instance.execute_action(action_name, **keywords)
+              instance.execute_action(action_name, *arguments, **keywords)
 
               expect(action).not_to have_received(:call)
             end
@@ -651,6 +701,12 @@ RSpec.describe Ephesus::Core::Controller do
             it { expect(result).to be_a Ephesus::Core::Actions::Result }
 
             it { expect(result.success?).to be false }
+
+            it { expect(result.action_name).to be action_name }
+
+            it { expect(result.arguments).to be == arguments }
+
+            it { expect(result.keywords).to be == keywords }
 
             it 'should set the errors' do
               expect(result.errors).to include(expected_error)
@@ -708,6 +764,12 @@ RSpec.describe Ephesus::Core::Controller do
             it { expect(result).to be_a Ephesus::Core::Actions::Result }
 
             it { expect(result.success?).to be false }
+
+            it { expect(result.action_name).to be action_name }
+
+            it { expect(result.arguments).to be == arguments }
+
+            it { expect(result.keywords).to be == keywords }
 
             it 'should set the errors' do
               expect(result.errors).to include(expected_error)

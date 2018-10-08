@@ -3,7 +3,7 @@
 require 'ephesus/core/actions/invalid_action_result'
 
 RSpec.describe Ephesus::Core::Actions::InvalidActionResult do
-  subject(:instance) { described_class.new(action_name) }
+  subject(:instance) { described_class.new }
 
   let(:action_name) { :do_something }
 
@@ -11,13 +11,19 @@ RSpec.describe Ephesus::Core::Actions::InvalidActionResult do
     it 'should define the constructor' do
       expect(described_class)
         .to be_constructible
-        .with(1).argument
+        .with(0..1).arguments
         .and_any_keywords
     end
   end
 
   describe '#action_name' do
-    it { expect(instance.action_name).to be action_name }
+    it { expect(instance.action_name).to be nil }
+
+    context 'when initialized with an action name' do
+      let(:instance) { described_class.new(action_name) }
+
+      it { expect(instance.action_name).to be action_name }
+    end
   end
 
   describe '#errors' do

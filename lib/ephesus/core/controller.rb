@@ -75,10 +75,12 @@ module Ephesus::Core
       definition = definition_for(action_name)
       arguments, keywords = split_arguments(args)
 
-      handle_invalid_action(action_name, definition) ||
-        handle_unavailable_action(action_name, definition) ||
-        handle_invalid_arguments(definition, arguments, keywords) ||
-        send(action_name).call(*args)
+      wrap_result(action_name, arguments, keywords) do
+        handle_invalid_action(definition) ||
+          handle_unavailable_action(definition) ||
+          handle_invalid_arguments(definition, arguments, keywords) ||
+          send(action_name).call(*args)
+      end
     end
 
     private
@@ -96,10 +98,10 @@ module Ephesus::Core
       self.class.send(:command_definitions)[action_name]
     end
 
-    def handle_invalid_action(action_name, definition)
+    def handle_invalid_action(definition)
       return nil if definition
 
-      Ephesus::Core::Actions::InvalidActionResult.new(action_name)
+      Ephesus::Core::Actions::InvalidActionResult.new
     end
 
     def handle_invalid_arguments(definition, arguments, keywords)
@@ -109,20 +111,28 @@ module Ephesus::Core
       success ? nil : error_result
     end
 
-    def handle_unavailable_action(action_name, definition)
+    def handle_unavailable_action(definition)
       return nil if available?(definition)
 
       if definition[:secret]
-        return Ephesus::Core::Actions::InvalidActionResult.new(action_name)
+        return Ephesus::Core::Actions::InvalidActionResult.new
       end
 
-      Ephesus::Core::Actions::UnavailableActionResult.new(action_name)
+      Ephesus::Core::Actions::UnavailableActionResult.new
     end
 
     def split_arguments(arguments)
       return [arguments, {}] unless arguments.last.is_a?(Hash)
 
       [arguments[0...-1], arguments.last]
+    end
+
+    def wrap_result(action_name, arguments, keywords)
+      yield.tap do |result|
+        result.action_name = action_name
+        result.arguments   = arguments
+        result.keywords    = keywords
+      end
     end
   end
 end

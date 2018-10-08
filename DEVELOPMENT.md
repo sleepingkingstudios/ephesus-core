@@ -5,37 +5,13 @@
 ## Actions
 
 - DSL: set options for Controller#available_actions (see below)
-- ::properties method:
-  - returns Hash of action info, see #available_actions
-- ::signature method:
-  - returns an Action::Signature for the Action, see below
-
-## Action::Result
-
-- Custom subclass of Cuprum::Result.
-- Action generates with #build_result method.
-- Has additional properties:
-  - action_name
-  - arguments
-  - keywords
-
-### Action::Signature
-
-- constructor takes an Action
-- #match(arguments, keywords):
-
-  returns [success(Boolean), error_result(Action::Result, nil)]
+  - short description (< 80 chars? for "what can I do")
+  - long description (for "help")
+  - examples
 
 ## Applications
 
 ## Controllers
-
-- ::action:
-
-  Set additional metadata
-  - :name
-  - :properties, from action_class::properties
-  - :signature, from action_class::signature
 
 - #available_actions :
   ```
@@ -78,10 +54,6 @@
   }
   ```
 
-- #execute_action:
-  - catch (pre-check?) argument errors, respond with failing Result
-  - see Action::Signature above
-
 - conditional actions with method names:
 
   action :request_clearance, RequestClearance, if: :can_request_clearance?
@@ -103,3 +75,7 @@
 ## Ephesus::RSpec
 
 - matchers, examples, helpers for testing Ephesus applications
+  - should be a passing result
+  - should be a failing result
+  - should define action, action_name, action_class
+  - should have available action, action_name, action_class
