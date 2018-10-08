@@ -308,4 +308,85 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       it { expect(action_class.properties).to be == expected }
     end
   end
+
+  describe '::signature' do
+    let(:signature) { action_class.signature }
+
+    it { expect(action_class).to have_reader(:signature) }
+
+    it { expect(signature).to be_a Ephesus::Core::Actions::Signature }
+
+    it { expect(signature.action_class).to be action_class }
+
+    it { expect(signature.min_argument_count).to be 0 }
+
+    it { expect(signature.max_argument_count).to be 0 }
+
+    it { expect(signature.allowed_keywords).to be_empty }
+
+    it { expect(signature.required_keywords).to be_empty }
+
+    wrap_context 'when the action defines an argument' do
+      it { expect(signature.min_argument_count).to be 1 }
+
+      it { expect(signature.max_argument_count).to be 1 }
+
+      it { expect(signature.allowed_keywords).to be_empty }
+
+      it { expect(signature.required_keywords).to be_empty }
+    end
+
+    wrap_context 'when the action defines many arguments' do
+      it { expect(signature.min_argument_count).to be 2 }
+
+      it { expect(signature.max_argument_count).to be 3 }
+
+      it { expect(signature.allowed_keywords).to be_empty }
+
+      it { expect(signature.required_keywords).to be_empty }
+    end
+
+    wrap_context 'when the action defines a keyword' do
+      it { expect(signature.min_argument_count).to be 0 }
+
+      it { expect(signature.max_argument_count).to be 0 }
+
+      it { expect(signature.allowed_keywords).to contain_exactly(:with_option) }
+
+      it { expect(signature.required_keywords).to be_empty }
+    end
+
+    wrap_context 'when the action defines many keywords' do
+      it { expect(signature.min_argument_count).to be 0 }
+
+      it { expect(signature.max_argument_count).to be 0 }
+
+      it 'should return the allowed keywords' do
+        expect(signature.allowed_keywords)
+          .to contain_exactly(:keyword_one, :keyword_two, :keyword_three)
+      end
+
+      it 'should return the required keywords' do
+        expect(signature.required_keywords).to contain_exactly(:keyword_three)
+      end
+    end
+
+    context 'when the action defines many arguments and keywords' do
+      include_context 'when the action defines many arguments'
+      include_context 'when the action defines many keywords'
+
+      it { expect(signature.min_argument_count).to be 2 }
+
+      it { expect(signature.max_argument_count).to be 3 }
+
+      it 'should return the allowed keywords' do
+        expect(signature.allowed_keywords)
+          .to contain_exactly(:keyword_one, :keyword_two, :keyword_three)
+      end
+
+      it 'should return the required keywords' do
+        expect(signature.required_keywords).to contain_exactly(:keyword_three)
+      end
+    end
+  end
 end

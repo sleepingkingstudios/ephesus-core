@@ -4,6 +4,7 @@ require 'sleeping_king_studios/tools/toolbelt'
 require 'sleeping_king_studios/tools/toolbox/mixin'
 
 require 'ephesus/core/actions'
+require 'ephesus/core/actions/signature'
 
 module Ephesus::Core::Actions
   # Mixin for defining metadata properties for Ephesus actions.
@@ -19,6 +20,10 @@ module Ephesus::Core::Actions
           arguments: [],
           keywords:  {}
         }
+      end
+
+      def signature
+        @signature ||= Ephesus::Core::Actions::Signature.new(self)
       end
 
       private
