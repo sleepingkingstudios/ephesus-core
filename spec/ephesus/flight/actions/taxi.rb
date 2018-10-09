@@ -8,6 +8,8 @@ module Ephesus::Flight::Actions
   class Taxi < Ephesus::Core::Action
     VALID_DESTINATIONS = %w[hangar runway tarmac].freeze
 
+    keyword :to, required: true
+
     private
 
     def process(to:)

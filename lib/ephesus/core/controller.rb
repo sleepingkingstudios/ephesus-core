@@ -10,8 +10,15 @@ module Ephesus::Core
   # user to interact with the game state.
   class Controller < Cuprum::CommandFactory
     class << self
+      # rubocop:disable Metrics/MethodLength
       def action(name, action_class, **metadata)
-        command(name, metadata.merge(action: true)) do |*args, &block|
+        metadata = metadata.merge(
+          action:     true,
+          properties: action_class.properties,
+          signature:  action_class.signature
+        )
+
+        command(name, metadata) do |*args, &block|
           action_class.new(
             state,
             *args,
@@ -21,6 +28,7 @@ module Ephesus::Core
           )
         end
       end
+      # rubocop:enable Metrics/MethodLength
     end
 
     def initialize(state, event_dispatcher:, repository: nil)
@@ -59,23 +67,20 @@ module Ephesus::Core
         next unless definition.fetch(:action, false)
         next unless available?(definition)
 
-        hsh[action_name] = {}
+        hsh[action_name] = definition.fetch(:properties, {})
       end
     end
 
     def execute_action(action_name, *args)
       definition = definition_for(action_name)
-      available  = available?(definition)
+      arguments, keywords = split_arguments(args)
 
-      if definition.nil? || (!available && definition[:secret])
-        return Ephesus::Core::Actions::InvalidActionResult.new(action_name)
+      wrap_result(action_name, arguments, keywords) do
+        handle_invalid_action(definition) ||
+          handle_unavailable_action(definition) ||
+          handle_invalid_arguments(definition, arguments, keywords) ||
+          send(action_name).call(*args)
       end
-
-      unless available
-        return Ephesus::Core::Actions::UnavailableActionResult.new(action_name)
-      end
-
-      send(action_name).call(*args)
     end
 
     private
@@ -91,6 +96,43 @@ module Ephesus::Core
 
     def definition_for(action_name)
       self.class.send(:command_definitions)[action_name]
+    end
+
+    def handle_invalid_action(definition)
+      return nil if definition
+
+      Ephesus::Core::Actions::InvalidActionResult.new
+    end
+
+    def handle_invalid_arguments(definition, arguments, keywords)
+      signature = definition[:signature]
+      success, error_result = signature.match(*arguments, **keywords)
+
+      success ? nil : error_result
+    end
+
+    def handle_unavailable_action(definition)
+      return nil if available?(definition)
+
+      if definition[:secret]
+        return Ephesus::Core::Actions::InvalidActionResult.new
+      end
+
+      Ephesus::Core::Actions::UnavailableActionResult.new
+    end
+
+    def split_arguments(arguments)
+      return [arguments, {}] unless arguments.last.is_a?(Hash)
+
+      [arguments[0...-1], arguments.last]
+    end
+
+    def wrap_result(action_name, arguments, keywords)
+      yield.tap do |result|
+        result.action_name = action_name
+        result.arguments   = arguments
+        result.keywords    = keywords
+      end
     end
   end
 end

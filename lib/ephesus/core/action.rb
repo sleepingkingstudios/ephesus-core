@@ -5,13 +5,15 @@ require 'sleeping_king_studios/tools/toolbox/delegator'
 require 'cuprum/command'
 
 require 'ephesus/core'
+require 'ephesus/core/actions/dsl'
 require 'ephesus/core/actions/result'
 
 module Ephesus::Core
   # Abstract base class for Ephesus actions. Takes and stores a state object
   # representing the current game state.
   class Action < Cuprum::Command
-    extend SleepingKingStudios::Tools::Toolbox::Delegator
+    extend  SleepingKingStudios::Tools::Toolbox::Delegator
+    include Ephesus::Core::Actions::Dsl
 
     class << self
       def after(status = nil, **options, &block)

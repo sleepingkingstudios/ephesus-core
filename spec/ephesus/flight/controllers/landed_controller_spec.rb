@@ -18,6 +18,13 @@ RSpec.describe Ephesus::Flight::Controllers::LandedController do
     before(:example) { initial_state.update(takeoff_clearance: true) }
   end
 
+  shared_examples 'should be available' do |action_name, action_class|
+    it 'should return the action properties' do
+      expect(instance.available_actions[action_name])
+        .to be == action_class.properties
+    end
+  end
+
   shared_examples 'should define action' do |action_name, action_class|
     let(:action) { instance.send(action_name) }
 
@@ -63,15 +70,21 @@ RSpec.describe Ephesus::Flight::Controllers::LandedController do
 
     it { expect(instance.available_actions).not_to have_key :take_off }
 
-    it { expect(instance.available_actions[:radio_tower]).to be == {} }
+    include_examples 'should be available',
+      :radio_tower,
+      Ephesus::Flight::Actions::RadioOn
 
-    it { expect(instance.available_actions[:taxi]).to be == {} }
+    include_examples 'should be available',
+      :taxi,
+      Ephesus::Flight::Actions::Taxi
 
     wrap_context 'when at the runway' do
       it { expect(instance.available_actions).not_to have_key :take_off }
 
       wrap_context 'when takeoff clearance has been granted' do
-        it { expect(instance.available_actions[:take_off]).to be == {} }
+        include_examples 'should be available',
+          :take_off,
+          Ephesus::Flight::Actions::Takeoff
       end
     end
 

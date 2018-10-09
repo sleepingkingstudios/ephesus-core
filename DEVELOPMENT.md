@@ -5,6 +5,9 @@
 ## Actions
 
 - DSL: set options for Controller#available_actions (see below)
+  - short description (< 80 chars? for "what can I do")
+  - long description (for "help")
+  - examples
 
 ## Applications
 
@@ -60,6 +63,19 @@
   alias_action :do_trick, as: :do_a_trick
   alias_action :dance, as: %i[shake rattle roll]
 
+## Events
+
+- StateUpdateEvent:
+  - used for handling output
+  - CANNOT BE USED IN A REDUCER
+  - #parent_event
+  - #previous_state
+  - #current_state
+
 ## Ephesus::RSpec
 
 - matchers, examples, helpers for testing Ephesus applications
+  - should be a passing result
+  - should be a failing result
+  - should define action, action_name, action_class
+  - should have available action, action_name, action_class

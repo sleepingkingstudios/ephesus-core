@@ -13,6 +13,21 @@ RSpec.describe Ephesus::Flight::Actions::Taxi do
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
   let(:state)            { Hamster::Hash.new(location: 'hangar') }
 
+  describe '::properties' do
+    let(:keywords) { { to: { name: :to, required: true } } }
+    let(:expected) { { arguments: [], keywords: keywords } }
+
+    it { expect(described_class.properties).to be == expected }
+  end
+
+  describe '::signature' do
+    let(:signature) { described_class.signature }
+
+    it { expect(signature).to be_a Ephesus::Core::Actions::Signature }
+
+    it { expect(signature.action_class).to be described_class }
+  end
+
   describe '#call' do
     describe 'with an invalid destination' do
       let(:destination) { 'control_tower' }
