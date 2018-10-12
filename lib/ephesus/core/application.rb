@@ -12,7 +12,7 @@ module Ephesus::Core
       @event_dispatcher = event_dispatcher || Ephesus::Core::EventDispatcher.new
       @repository       = repository
       @state            =
-        Ephesus::Core::Utils::Immutable.from_hash(initial_state)
+        Ephesus::Core::Utils::Immutable.from_object(initial_state)
 
       initialize_reducers!
     end
