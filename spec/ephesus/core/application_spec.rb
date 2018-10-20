@@ -5,6 +5,28 @@ require 'bronze/collections/repository'
 require 'ephesus/core/application'
 
 RSpec.describe Ephesus::Core::Application do
+  shared_context 'when a custom store is defined' do
+    let(:store_initial_state) do
+      {
+        era:       :future,
+        locations: ['Venus', 'the Moon', 'Mars'],
+        genre:     'Space Romance'
+      }
+    end
+
+    example_class 'Spec::ExampleStore', Ephesus::Core::ImmutableStore do |klass|
+      state = store_initial_state
+
+      klass.define_method(:initial_state) { Hamster::Hash.new(state) }
+    end
+
+    before(:example) do
+      Spec::ExampleApplication.define_method(:build_store) do |state|
+        Spec::ExampleStore.new(state)
+      end
+    end
+  end
+
   shared_context 'when the application has an event dispatcher' do
     let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
   end
@@ -18,8 +40,6 @@ RSpec.describe Ephesus::Core::Application do
   end
 
   shared_context 'when the initial state is defined' do
-    include_context 'with an application subclass'
-
     let(:initial_state) do
       {
         era:      :renaissance,
@@ -189,17 +209,37 @@ RSpec.describe Ephesus::Core::Application do
     end
   end
 
-  describe '#state' do
-    include_examples 'should have reader', :state
+  describe '#store' do
+    include_examples 'should have reader',
+      :store,
+      -> { an_instance_of Ephesus::Core::ImmutableStore }
 
-    it { expect(instance.state).to be_a Hamster::Hash }
+    it { expect(instance.store.state).to be_a Hamster::Hash }
 
-    it { expect(instance.state).to be_empty }
+    it { expect(instance.store.state).to be_empty }
 
     wrap_context 'when the initial state is defined' do
-      it { expect(instance.state).to be_a Hamster::Hash }
+      include_context 'with an application subclass'
 
-      it { expect(instance.state).to be == initial_state }
+      it { expect(instance.store.state).to be_a Hamster::Hash }
+
+      it { expect(instance.store.state).to be == initial_state }
+    end
+
+    wrap_context 'when a custom store is defined' do
+      include_context 'with an application subclass'
+
+      it { expect(instance.store).to be_a Spec::ExampleStore }
+
+      it { expect(instance.store.state).to be_a Hamster::Hash }
+
+      it { expect(instance.store.state).to be == store_initial_state }
+
+      wrap_context 'when the initial state is defined' do
+        it { expect(instance.store.state).to be_a Hamster::Hash }
+
+        it { expect(instance.store.state).to be == initial_state }
+      end
     end
   end
 end

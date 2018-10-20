@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require 'forwardable'
+
 require 'ephesus/core/event_dispatcher'
+require 'ephesus/core/immutable_store'
 require 'ephesus/core/reducer'
 require 'ephesus/core/utils/immutable'
 
@@ -8,20 +11,24 @@ module Ephesus::Core
   # Base class for Ephesus applications. An application has a single state, and
   # is referenced by one or many sessions.
   class Application
+    extend Forwardable
+
     def initialize(event_dispatcher: nil, repository: nil)
       @event_dispatcher = event_dispatcher || Ephesus::Core::EventDispatcher.new
       @repository       = repository
-      @state            =
-        Ephesus::Core::Utils::Immutable.from_object(initial_state)
+
+      @store = build_store(initial_state)
 
       initialize_reducers!
     end
+
+    def_delegator :@store, :state
 
     attr_reader :event_dispatcher
 
     attr_reader :repository
 
-    attr_reader :state
+    attr_reader :store
 
     def add_event_listener(event_type, method_name = nil, &block)
       if block_given?
@@ -35,7 +42,9 @@ module Ephesus::Core
 
     protected
 
-    attr_writer :state
+    def state=(value)
+      @store = build_store(value)
+    end
 
     private
 
@@ -75,8 +84,12 @@ module Ephesus::Core
       ->(event) { self.state = send(definition, state, event) }
     end
 
+    def build_store(state)
+      Ephesus::Core::ImmutableStore.new(state)
+    end
+
     def initial_state
-      {}
+      nil
     end
 
     def initialize_reducers!
