@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'sleeping_king_studios/tools/toolbox/delegator'
+require 'forwardable'
 
 require 'cuprum/command'
 
@@ -13,15 +13,18 @@ module Ephesus::Core
   # Abstract base class for Ephesus actions. Takes and stores a state object
   # representing the current game state.
   class Action < Cuprum::Command
-    extend  SleepingKingStudios::Tools::Toolbox::Delegator
+    extend  Forwardable
     include Ephesus::Core::Actions::Hooks
     include Ephesus::Core::Actions::Dsl
 
-    def initialize(state, event_dispatcher:, repository: nil)
+    def initialize(state, dispatcher:, event_dispatcher:, repository: nil)
       @state            = state
+      @dispatcher       = dispatcher
       @event_dispatcher = event_dispatcher
       @repository       = repository
     end
+
+    attr_reader :dispatcher
 
     attr_reader :event_dispatcher
 
@@ -29,7 +32,9 @@ module Ephesus::Core
 
     attr_reader :state
 
-    delegate :dispatch_event, to: :event_dispatcher
+    def_delegators :@dispatcher, :dispatch
+
+    def_delegators :event_dispatcher, :dispatch_event
 
     private
 

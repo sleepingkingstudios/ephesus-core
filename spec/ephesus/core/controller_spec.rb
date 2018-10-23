@@ -35,9 +35,10 @@ RSpec.describe Ephesus::Core::Controller do
       base_class: Ephesus::Core::Action \
     do |klass|
       klass.send :define_method, :initialize \
-      do |state, *rest, event_dispatcher:, repository: nil|
+      do |state, *rest, dispatcher:, event_dispatcher:, repository: nil|
         super(
           state,
+          dispatcher:       dispatcher,
           event_dispatcher: event_dispatcher,
           repository:       repository
         )
@@ -409,7 +410,11 @@ RSpec.describe Ephesus::Core::Controller do
       describe 'with a valid action name' do
         let(:expected_result) { Ephesus::Core::Actions::Result.new }
         let(:action) do
-          action_class.new(state, event_dispatcher: event_dispatcher)
+          action_class.new(
+            state,
+            dispatcher: dispatcher,
+            event_dispatcher: event_dispatcher
+          )
         end
         let(:result) { instance.execute_action(action_name) }
 

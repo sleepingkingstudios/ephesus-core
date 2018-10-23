@@ -3,13 +3,21 @@
 require 'hamster'
 
 require 'ephesus/core/event_dispatcher'
+require 'ephesus/core/utils/dispatch_proxy'
 require 'ephesus/flight/actions/request_clearance'
 
 RSpec.describe Ephesus::Flight::Actions::RequestClearance do
   subject(:instance) do
-    described_class.new(state, event_dispatcher: event_dispatcher)
+    described_class.new(
+      state,
+      dispatcher:       dispatcher,
+      event_dispatcher: event_dispatcher
+    )
   end
 
+  let(:dispatcher) do
+    instance_double(Ephesus::Core::Utils::DispatchProxy, dispatch: true)
+  end
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
   let(:initial_state)    { {} }
   let(:state)            { Hamster::Hash.new(initial_state) }

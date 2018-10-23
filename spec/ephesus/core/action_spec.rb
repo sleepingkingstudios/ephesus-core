@@ -6,6 +6,7 @@ require 'hamster'
 
 require 'ephesus/core/action'
 require 'ephesus/core/event_dispatcher'
+require 'ephesus/core/utils/dispatch_proxy'
 
 RSpec.describe Ephesus::Core::Action do
   shared_context 'when the action has a repository' do
@@ -19,11 +20,15 @@ RSpec.describe Ephesus::Core::Action do
   subject(:instance) do
     described_class.new(
       state,
+      dispatcher:       dispatcher,
       event_dispatcher: event_dispatcher,
       repository:       repository
     )
   end
 
+  let(:dispatcher) do
+    instance_double(Ephesus::Core::Utils::DispatchProxy, dispatch: true)
+  end
   let(:state)            { Hamster::Hash.new }
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
   let(:repository)       { nil }
@@ -33,7 +38,7 @@ RSpec.describe Ephesus::Core::Action do
       expect(described_class)
         .to be_constructible
         .with(1).argument
-        .and_keywords(:event_dispatcher, :repository)
+        .and_keywords(:dispatcher, :event_dispatcher, :repository)
     end
   end
 
@@ -64,6 +69,18 @@ RSpec.describe Ephesus::Core::Action do
     end
   end
 
+  describe '#dispatch' do
+    let(:action) { { type: 'spec.actions.example_action' } }
+
+    it { expect(instance).to respond_to(:dispatch).with(1).argument }
+
+    it 'should delegate to the dispatcher' do
+      instance.dispatch(action)
+
+      expect(dispatcher).to have_received(:dispatch).with(action)
+    end
+  end
+
   describe '#dispatch_event' do
     let(:event_type) { 'spec.events.example_event' }
     let(:event)      { Ephesus::Core::Event.new(event_type) }
@@ -79,6 +96,10 @@ RSpec.describe Ephesus::Core::Action do
 
       expect(event_dispatcher).to have_received(:dispatch_event).with(event)
     end
+  end
+
+  describe '#dispatcher' do
+    include_examples 'should have reader', :dispatcher, -> { dispatcher }
   end
 
   describe '#event_dispatcher' do

@@ -4,6 +4,7 @@ require 'hamster'
 
 require 'ephesus/core/action'
 require 'ephesus/core/event_dispatcher'
+require 'ephesus/core/utils/dispatch_proxy'
 
 RSpec.describe Ephesus::Core::Actions::Hooks do
   shared_context 'when the action has chained commands' do
@@ -22,6 +23,9 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
     end
   end
 
+  let(:dispatcher) do
+    instance_double(Ephesus::Core::Utils::DispatchProxy)
+  end
   let(:result)           { Cuprum::Result.new 'first result' }
   let(:expected_result)  { result }
   let(:action_class)     { Spec::ExampleAction }
@@ -30,6 +34,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
   let(:action) do
     action_class.new(
       state,
+      dispatcher:       dispatcher,
       event_dispatcher: event_dispatcher
     )
   end
