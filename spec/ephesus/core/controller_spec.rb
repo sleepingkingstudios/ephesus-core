@@ -6,6 +6,7 @@ require 'hamster'
 require 'ephesus/core/action'
 require 'ephesus/core/controller'
 require 'ephesus/core/event_dispatcher'
+require 'ephesus/core/utils/dispatch_proxy'
 
 RSpec.describe Ephesus::Core::Controller do
   shared_context 'when an action is defined' do
@@ -98,11 +99,15 @@ RSpec.describe Ephesus::Core::Controller do
   subject(:instance) do
     described_class.new(
       state,
+      dispatcher:       dispatcher,
       event_dispatcher: event_dispatcher,
       repository:       repository
     )
   end
 
+  let(:dispatcher) do
+    instance_double(Ephesus::Core::Utils::DispatchProxy)
+  end
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
   let(:repository)       { nil }
   let(:state)            { Hamster::Hash.new(landed: true, location: :hangar) }
@@ -112,7 +117,7 @@ RSpec.describe Ephesus::Core::Controller do
       expect(described_class)
         .to be_constructible
         .with(1).argument
-        .and_keywords(:event_dispatcher, :repository)
+        .and_keywords(:dispatcher, :event_dispatcher, :repository)
     end
   end
 
@@ -332,6 +337,10 @@ RSpec.describe Ephesus::Core::Controller do
     wrap_context 'when a command is defined' do
       it { expect(instance.commands).to include :calculate_something }
     end
+  end
+
+  describe '#dispatcher' do
+    include_examples 'should have reader', :dispatcher, -> { dispatcher }
   end
 
   describe '#execute_action' do

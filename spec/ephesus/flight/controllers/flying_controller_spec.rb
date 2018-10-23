@@ -3,6 +3,7 @@
 require 'hamster'
 
 require 'ephesus/core/event_dispatcher'
+require 'ephesus/core/utils/dispatch_proxy'
 require 'ephesus/flight/controllers/flying_controller'
 
 RSpec.describe Ephesus::Flight::Controllers::FlyingController do
@@ -30,9 +31,16 @@ RSpec.describe Ephesus::Flight::Controllers::FlyingController do
   end
 
   subject(:instance) do
-    described_class.new(state, event_dispatcher: event_dispatcher)
+    described_class.new(
+      state,
+      dispatcher: dispatcher,
+      event_dispatcher: event_dispatcher
+    )
   end
 
+  let(:dispatcher) do
+    instance_double(Ephesus::Core::Utils::DispatchProxy)
+  end
   let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
   let(:initial_state)    { {} }
   let(:state)            { Hamster::Hash.new(initial_state) }

@@ -3,6 +3,7 @@
 require 'forwardable'
 
 require 'ephesus/core'
+require 'ephesus/core/utils/dispatch_proxy'
 
 module Ephesus::Core
   # Class for managing state transitions in an Ephesus application. Each session
@@ -63,6 +64,7 @@ module Ephesus::Core
     def build_controller(controller_type)
       controller_class(controller_type).new(
         state,
+        dispatcher: Ephesus::Core::Utils::DispatchProxy.new(store),
         event_dispatcher: event_dispatcher,
         repository: application.repository
       )

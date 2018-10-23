@@ -31,11 +31,14 @@ module Ephesus::Core
       # rubocop:enable Metrics/MethodLength
     end
 
-    def initialize(state, event_dispatcher:, repository: nil)
+    def initialize(state, dispatcher:, event_dispatcher:, repository: nil)
       @state            = state
+      @dispatcher       = dispatcher
       @event_dispatcher = event_dispatcher
       @repository       = repository
     end
+
+    attr_reader :dispatcher
 
     attr_reader :event_dispatcher
 

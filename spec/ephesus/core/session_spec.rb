@@ -419,6 +419,23 @@ RSpec.describe Ephesus::Core::Session do
   end
 
   describe '#controller' do
+    shared_examples 'should set the dispatch proxy' do
+      let(:action) { { type: 'spec.actions.example_action' } }
+
+      it 'should return a dispatcher' do
+        expect(controller.dispatcher)
+          .to be_a Ephesus::Core::Utils::DispatchProxy
+      end
+
+      it 'should delegate to the application store' do
+        allow(application.store).to receive(:dispatch)
+
+        controller.dispatcher.dispatch(action)
+
+        expect(application.store).to have_received(:dispatch).with(action)
+      end
+    end
+
     let(:error_message) do
       "unknown controller for state #{application.state.inspect}"
     end
@@ -454,6 +471,8 @@ RSpec.describe Ephesus::Core::Session do
       it { expect(controller.repository).to be repository }
 
       it { expect(controller.state).to be application.state }
+
+      include_examples 'should set the dispatch proxy'
     end
 
     wrap_context 'with a non-matching conditional controller' do
@@ -477,6 +496,8 @@ RSpec.describe Ephesus::Core::Session do
       it { expect(controller.repository).to be repository }
 
       it { expect(controller.state).to be application.state }
+
+      include_examples 'should set the dispatch proxy'
     end
 
     wrap_context 'with a non-conditional controller' do
@@ -491,6 +512,8 @@ RSpec.describe Ephesus::Core::Session do
       it { expect(controller.repository).to be repository }
 
       it { expect(controller.state).to be application.state }
+
+      include_examples 'should set the dispatch proxy'
     end
 
     wrap_context 'with a chain of controllers' do
@@ -505,6 +528,8 @@ RSpec.describe Ephesus::Core::Session do
       it { expect(controller.repository).to be repository }
 
       it { expect(controller.state).to be application.state }
+
+      include_examples 'should set the dispatch proxy'
     end
   end
 
