@@ -443,7 +443,7 @@ RSpec.describe Ephesus::Core::Session do
 
       before(:example) do
         described_class.send(:define_method, :current_controller) do
-          state.get(:controller)
+          store.state.get(:controller)
         end
       end
 
@@ -539,7 +539,7 @@ RSpec.describe Ephesus::Core::Session do
     end
   end
 
-  describe '#state' do
-    include_examples 'should have reader', :state, -> { application.state }
+  describe '#store' do
+    include_examples 'should have reader', :store, -> { application.store }
   end
 end

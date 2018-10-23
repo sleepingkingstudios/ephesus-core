@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'sleeping_king_studios/tools/toolbox/delegator'
+require 'forwardable'
 
 require 'ephesus/core'
 
@@ -9,7 +9,7 @@ module Ephesus::Core
   # belongs to an application and has a controller corresponding to the
   # application state.
   class Session
-    extend SleepingKingStudios::Tools::Toolbox::Delegator
+    extend Forwardable
 
     class << self
       def controller(controller_type, **conditionals)
@@ -34,17 +34,16 @@ module Ephesus::Core
       @application = application
     end
 
-    attr_reader :application
-
-    delegate \
+    def_delegators :@application,
       :event_dispatcher,
       :state,
-      to: :@application
+      :store
 
-    delegate \
+    def_delegators :controller,
       :available_actions,
-      :execute_action,
-      to: :controller
+      :execute_action
+
+    attr_reader :application
 
     def controller
       return @controller if @controller && @controller.state == state
