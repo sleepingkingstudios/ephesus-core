@@ -17,8 +17,6 @@ RSpec.describe Ephesus::Flight::Application do
     }
   end
 
-  it { expect(described_class).to be < Ephesus::Flight::Reducer }
-
   describe '#state' do
     it { expect(instance.state).to be_a Hamster::Hash }
 

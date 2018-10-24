@@ -4,7 +4,6 @@ require 'forwardable'
 
 require 'ephesus/core/event_dispatcher'
 require 'ephesus/core/immutable_store'
-require 'ephesus/core/reducer'
 require 'ephesus/core/utils/immutable'
 
 module Ephesus::Core
@@ -18,8 +17,6 @@ module Ephesus::Core
       @repository       = repository
 
       @store = build_store(state || initial_state)
-
-      initialize_reducers!
     end
 
     def_delegator :@store, :state
@@ -38,12 +35,6 @@ module Ephesus::Core
       else
         raise ArgumentError, 'listener must be a method name or a block'
       end
-    end
-
-    protected
-
-    def state=(value)
-      @store = build_store(value)
     end
 
     private
@@ -74,34 +65,12 @@ module Ephesus::Core
       end
     end
 
-    def build_reducer(definition)
-      if definition.is_a?(Proc)
-        return lambda do |event|
-          self.state = instance_exec(state, event, &definition)
-        end
-      end
-
-      ->(event) { self.state = send(definition, state, event) }
-    end
-
     def build_store(state)
       Ephesus::Core::ImmutableStore.new(state)
     end
 
     def initial_state
       nil
-    end
-
-    def initialize_reducers!
-      reducers.each do |reducer|
-        reducer.listeners.each do |event_type, definition|
-          add_event_listener(event_type, &build_reducer(definition))
-        end
-      end
-    end
-
-    def reducers
-      self.class.ancestors.select { |mod| mod.is_a?(Ephesus::Core::Reducer) }
     end
   end
 end
