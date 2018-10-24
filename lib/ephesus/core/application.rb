@@ -13,11 +13,11 @@ module Ephesus::Core
   class Application
     extend Forwardable
 
-    def initialize(event_dispatcher: nil, repository: nil)
+    def initialize(event_dispatcher: nil, repository: nil, state: nil)
       @event_dispatcher = event_dispatcher || Ephesus::Core::EventDispatcher.new
       @repository       = repository
 
-      @store = build_store(initial_state)
+      @store = build_store(state || initial_state)
 
       initialize_reducers!
     end

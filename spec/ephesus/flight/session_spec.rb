@@ -5,20 +5,26 @@ require 'ephesus/flight/session'
 
 RSpec.describe Ephesus::Flight::Session do
   shared_context 'when the radio is on' do
-    before(:example) do
-      application.send :state=, application.state.put(:radio, true)
-    end
+    let(:initial_state) { super().merge radio: true }
   end
 
   shared_context 'when the state is flying' do
-    before(:example) do
-      application.send :state=, application.state.put(:landed, false)
-    end
+    let(:initial_state) { super().merge landed: false }
   end
 
   subject(:instance) { described_class.new(application) }
 
-  let(:application) { Ephesus::Flight::Application.new }
+  let(:initial_state) do
+    {
+      landed:            true,
+      landing_clearance: false,
+      location:          'hangar',
+      radio:             false,
+      score:             0,
+      takeoff_clearance: false
+    }
+  end
+  let(:application) { Ephesus::Flight::Application.new(state: initial_state) }
 
   describe '#controller' do
     it 'should return the default controller' do

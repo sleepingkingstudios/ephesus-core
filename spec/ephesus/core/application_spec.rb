@@ -39,7 +39,7 @@ RSpec.describe Ephesus::Core::Application do
     end
   end
 
-  shared_context 'when the initial state is defined' do
+  shared_context 'when the #initial_state method is defined' do
     let(:initial_state) do
       {
         era:      :renaissance,
@@ -55,6 +55,16 @@ RSpec.describe Ephesus::Core::Application do
     end
   end
 
+  shared_context 'when an initial state is given' do
+    let(:state) do
+      {
+        era:     :iron,
+        faction: 'Silla',
+        genre:   'Three Kingdoms'
+      }
+    end
+  end
+
   shared_context 'with an application subclass' do
     let(:described_class) { Spec::ExampleApplication }
 
@@ -67,19 +77,21 @@ RSpec.describe Ephesus::Core::Application do
   subject(:instance) do
     described_class.new(
       event_dispatcher: event_dispatcher,
-      repository:       repository
+      repository:       repository,
+      state:            state
     )
   end
 
   let(:event_dispatcher) { nil }
   let(:repository)       { nil }
+  let(:state)            { nil }
 
   describe '::new' do
     it 'should define the constructor' do
       expect(described_class)
         .to be_constructible
         .with(0).arguments
-        .and_keywords(:event_dispatcher, :repository)
+        .and_keywords(:event_dispatcher, :repository, :state)
     end
 
     describe 'with an event dispatcher' do
@@ -218,12 +230,24 @@ RSpec.describe Ephesus::Core::Application do
 
     it { expect(instance.store.state).to be_empty }
 
-    wrap_context 'when the initial state is defined' do
+    wrap_context 'when an initial state is given' do
+      it { expect(instance.store.state).to be_a Hamster::Hash }
+
+      it { expect(instance.store.state).to be == state }
+    end
+
+    wrap_context 'when the #initial_state method is defined' do
       include_context 'with an application subclass'
 
       it { expect(instance.store.state).to be_a Hamster::Hash }
 
       it { expect(instance.store.state).to be == initial_state }
+
+      wrap_context 'when an initial state is given' do
+        it { expect(instance.store.state).to be_a Hamster::Hash }
+
+        it { expect(instance.store.state).to be == state }
+      end
     end
 
     wrap_context 'when a custom store is defined' do
@@ -235,10 +259,22 @@ RSpec.describe Ephesus::Core::Application do
 
       it { expect(instance.store.state).to be == store_initial_state }
 
-      wrap_context 'when the initial state is defined' do
+      wrap_context 'when an initial state is given' do
+        it { expect(instance.store.state).to be_a Hamster::Hash }
+
+        it { expect(instance.store.state).to be == state }
+      end
+
+      wrap_context 'when the #initial_state method is defined' do
         it { expect(instance.store.state).to be_a Hamster::Hash }
 
         it { expect(instance.store.state).to be == initial_state }
+
+        wrap_context 'when an initial state is given' do
+          it { expect(instance.store.state).to be_a Hamster::Hash }
+
+          it { expect(instance.store.state).to be == state }
+        end
       end
     end
   end
