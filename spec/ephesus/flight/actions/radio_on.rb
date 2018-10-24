@@ -2,16 +2,14 @@
 
 require 'ephesus/core/action'
 require 'ephesus/flight/actions'
-require 'ephesus/flight/events'
+require 'ephesus/flight/state/actions'
 
 module Ephesus::Flight::Actions
   class RadioOn < Ephesus::Core::Action
     private
 
     def process
-      event = Ephesus::Flight::Events::RadioOn.new
-
-      dispatch_event(event)
+      dispatch(Ephesus::Flight::State::Actions.radio_on)
     end
   end
 end

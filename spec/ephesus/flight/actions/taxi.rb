@@ -2,7 +2,7 @@
 
 require 'ephesus/core/action'
 require 'ephesus/flight/actions'
-require 'ephesus/flight/events'
+require 'ephesus/flight/state/actions'
 
 module Ephesus::Flight::Actions
   class Taxi < Ephesus::Core::Action
@@ -25,9 +25,7 @@ module Ephesus::Flight::Actions
         return
       end
 
-      event = Ephesus::Flight::Events::Taxi.new(to: to)
-
-      dispatch_event(event)
+      dispatch(Ephesus::Flight::State::Actions.taxi to: to)
     end
   end
 end

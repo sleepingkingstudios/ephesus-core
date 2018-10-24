@@ -2,16 +2,14 @@
 
 require 'ephesus/core/action'
 require 'ephesus/flight/actions'
-require 'ephesus/flight/events'
+require 'ephesus/flight/state/actions'
 
 module Ephesus::Flight::Actions
   class Land < Ephesus::Core::Action
     private
 
     def process
-      event = Ephesus::Flight::Events::Land.new
-
-      dispatch_event(event)
+      dispatch(Ephesus::Flight::State::Actions.land)
     end
   end
 end

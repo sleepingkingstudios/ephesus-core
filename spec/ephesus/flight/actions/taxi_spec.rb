@@ -51,12 +51,10 @@ RSpec.describe Ephesus::Flight::Actions::Taxi do
 
       it { expect(result.errors[:destination]).to include error }
 
-      it 'should not dispatch an event' do
-        allow(event_dispatcher).to receive(:dispatch_event)
-
+      it 'should not dispatch an action' do
         instance.call(to: destination)
 
-        expect(event_dispatcher).not_to have_received(:dispatch_event)
+        expect(dispatcher).not_to have_received(:dispatch)
       end
     end
 
@@ -74,32 +72,28 @@ RSpec.describe Ephesus::Flight::Actions::Taxi do
 
       it { expect(result.errors[:destination]).to include error }
 
-      it 'should not dispatch an event' do
-        allow(event_dispatcher).to receive(:dispatch_event)
-
+      it 'should not dispatch an action' do
         instance.call(to: destination)
 
-        expect(event_dispatcher).not_to have_received(:dispatch_event)
+        expect(dispatcher).not_to have_received(:dispatch)
       end
     end
 
     describe 'with a valid destination' do
       let(:destination) { 'runway' }
       let(:result)      { instance.call(to: destination) }
-      let(:event)       { Ephesus::Flight::Events::Taxi.new(to: destination) }
+      let(:action) do
+        Ephesus::Flight::State::Actions.taxi(to: destination)
+      end
 
       it { expect(result.success?).to be true }
 
       it { expect(result.errors).to be_empty }
 
-      it 'should dispatch a TAXI event' do
-        allow(event_dispatcher).to receive(:dispatch_event)
-
+      it 'should dispatch a TAXI action' do
         instance.call(to: destination)
 
-        expect(event_dispatcher)
-          .to have_received(:dispatch_event)
-          .with(be == event)
+        expect(dispatcher).to have_received(:dispatch).with(be == action)
       end
     end
   end

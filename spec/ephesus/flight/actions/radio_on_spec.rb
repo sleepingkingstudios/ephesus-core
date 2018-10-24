@@ -37,20 +37,16 @@ RSpec.describe Ephesus::Flight::Actions::RadioOn do
 
   describe '#call' do
     let(:result) { instance.call }
-    let(:event)  { Ephesus::Flight::Events::RadioOn.new }
+    let(:action) { Ephesus::Flight::State::Actions.radio_on }
 
     it { expect(result.success?).to be true }
 
     it { expect(result.errors).to be_empty }
 
-    it 'should dispatch a RADIO_ON event' do
-      allow(event_dispatcher).to receive(:dispatch_event)
-
+    it 'should dispatch a RADIO_ON action' do
       instance.call
 
-      expect(event_dispatcher)
-        .to have_received(:dispatch_event)
-        .with(be == event)
+      expect(dispatcher).to have_received(:dispatch).with(be == action)
     end
   end
 end
