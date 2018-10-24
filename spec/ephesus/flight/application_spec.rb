@@ -12,6 +12,7 @@ RSpec.describe Ephesus::Flight::Application do
       landing_clearance: false,
       location:          'hangar',
       radio:             false,
+      score:             0,
       takeoff_clearance: false
     }
   end
@@ -22,5 +23,11 @@ RSpec.describe Ephesus::Flight::Application do
     it { expect(instance.state).to be_a Hamster::Hash }
 
     it { expect(instance.state).to be == initial_state }
+  end
+
+  describe '#store' do
+    it { expect(instance.store).to be_a Ephesus::Flight::State::Store }
+
+    it { expect(instance.store.state).to be == initial_state }
   end
 end
