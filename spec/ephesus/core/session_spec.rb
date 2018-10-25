@@ -466,10 +466,6 @@ RSpec.describe Ephesus::Core::Session do
 
       it { expect(controller).to be_a Spec::CustomController }
 
-      it { expect(controller.event_dispatcher).to be event_dispatcher }
-
-      it { expect(controller.repository).to be repository }
-
       it { expect(controller.state).to be application.state }
 
       include_examples 'should set the dispatch proxy'
@@ -491,10 +487,6 @@ RSpec.describe Ephesus::Core::Session do
 
       it { expect(controller).to be_a Spec::MatchingConditionalController }
 
-      it { expect(controller.event_dispatcher).to be event_dispatcher }
-
-      it { expect(controller.repository).to be repository }
-
       it { expect(controller.state).to be application.state }
 
       include_examples 'should set the dispatch proxy'
@@ -507,10 +499,6 @@ RSpec.describe Ephesus::Core::Session do
 
       it { expect(controller).to be_a Spec::NonConditionalController }
 
-      it { expect(controller.event_dispatcher).to be event_dispatcher }
-
-      it { expect(controller.repository).to be repository }
-
       it { expect(controller.state).to be application.state }
 
       include_examples 'should set the dispatch proxy'
@@ -522,10 +510,6 @@ RSpec.describe Ephesus::Core::Session do
       let(:controller) { instance.controller }
 
       it { expect(controller).to be_a Spec::MatchingConditionalController }
-
-      it { expect(controller.event_dispatcher).to be event_dispatcher }
-
-      it { expect(controller.repository).to be repository }
 
       it { expect(controller.state).to be application.state }
 

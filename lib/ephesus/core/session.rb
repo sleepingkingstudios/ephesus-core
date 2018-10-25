@@ -65,7 +65,6 @@ module Ephesus::Core
       controller_class(controller_type).new(
         state,
         dispatcher: Ephesus::Core::Utils::DispatchProxy.new(store),
-        event_dispatcher: event_dispatcher,
         repository: application.repository
       )
     end
