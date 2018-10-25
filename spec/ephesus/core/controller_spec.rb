@@ -35,12 +35,11 @@ RSpec.describe Ephesus::Core::Controller do
       base_class: Ephesus::Core::Action \
     do |klass|
       klass.send :define_method, :initialize \
-      do |state, *rest, dispatcher:, event_dispatcher:, repository: nil|
+      do |state, *rest, dispatcher:, **options|
         super(
           state,
-          dispatcher:       dispatcher,
-          event_dispatcher: event_dispatcher,
-          repository:       repository
+          dispatcher: dispatcher,
+          **options
         )
 
         @arguments = *rest
@@ -182,9 +181,7 @@ RSpec.describe Ephesus::Core::Controller do
 
         it { expect(action.state).to be state }
 
-        it { expect(action.event_dispatcher).to be event_dispatcher }
-
-        it { expect(action.repository).to be nil }
+        it { expect(action.options).to be == { repository: nil } }
 
         wrap_context 'when the action constructor takes arguments' do
           let(:args)   { [:ichi, 'ni', san: 3] }
@@ -196,13 +193,11 @@ RSpec.describe Ephesus::Core::Controller do
 
           it { expect(action.arguments).to be == args }
 
-          it { expect(action.event_dispatcher).to be event_dispatcher }
-
-          it { expect(action.repository).to be nil }
+          it { expect(action.options).to be == { repository: nil } }
         end
 
         wrap_context 'when the controller has a repository' do
-          it { expect(action.repository).to be repository }
+          it { expect(action.options).to be == { repository: repository } }
         end
       end
     end

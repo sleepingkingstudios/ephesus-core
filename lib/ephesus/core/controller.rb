@@ -22,9 +22,8 @@ module Ephesus::Core
           action_class.new(
             state,
             *args,
-            dispatcher:       dispatcher,
-            event_dispatcher: event_dispatcher,
-            repository:       repository,
+            dispatcher: dispatcher,
+            repository: repository,
             &block
           )
         end

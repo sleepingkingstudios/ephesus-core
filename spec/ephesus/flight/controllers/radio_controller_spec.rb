@@ -33,8 +33,6 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
 
     it { expect(action).to be_a action_class }
 
-    it { expect(action.event_dispatcher).to be event_dispatcher }
-
     it { expect(action.state).to be state }
   end
 

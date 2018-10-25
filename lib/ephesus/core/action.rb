@@ -17,24 +17,20 @@ module Ephesus::Core
     include Ephesus::Core::Actions::Hooks
     include Ephesus::Core::Actions::Dsl
 
-    def initialize(state, dispatcher:, event_dispatcher:, repository: nil)
+    def initialize(state, dispatcher:, **options)
       @state            = state
       @dispatcher       = dispatcher
-      @event_dispatcher = event_dispatcher
-      @repository       = repository
+      @options          = options
+      @repository       = options[:repository]
     end
 
     attr_reader :dispatcher
 
-    attr_reader :event_dispatcher
-
-    attr_reader :repository
+    attr_reader :options
 
     attr_reader :state
 
     def_delegators :@dispatcher, :dispatch
-
-    def_delegators :event_dispatcher, :dispatch_event
 
     private
 
