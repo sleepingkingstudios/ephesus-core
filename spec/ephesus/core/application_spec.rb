@@ -27,18 +27,6 @@ RSpec.describe Ephesus::Core::Application do
     end
   end
 
-  shared_context 'when the application has an event dispatcher' do
-    let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
-  end
-
-  shared_context 'when the application has a repository' do
-    let(:repository) { Spec::ExampleRepository.new }
-
-    example_class 'Spec::ExampleRepository' do |klass|
-      klass.send(:include, Bronze::Collections::Repository)
-    end
-  end
-
   shared_context 'when the #initial_state method is defined' do
     let(:initial_state) do
       {
@@ -75,149 +63,17 @@ RSpec.describe Ephesus::Core::Application do
   end
 
   subject(:instance) do
-    described_class.new(
-      event_dispatcher: event_dispatcher,
-      repository:       repository,
-      state:            state
-    )
+    described_class.new(state: state)
   end
 
-  let(:event_dispatcher) { nil }
-  let(:repository)       { nil }
-  let(:state)            { nil }
+  let(:state) { nil }
 
   describe '::new' do
     it 'should define the constructor' do
       expect(described_class)
         .to be_constructible
         .with(0).arguments
-        .and_keywords(:event_dispatcher, :repository, :state)
-    end
-
-    describe 'with an event dispatcher' do
-      let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
-      let(:instance) do
-        described_class.new(event_dispatcher: event_dispatcher)
-      end
-
-      it 'should inject the event dispatcher' do
-        expect(instance.event_dispatcher).to be event_dispatcher
-      end
-    end
-  end
-
-  describe '#add_event_listener' do
-    let(:event_type) { 'spec.events.custom_event' }
-    let(:event)      { Ephesus::Core::Event.new(event_type) }
-
-    it 'should define the method' do
-      expect(instance)
-        .to respond_to(:add_event_listener)
-        .with(1..2).arguments
-        .and_a_block
-    end
-
-    describe 'with no definition' do
-      let(:error_message) do
-        'listener must be a method name or a block'
-      end
-
-      it 'should raise an error' do
-        expect { instance.add_event_listener(event_type) }
-          .to raise_error ArgumentError, error_message
-      end
-    end
-
-    describe 'with a block with no arguments' do
-      it 'should call the block with no arguments' do
-        called = false
-        block  = -> { called = true }
-
-        instance.add_event_listener(event_type, &block)
-
-        instance.event_dispatcher.dispatch_event(event)
-
-        expect(called).to be true
-      end
-    end
-
-    describe 'with a block with one argument' do
-      it 'should call the block with the event' do
-        args  = []
-        block = ->(event) { args << event }
-
-        instance.add_event_listener(event_type, &block)
-
-        instance.event_dispatcher.dispatch_event(event)
-
-        expect(args).to contain_exactly(event)
-      end
-    end
-
-    describe 'with the name of an undefined method' do
-      let(:method_name) { :custom_event_handler }
-      let(:error_message) do
-        "undefined method `#{method_name}' for class `#{described_class}'"
-      end
-
-      it 'should raise an error' do
-        expect { instance.add_event_listener(event_type, method_name) }
-          .to raise_error NameError, error_message
-      end
-    end
-
-    describe 'with the name of a method with no arguments' do
-      let(:method_name) { :custom_event_handler }
-
-      it 'should call the method with no arguments' do
-        called = false
-
-        instance.define_singleton_method(method_name) { called = true }
-
-        instance.add_event_listener(event_type, method_name)
-
-        instance.event_dispatcher.dispatch_event(event)
-
-        expect(called).to be true
-      end
-    end
-
-    describe 'with the name of a method with one argument' do
-      let(:method_name) { :custom_event_handler }
-
-      # rubocop:disable RSpec/ExampleLength
-      it 'should call the method with the event' do
-        arguments = []
-
-        instance.define_singleton_method(method_name) do |*args|
-          arguments = args
-        end
-
-        instance.add_event_listener(event_type, method_name)
-
-        instance.event_dispatcher.dispatch_event(event)
-
-        expect(arguments).to be == [event]
-      end
-      # rubocop:enable RSpec/ExampleLength
-    end
-  end
-
-  describe '#event_dispatcher' do
-    include_examples 'should have reader',
-      :event_dispatcher,
-      -> { an_instance_of Ephesus::Core::EventDispatcher }
-
-    wrap_context 'when the application has an event dispatcher' do
-      it { expect(instance.event_dispatcher).to be event_dispatcher }
-    end
-  end
-
-  describe '#repository' do
-    include_examples 'should have reader', :repository, nil
-
-    wrap_context 'when the application has a repository' do
-      it { expect(instance.repository).to be repository }
+        .and_keywords(:state)
     end
   end
 
