@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'ephesus/core/actions/invalid_arguments_result'
+require 'ephesus/core/commands/invalid_arguments_result'
 
-RSpec.describe Ephesus::Core::Actions::InvalidArgumentsResult do
+RSpec.describe Ephesus::Core::Commands::InvalidArgumentsResult do
   subject(:instance) { described_class.new }
 
-  let(:action_name) { :do_something }
+  let(:command_name) { :do_something }
 
   describe '::new' do
     it 'should define the constructor' do
@@ -16,13 +16,13 @@ RSpec.describe Ephesus::Core::Actions::InvalidArgumentsResult do
     end
   end
 
-  describe '#action_name' do
-    it { expect(instance.action_name).to be nil }
+  describe '#command_name' do
+    it { expect(instance.command_name).to be nil }
 
-    context 'when initialized with an action name' do
-      let(:instance) { described_class.new(action_name) }
+    context 'when initialized with an command name' do
+      let(:instance) { described_class.new(command_name) }
 
-      it { expect(instance.action_name).to be action_name }
+      it { expect(instance.command_name).to be command_name }
     end
   end
 

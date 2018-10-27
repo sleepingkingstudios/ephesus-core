@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'ephesus/core/actions/invalid_action_result'
+require 'ephesus/core/commands/unavailable_command_result'
 
-RSpec.describe Ephesus::Core::Actions::InvalidActionResult do
+RSpec.describe Ephesus::Core::Commands::UnavailableCommandResult do
   subject(:instance) { described_class.new }
 
-  let(:action_name) { :do_something }
+  let(:command_name) { :do_something }
 
   describe '::new' do
     it 'should define the constructor' do
@@ -16,18 +16,18 @@ RSpec.describe Ephesus::Core::Actions::InvalidActionResult do
     end
   end
 
-  describe '#action_name' do
-    it { expect(instance.action_name).to be nil }
+  describe '#command_name' do
+    it { expect(instance.command_name).to be nil }
 
-    context 'when initialized with an action name' do
-      let(:instance) { described_class.new(action_name) }
+    context 'when initialized with a command name' do
+      let(:instance) { described_class.new(command_name) }
 
-      it { expect(instance.action_name).to be action_name }
+      it { expect(instance.command_name).to be command_name }
     end
   end
 
   describe '#errors' do
-    let(:expected_error) { :invalid_action }
+    let(:expected_error) { :unavailable_command }
 
     it { expect(instance.errors).to include expected_error }
   end

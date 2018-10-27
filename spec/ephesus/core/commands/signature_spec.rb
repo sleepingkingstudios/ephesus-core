@@ -1,96 +1,110 @@
 # frozen_string_literal: true
 
 require 'ephesus/core/command'
-require 'ephesus/core/actions/signature'
+require 'ephesus/core/commands/signature'
 
-RSpec.describe Ephesus::Core::Actions::Signature do
-  shared_context 'when the action has one optional argument' do
+RSpec.describe Ephesus::Core::Commands::Signature do
+  shared_context 'when the command has one optional argument' do
     before(:example) do
-      action_class.send :argument, :optional_arg, required: false
+      command_class.instance_eval do
+        argument :optional_arg, required: false
+      end
     end
   end
 
-  shared_context 'when the action has one required argument' do
+  shared_context 'when the command has one required argument' do
     before(:example) do
-      action_class.send :argument, :required_arg, required: true
+      command_class.instance_eval do
+        argument :required_arg, required: true
+      end
     end
   end
 
-  shared_context 'when the action has mixed optional and required arguments' do
+  shared_context 'when the command has mixed optional and required arguments' do
     before(:example) do
-      action_class.send :argument, :first_arg,  required: true
-      action_class.send :argument, :second_arg, required: true
-      action_class.send :argument, :third_arg,  required: true
-      action_class.send :argument, :fourth_arg, required: false
-      action_class.send :argument, :fifth_arg,  required: false
-      action_class.send :argument, :sixth_arg,  required: false
+      command_class.instance_eval do
+        argument :first_arg,  required: true
+        argument :second_arg, required: true
+        argument :third_arg,  required: true
+        argument :fourth_arg, required: false
+        argument :fifth_arg,  required: false
+        argument :sixth_arg,  required: false
+      end
     end
   end
 
-  shared_context 'when the action has one optional keyword' do
+  shared_context 'when the command has one optional keyword' do
     before(:example) do
-      action_class.send :keyword, :optional_key, required: false
+      command_class.instance_eval do
+        keyword :optional_key, required: false
+      end
     end
   end
 
-  shared_context 'when the action has one required keyword' do
+  shared_context 'when the command has one required keyword' do
     before(:example) do
-      action_class.send :keyword, :required_key, required: true
+      command_class.instance_eval do
+        keyword :required_key, required: true
+      end
     end
   end
 
-  shared_context 'when the action has mixed optional and required keywords' do
+  shared_context 'when the command has mixed optional and required keywords' do
     before(:example) do
-      action_class.send :keyword, :first_required_key,  required: true
-      action_class.send :keyword, :second_required_key, required: true
-      action_class.send :keyword, :third_required_key,  required: true
-      action_class.send :keyword, :first_optional_key,  required: false
-      action_class.send :keyword, :second_optional_key, required: false
-      action_class.send :keyword, :third_optional_key,  required: false
+      command_class.instance_eval do
+        keyword :first_required_key,  required: true
+        keyword :second_required_key, required: true
+        keyword :third_required_key,  required: true
+        keyword :first_optional_key,  required: false
+        keyword :second_optional_key, required: false
+        keyword :third_optional_key,  required: false
+      end
     end
   end
 
-  shared_context 'when the action has mixed arguments and keywords' do
+  shared_context 'when the command has mixed arguments and keywords' do
     before(:example) do
-      action_class.send :argument, :first_arg,  required: true
-      action_class.send :argument, :second_arg, required: true
-      action_class.send :argument, :third_arg,  required: false
-      action_class.send :keyword,  :first_key,  required: false
-      action_class.send :keyword,  :second_key, required: true
-      action_class.send :keyword,  :third_key,  required: false
+      command_class.instance_eval do
+        argument :first_arg,  required: true
+        argument :second_arg, required: true
+        argument :third_arg,  required: false
+        keyword  :first_key,  required: false
+        keyword  :second_key, required: true
+        keyword  :third_key,  required: false
+      end
     end
   end
 
-  subject(:instance) { described_class.new(action_class) }
+  subject(:instance) { described_class.new(command_class) }
 
-  let(:action_class) { Spec::ExampleAction }
+  let(:command_class) { Spec::ExampleCommand }
 
-  example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Command
+  example_class 'Spec::ExampleCommand', base_class: Ephesus::Core::Command
 
   describe '::new' do
     it { expect(described_class).to be_constructible.with(1).argument }
   end
 
-  describe '#action' do
-    include_examples 'should have reader', :action_class, -> { action_class }
+  describe '#command_class' do
+    include_examples 'should have reader', :command_class, -> { command_class }
   end
 
   describe '#allowed_keywords' do
     include_examples 'should have reader', :allowed_keywords, []
 
-    wrap_context 'when the action has one optional keyword' do
+    wrap_context 'when the command has one optional keyword' do
       it 'should return the allowed keywords' do
         expect(instance.allowed_keywords).to contain_exactly(:optional_key)
       end
     end
 
-    wrap_context 'when the action has one required keyword' do
+    wrap_context 'when the command has one required keyword' do
       it 'should return the allowed keywords' do
         expect(instance.allowed_keywords).to contain_exactly(:required_key)
       end
     end
 
-    wrap_context 'when the action has mixed optional and required keywords' do
+    wrap_context 'when the command has mixed optional and required keywords' do
       let(:expected) do
         %i[
           first_optional_key
@@ -107,7 +121,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
       end
     end
 
-    wrap_context 'when the action has mixed arguments and keywords' do
+    wrap_context 'when the command has mixed arguments and keywords' do
       let(:expected) do
         %i[
           first_key
@@ -126,7 +140,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
     shared_examples 'should return an error result' do
       it { expect(success).to be false }
 
-      it { expect(error_result).to be_a Ephesus::Core::Actions::Result }
+      it { expect(error_result).to be_a Ephesus::Core::Commands::Result }
 
       it { expect(error_result.errors).to include default_error }
     end
@@ -152,7 +166,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
         .and_any_keywords
     end
 
-    context 'when the action has no arguments or keywords' do
+    context 'when the command has no arguments or keywords' do
       # rubocop:disable RSpec/NestedGroups
       describe 'with no arguments or keywords' do
         it { expect(success).to be true }
@@ -201,7 +215,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
       # rubocop:enable RSpec/NestedGroups
     end
 
-    wrap_context 'when the action has one optional argument' do
+    wrap_context 'when the command has one optional argument' do
       describe 'with no arguments or keywords' do
         it { expect(success).to be true }
 
@@ -252,7 +266,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
       end
     end
 
-    wrap_context 'when the action has one required argument' do
+    wrap_context 'when the command has one required argument' do
       describe 'with no arguments or keywords' do
         let(:expected_error) do
           {
@@ -313,7 +327,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
       end
     end
 
-    wrap_context 'when the action has mixed optional and required arguments' do
+    wrap_context 'when the command has mixed optional and required arguments' do
       describe 'with no arguments or keywords' do
         let(:expected_error) do
           {
@@ -444,7 +458,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
       end
     end
 
-    wrap_context 'when the action has one optional keyword' do
+    wrap_context 'when the command has one optional keyword' do
       describe 'with no arguments or keywords' do
         it { expect(success).to be true }
 
@@ -505,7 +519,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
       end
     end
 
-    wrap_context 'when the action has one required keyword' do
+    wrap_context 'when the command has one required keyword' do
       describe 'with no arguments or keywords' do
         let(:expected_error) do
           {
@@ -673,7 +687,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
       end
     end
 
-    wrap_context 'when the action has mixed optional and required keywords' do
+    wrap_context 'when the command has mixed optional and required keywords' do
       describe 'with no arguments or keywords' do
         let(:expected_error) do
           {
@@ -980,7 +994,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
       end
     end
 
-    wrap_context 'when the action has mixed arguments and keywords' do
+    wrap_context 'when the command has mixed arguments and keywords' do
       describe 'with no arguments or keywords' do
         let(:arguments_error) do
           {
@@ -1250,19 +1264,19 @@ RSpec.describe Ephesus::Core::Actions::Signature do
   describe '#max_argument_count' do
     include_examples 'should have reader', :max_argument_count, 0
 
-    wrap_context 'when the action has one optional argument' do
+    wrap_context 'when the command has one optional argument' do
       it { expect(instance.max_argument_count).to be 1 }
     end
 
-    wrap_context 'when the action has one required argument' do
+    wrap_context 'when the command has one required argument' do
       it { expect(instance.max_argument_count).to be 1 }
     end
 
-    wrap_context 'when the action has mixed optional and required arguments' do
+    wrap_context 'when the command has mixed optional and required arguments' do
       it { expect(instance.max_argument_count).to be 6 }
     end
 
-    wrap_context 'when the action has mixed arguments and keywords' do
+    wrap_context 'when the command has mixed arguments and keywords' do
       it { expect(instance.max_argument_count).to be 3 }
     end
   end
@@ -1270,19 +1284,19 @@ RSpec.describe Ephesus::Core::Actions::Signature do
   describe '#min_argument_count' do
     include_examples 'should have reader', :min_argument_count, 0
 
-    wrap_context 'when the action has one optional argument' do
+    wrap_context 'when the command has one optional argument' do
       it { expect(instance.min_argument_count).to be 0 }
     end
 
-    wrap_context 'when the action has one required argument' do
+    wrap_context 'when the command has one required argument' do
       it { expect(instance.min_argument_count).to be 1 }
     end
 
-    wrap_context 'when the action has mixed optional and required arguments' do
+    wrap_context 'when the command has mixed optional and required arguments' do
       it { expect(instance.min_argument_count).to be 3 }
     end
 
-    wrap_context 'when the action has mixed arguments and keywords' do
+    wrap_context 'when the command has mixed arguments and keywords' do
       it { expect(instance.min_argument_count).to be 2 }
     end
   end
@@ -1290,17 +1304,17 @@ RSpec.describe Ephesus::Core::Actions::Signature do
   describe '#optional_keywords' do
     include_examples 'should have reader', :optional_keywords, []
 
-    wrap_context 'when the action has one optional keyword' do
+    wrap_context 'when the command has one optional keyword' do
       it 'should return the optional keywords' do
         expect(instance.optional_keywords).to contain_exactly(:optional_key)
       end
     end
 
-    wrap_context 'when the action has one required keyword' do
+    wrap_context 'when the command has one required keyword' do
       it { expect(instance.optional_keywords).to be_empty }
     end
 
-    wrap_context 'when the action has mixed optional and required keywords' do
+    wrap_context 'when the command has mixed optional and required keywords' do
       let(:expected) do
         %i[
           first_optional_key
@@ -1314,7 +1328,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
       end
     end
 
-    wrap_context 'when the action has mixed arguments and keywords' do
+    wrap_context 'when the command has mixed arguments and keywords' do
       it 'should return the optional keywords' do
         expect(instance.optional_keywords)
           .to contain_exactly(:first_key, :third_key)
@@ -1325,17 +1339,17 @@ RSpec.describe Ephesus::Core::Actions::Signature do
   describe '#required_keywords' do
     include_examples 'should have reader', :required_keywords, []
 
-    wrap_context 'when the action has one optional keyword' do
+    wrap_context 'when the command has one optional keyword' do
       it { expect(instance.required_keywords).to be_empty }
     end
 
-    wrap_context 'when the action has one required keyword' do
+    wrap_context 'when the command has one required keyword' do
       it 'should return the required keywords' do
         expect(instance.required_keywords).to contain_exactly(:required_key)
       end
     end
 
-    wrap_context 'when the action has mixed optional and required keywords' do
+    wrap_context 'when the command has mixed optional and required keywords' do
       let(:expected) do
         %i[
           first_required_key
@@ -1349,7 +1363,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
       end
     end
 
-    wrap_context 'when the action has mixed arguments and keywords' do
+    wrap_context 'when the command has mixed arguments and keywords' do
       it 'should return the required keywords' do
         expect(instance.required_keywords).to contain_exactly(:second_key)
       end

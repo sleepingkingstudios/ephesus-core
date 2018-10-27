@@ -3,6 +3,6 @@
 require 'ephesus/core'
 
 module Ephesus::Core
-  # Namespace for functionality for Ephesus actions.
-  module Actions; end
+  # Namespace for functionality for Ephesus commands.
+  module Commands; end
 end

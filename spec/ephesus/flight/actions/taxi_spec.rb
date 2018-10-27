@@ -23,9 +23,9 @@ RSpec.describe Ephesus::Flight::Actions::Taxi do
   describe '::signature' do
     let(:signature) { described_class.signature }
 
-    it { expect(signature).to be_a Ephesus::Core::Actions::Signature }
+    it { expect(signature).to be_a Ephesus::Core::Commands::Signature }
 
-    it { expect(signature.action_class).to be described_class }
+    it { expect(signature.command_class).to be described_class }
   end
 
   describe '#call' do

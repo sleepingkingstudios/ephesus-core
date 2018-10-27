@@ -5,9 +5,9 @@ require 'forwardable'
 require 'cuprum/command'
 
 require 'ephesus/core'
-require 'ephesus/core/actions/dsl'
-require 'ephesus/core/actions/hooks'
-require 'ephesus/core/actions/result'
+require 'ephesus/core/commands/dsl'
+require 'ephesus/core/commands/hooks'
+require 'ephesus/core/commands/result'
 
 module Ephesus::Core
   # Abstract base class for Ephesus commands. Takes and stores a state object
@@ -15,8 +15,8 @@ module Ephesus::Core
   # and optional params passed from the controller object.
   class Command < Cuprum::Command
     extend  Forwardable
-    include Ephesus::Core::Actions::Hooks
-    include Ephesus::Core::Actions::Dsl
+    include Ephesus::Core::Commands::Dsl
+    include Ephesus::Core::Commands::Hooks
 
     def initialize(state, dispatcher:, **options)
       @state      = state
@@ -35,7 +35,7 @@ module Ephesus::Core
     private
 
     def build_result(value = nil, **options)
-      Ephesus::Core::Actions::Result.new(value, options)
+      Ephesus::Core::Commands::Result.new(value, options)
     end
   end
 end

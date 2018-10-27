@@ -1,21 +1,21 @@
 # frozen_string_literal: true
 
-require 'ephesus/core/actions'
-require 'ephesus/core/actions/invalid_arguments_result'
+require 'ephesus/core/commands'
+require 'ephesus/core/commands/invalid_arguments_result'
 
-module Ephesus::Core::Actions
-  # Utility class representing the expected parameters of an action. Can match
+module Ephesus::Core::Commands
+  # Utility class representing the expected parameters of a command. Can match
   # the actual arguments and keywords against the expectation and generate an
   # error result on a failed match.
   class Signature
-    def initialize(action_class)
-      @action_class = action_class
+    def initialize(command_class)
+      @command_class = command_class
 
       count_arguments
       check_keywords
     end
 
-    attr_reader :action_class
+    attr_reader :command_class
 
     attr_reader :allowed_keywords
 
@@ -48,7 +48,7 @@ module Ephesus::Core::Actions
       @optional_keywords = []
       @required_keywords = []
 
-      action_class.properties[:keywords].each do |key, hsh|
+      command_class.properties[:keywords].each do |key, hsh|
         @allowed_keywords << key
 
         (hsh[:required] ? @required_keywords : @optional_keywords) << key
@@ -56,7 +56,7 @@ module Ephesus::Core::Actions
     end
 
     def count_arguments
-      arguments           = action_class.properties[:arguments]
+      arguments           = command_class.properties[:arguments]
       @min_argument_count = arguments.select { |hsh| hsh[:required] }.size
       @max_argument_count = arguments.size
     end
@@ -108,7 +108,7 @@ module Ephesus::Core::Actions
     end
 
     def result
-      @result ||= Ephesus::Core::Actions::InvalidArgumentsResult.new
+      @result ||= Ephesus::Core::Commands::InvalidArgumentsResult.new
     end
   end
 end

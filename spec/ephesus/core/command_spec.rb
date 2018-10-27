@@ -41,7 +41,8 @@ RSpec.describe Ephesus::Core::Command do
     end
 
     it 'should return a result' do
-      expect(instance.send :build_result).to be_a Ephesus::Core::Actions::Result
+      expect(instance.send :build_result)
+        .to be_a Ephesus::Core::Commands::Result
     end
 
     it { expect(instance.send(:build_result).value).to be nil }

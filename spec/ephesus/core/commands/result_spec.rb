@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'ephesus/core/actions/result'
+require 'ephesus/core/commands/result'
 
-RSpec.describe Ephesus::Core::Actions::Result do
+RSpec.describe Ephesus::Core::Commands::Result do
   subject(:instance) { described_class.new(value, errors: errors) }
 
   let(:value)  { 'result value' }
@@ -13,28 +13,28 @@ RSpec.describe Ephesus::Core::Actions::Result do
       expect(described_class)
         .to be_constructible
         .with(0..1).arguments
-        .and_keywords(:action_name, :arguments, :errors, :keywords)
+        .and_keywords(:command_name, :arguments, :errors, :keywords)
     end
   end
 
-  describe '#action_name' do
-    include_examples 'should have property', :action_name, nil
+  describe '#command_name' do
+    include_examples 'should have property', :command_name, nil
 
-    context 'when initialized with an action name' do
-      let(:action_name) { :do_something }
+    context 'when initialized with an command name' do
+      let(:command_name) { :do_something }
       let(:instance) do
-        described_class.new(value, action_name: action_name, errors: errors)
+        described_class.new(value, command_name: command_name, errors: errors)
       end
 
-      it { expect(instance.action_name).to be action_name }
+      it { expect(instance.command_name).to be command_name }
     end
 
-    context 'when the action name is set' do
-      let(:action_name) { :do_something }
+    context 'when the command name is set' do
+      let(:command_name) { :do_something }
 
-      before(:example) { instance.action_name = action_name }
+      before(:example) { instance.command_name = command_name }
 
-      it { expect(instance.action_name).to be action_name }
+      it { expect(instance.command_name).to be command_name }
     end
   end
 

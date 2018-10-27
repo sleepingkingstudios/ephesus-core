@@ -3,15 +3,15 @@
 require 'sleeping_king_studios/tools/toolbelt'
 require 'sleeping_king_studios/tools/toolbox/mixin'
 
-require 'ephesus/core/actions'
-require 'ephesus/core/actions/signature'
+require 'ephesus/core/commands'
+require 'ephesus/core/commands/signature'
 
-module Ephesus::Core::Actions
-  # Mixin for defining metadata properties for Ephesus actions.
+module Ephesus::Core::Commands
+  # Mixin for defining metadata properties for Ephesus commands.
   module Dsl
     extend SleepingKingStudios::Tools::Toolbox::Mixin
 
-    # Class methods to include in Ephesus::Core::Action.
+    # Class methods to include in Ephesus::Core::Command.
     module ClassMethods
       def properties
         return @properties if @properties
@@ -23,7 +23,7 @@ module Ephesus::Core::Actions
       end
 
       def signature
-        @signature ||= Ephesus::Core::Actions::Signature.new(self)
+        @signature ||= Ephesus::Core::Commands::Signature.new(self)
       end
 
       private

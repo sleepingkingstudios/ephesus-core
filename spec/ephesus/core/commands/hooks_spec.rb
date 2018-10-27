@@ -5,12 +5,12 @@ require 'hamster'
 require 'ephesus/core/command'
 require 'ephesus/core/utils/dispatch_proxy'
 
-RSpec.describe Ephesus::Core::Actions::Hooks do
-  shared_context 'when the action has chained commands' do
+RSpec.describe Ephesus::Core::Commands::Hooks do
+  shared_context 'when the command has chained commands' do
     let(:chained_command) { Cuprum::Command.new }
     let(:chained_result)  { Cuprum::Result.new 'chained result' }
     let(:expected_result) { chained_result }
-    let(:action) do
+    let(:command) do
       super()
         .chain { 'second result' }
         .chain { 'third result' }
@@ -27,32 +27,29 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
   end
   let(:result)           { Cuprum::Result.new 'first result' }
   let(:expected_result)  { result }
-  let(:action_class)     { Spec::ExampleAction }
+  let(:command_class)    { Spec::ExampleCommand }
   let(:state)            { {} }
-  let(:action) do
-    action_class.new(state, dispatcher: dispatcher)
+  let(:command) do
+    command_class.new(state, dispatcher: dispatcher)
   end
 
-  example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Command \
-  do |klass|
-    klass.send :include, described_class
-  end
+  example_class 'Spec::ExampleCommand', base_class: Ephesus::Core::Command
 
-  before(:example) { allow(action).to receive(:process).and_return(result) }
+  before(:example) { allow(command).to receive(:process).and_return(result) }
 
   describe '::after' do
     shared_examples 'should yield and return the last result' do
       it 'should return the result' do
         define_hook {}
 
-        expect(action.call).to be expected_result
+        expect(command.call).to be expected_result
       end
 
       it 'should yield the last result to the block' do
         expect do |block|
           define_hook(&block)
 
-          action.call
+          command.call
         end
           .to yield_with_args(expected_result)
       end
@@ -63,14 +60,14 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
         expect do |block|
           define_hook(&block)
 
-          action.call
+          command.call
         end
           .not_to yield_control
       end
     end
 
     it 'should define the class method' do
-      expect(action_class)
+      expect(command_class)
         .to respond_to(:after)
         .with(0..1).arguments
         .and_keywords(:if, :unless)
@@ -79,36 +76,36 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
     describe 'without a block' do
       it 'should raise an error' do
-        expect { action_class.after }
+        expect { command_class.after }
           .to raise_error ArgumentError, 'must provide a block'
       end
     end
 
     describe 'with an invalid status' do
       it 'should raise an error' do
-        expect { action_class.after(:on_fire) {} }
+        expect { command_class.after(:on_fire) {} }
           .to raise_error ArgumentError, 'invalid result status :on_fire'
       end
     end
 
     describe 'with no arguments' do
       def define_hook(&block)
-        action_class.after(&block)
+        command_class.after(&block)
       end
 
-      it 'should evaluate the block in the context of the action instance' do
+      it 'should evaluate the block in the context of the command instance' do
         context = nil
 
         define_hook { context = self }
 
-        action.call
+        command.call
 
-        expect(context).to be action
+        expect(context).to be command
       end
 
       include_examples 'should yield and return the last result'
 
-      wrap_context 'when the action has chained commands' do
+      wrap_context 'when the command has chained commands' do
         include_examples 'should yield and return the last result'
       end
     end
@@ -116,7 +113,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
     # rubocop:disable RSpec/NestedGroups
     describe 'with :success' do
       def define_hook(&block)
-        action_class.after(:success, &block)
+        command_class.after(:success, &block)
       end
 
       context 'when the result is passing' do
@@ -126,7 +123,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
         include_examples 'should yield and return the last result'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should yield and return the last result'
         end
       end
@@ -138,7 +135,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
         include_examples 'should not yield the block'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should not yield the block'
         end
       end
@@ -148,7 +145,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
     # rubocop:disable RSpec/NestedGroups
     describe 'with :failure' do
       def define_hook(&block)
-        action_class.after(:failure, &block)
+        command_class.after(:failure, &block)
       end
 
       context 'when the result is passing' do
@@ -158,7 +155,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
         include_examples 'should not yield the block'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should not yield the block'
         end
       end
@@ -170,7 +167,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
         include_examples 'should yield and return the last result'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should yield and return the last result'
         end
       end
@@ -182,7 +179,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
       let(:conditional) { ->(_) {} }
 
       def define_hook(&block)
-        action_class.after(if: conditional, &block)
+        command_class.after(if: conditional, &block)
       end
 
       context 'when the conditional block takes an argument' do
@@ -190,9 +187,9 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
           yielded     = nil
           conditional = ->(result) { yielded = result }
 
-          action_class.after(if: conditional) {}
+          command_class.after(if: conditional) {}
 
-          action.call
+          command.call
 
           expect(yielded).to be result
         end
@@ -203,7 +200,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
         include_examples 'should yield and return the last result'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should yield and return the last result'
         end
       end
@@ -213,7 +210,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
         include_examples 'should not yield the block'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should not yield the block'
         end
       end
@@ -225,31 +222,31 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
       let(:method_name) { :conditional_method }
 
       def define_hook(&block)
-        action_class.after(if: method_name, &block)
+        command_class.after(if: method_name, &block)
       end
 
-      context 'when the action does not define the method' do
+      context 'when the command does not define the method' do
         it 'should raise an error when called' do
           define_hook {}
 
-          expect { action.call }
+          expect { command.call }
             .to raise_error NoMethodError,
               /undefined method `conditional_method'/
         end
       end
 
-      context 'when the action defines the method' do
+      context 'when the command defines the method' do
         # rubocop:disable RSpec/ExampleLength
         it 'should call the method with the last result' do
           arguments = nil
 
-          action_class.after(if: method_name) {}
+          command_class.after(if: method_name) {}
 
-          action_class.send(:define_method, method_name) do |*args|
+          command_class.send(:define_method, method_name) do |*args|
             arguments = args
           end
 
-          action.call
+          command.call
 
           expect(arguments).to be == [expected_result]
         end
@@ -258,24 +255,24 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
       context 'when the conditional block returns true' do
         before(:example) do
-          action_class.send(:define_method, method_name) { |_| true }
+          command_class.send(:define_method, method_name) { |_| true }
         end
 
         include_examples 'should yield and return the last result'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should yield and return the last result'
         end
       end
 
       context 'when the conditional block returns false' do
         before(:example) do
-          action_class.send(:define_method, method_name) { |_| false }
+          command_class.send(:define_method, method_name) { |_| false }
         end
 
         include_examples 'should not yield the block'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should not yield the block'
         end
       end
@@ -287,7 +284,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
       let(:conditional) { ->(_) {} }
 
       def define_hook(&block)
-        action_class.after(unless: conditional, &block)
+        command_class.after(unless: conditional, &block)
       end
 
       context 'when the conditional block takes an argument' do
@@ -295,9 +292,9 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
           yielded     = nil
           conditional = ->(result) { yielded = result }
 
-          action_class.after(unless: conditional) {}
+          command_class.after(unless: conditional) {}
 
-          action.call
+          command.call
 
           expect(yielded).to be result
         end
@@ -308,7 +305,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
         include_examples 'should not yield the block'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should not yield the block'
         end
       end
@@ -318,7 +315,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
         include_examples 'should yield and return the last result'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should yield and return the last result'
         end
       end
@@ -330,31 +327,31 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
       let(:method_name) { :conditional_method }
 
       def define_hook(&block)
-        action_class.after(unless: method_name, &block)
+        command_class.after(unless: method_name, &block)
       end
 
-      context 'when the action does not define the method' do
+      context 'when the command does not define the method' do
         it 'should raise an error when called' do
           define_hook {}
 
-          expect { action.call }
+          expect { command.call }
             .to raise_error NoMethodError,
               /undefined method `conditional_method'/
         end
       end
 
-      context 'when the action defines the method' do
+      context 'when the command defines the method' do
         # rubocop:disable RSpec/ExampleLength
         it 'should call the method with the last result' do
           arguments = nil
 
-          action_class.after(unless: method_name) {}
+          command_class.after(unless: method_name) {}
 
-          action_class.send(:define_method, method_name) do |*args|
+          command_class.send(:define_method, method_name) do |*args|
             arguments = args
           end
 
-          action.call
+          command.call
 
           expect(arguments).to be == [expected_result]
         end
@@ -363,24 +360,24 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
       context 'when the conditional block returns true' do
         before(:example) do
-          action_class.send(:define_method, method_name) { |_| true }
+          command_class.send(:define_method, method_name) { |_| true }
         end
 
         include_examples 'should not yield the block'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should not yield the block'
         end
       end
 
       context 'when the conditional block returns false' do
         before(:example) do
-          action_class.send(:define_method, method_name) { |_| false }
+          command_class.send(:define_method, method_name) { |_| false }
         end
 
         include_examples 'should yield and return the last result'
 
-        wrap_context 'when the action has chained commands' do
+        wrap_context 'when the command has chained commands' do
           include_examples 'should yield and return the last result'
         end
       end
@@ -390,7 +387,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
   describe '::before' do
     it 'should define the class method' do
-      expect(action_class)
+      expect(command_class)
         .to respond_to(:before)
         .with(0).arguments
         .and_a_block
@@ -398,53 +395,53 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
 
     describe 'without a block' do
       it 'should raise an error' do
-        expect { action_class.before }
+        expect { command_class.before }
           .to raise_error ArgumentError, 'must provide a block'
       end
     end
 
     describe 'with no arguments' do
       def define_hook(&block)
-        action_class.before(&block)
+        command_class.before(&block)
       end
 
       it 'should return the result' do
         define_hook {}
 
-        expect(action.call).to be expected_result
+        expect(command.call).to be expected_result
       end
 
       it 'should yield the initial result to the block' do
         expect do |block|
           define_hook(&block)
 
-          action.call
+          command.call
         end
-          .to yield_with_args(an_instance_of Ephesus::Core::Actions::Result)
+          .to yield_with_args(an_instance_of Ephesus::Core::Commands::Result)
       end
 
-      it 'should evaluate the block in the context of the action instance' do
+      it 'should evaluate the block in the context of the command instance' do
         context = nil
 
         define_hook { context = self }
 
-        action.call
+        command.call
 
-        expect(context).to be action
+        expect(context).to be command
       end
 
       # rubocop:disable RSpec/ExampleLength
-      it 'should call the action with the yielded result' do
+      it 'should call the command with the yielded result' do
         yielded = nil
         called  = nil
 
-        action_class.before { |result| yielded = result }
+        command_class.before { |result| yielded = result }
 
-        allow(action).to receive(:process) do
-          called = action.send(:result)
+        allow(command).to receive(:process) do
+          called = command.send(:result)
         end
 
-        action.call
+        command.call
 
         expect(called).to be yielded
       end

@@ -2,10 +2,10 @@
 
 require 'ephesus/core/command'
 
-RSpec.describe Ephesus::Core::Actions::Dsl do
-  shared_context 'when the action defines an argument' do
+RSpec.describe Ephesus::Core::Commands::Dsl do
+  shared_context 'when the command defines an argument' do
     before(:example) do
-      action_class.send :argument, :do_something
+      command_class.send :argument, :do_something
 
       properties[:arguments] << {
         name:     :do_something,
@@ -14,11 +14,11 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
     end
   end
 
-  shared_context 'when the action defines many arguments' do
+  shared_context 'when the command defines many arguments' do
     before(:example) do
-      action_class.send :argument, :argument_one
-      action_class.send :argument, :argument_two,   required: true
-      action_class.send :argument, :argument_three, required: false
+      command_class.send :argument, :argument_one
+      command_class.send :argument, :argument_two,   required: true
+      command_class.send :argument, :argument_three, required: false
 
       properties[:arguments] << {
         name:     :argument_one,
@@ -37,9 +37,9 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
     end
   end
 
-  shared_context 'when the action defines a keyword' do
+  shared_context 'when the command defines a keyword' do
     before(:example) do
-      action_class.send :keyword, :with_option
+      command_class.send :keyword, :with_option
 
       properties[:keywords][:with_option] = {
         name:     :with_option,
@@ -48,11 +48,11 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
     end
   end
 
-  shared_context 'when the action defines many keywords' do
+  shared_context 'when the command defines many keywords' do
     before(:example) do
-      action_class.send :keyword, :keyword_one
-      action_class.send :keyword, :keyword_two,   required: false
-      action_class.send :keyword, :keyword_three, required: true
+      command_class.send :keyword, :keyword_one
+      command_class.send :keyword, :keyword_two,   required: false
+      command_class.send :keyword, :keyword_three, required: true
 
       properties[:keywords][:keyword_one] = {
         name:     :keyword_one,
@@ -71,7 +71,7 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
     end
   end
 
-  let(:action_class) { Class.new(Ephesus::Core::Command) }
+  let(:command_class) { Class.new(Ephesus::Core::Command) }
   let(:properties) do
     {
       arguments: [],
@@ -79,7 +79,7 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
     }
   end
 
-  it { expect(action_class).to be < described_class }
+  it { expect(command_class).to be < described_class }
 
   describe '::argument' do
     let(:name) { :spell }
@@ -90,17 +90,17 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       }
     end
 
-    it { expect(action_class).not_to respond_to(:argument) }
+    it { expect(command_class).not_to respond_to(:argument) }
 
     it 'should define the private method' do
-      expect(action_class)
+      expect(command_class)
         .to respond_to(:argument, true)
         .with(1).argument.and_keywords(:required)
     end
 
     it 'should add the argument to the properties' do
-      expect { action_class.send(:argument, name) }
-        .to change { action_class.properties[:arguments] }
+      expect { command_class.send(:argument, name) }
+        .to change { command_class.properties[:arguments] }
         .to include expected
     end
 
@@ -108,8 +108,8 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       let(:name) { 'spell' }
 
       it 'should add the argument to the properties' do
-        expect { action_class.send(:argument, name) }
-          .to change { action_class.properties[:arguments] }
+        expect { command_class.send(:argument, name) }
+          .to change { command_class.properties[:arguments] }
           .to include expected
       end
     end
@@ -123,8 +123,8 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       end
 
       it 'should add the argument to the properties' do
-        expect { action_class.send(:argument, name) }
-          .to change { action_class.properties[:arguments] }
+        expect { command_class.send(:argument, name) }
+          .to change { command_class.properties[:arguments] }
           .to include expected
       end
     end
@@ -138,8 +138,8 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       end
 
       it 'should add the argument to the properties' do
-        expect { action_class.send(:argument, name) }
-          .to change { action_class.properties[:arguments] }
+        expect { command_class.send(:argument, name) }
+          .to change { command_class.properties[:arguments] }
           .to include expected
       end
     end
@@ -148,32 +148,32 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       let(:expected) { super().merge required: false }
 
       it 'should add the argument to the properties' do
-        expect { action_class.send(:argument, name, required: false) }
-          .to change { action_class.properties[:arguments] }
+        expect { command_class.send(:argument, name, required: false) }
+          .to change { command_class.properties[:arguments] }
           .to include expected
       end
     end
 
     describe 'with required: true' do
       it 'should add the argument to the properties' do
-        expect { action_class.send(:argument, name, required: true) }
-          .to change { action_class.properties[:arguments] }
+        expect { command_class.send(:argument, name, required: true) }
+          .to change { command_class.properties[:arguments] }
           .to include expected
       end
     end
 
-    wrap_context 'when the action defines an argument' do
+    wrap_context 'when the command defines an argument' do
       it 'should add the argument to the properties' do
-        expect { action_class.send(:argument, name) }
-          .to change { action_class.properties[:arguments] }
+        expect { command_class.send(:argument, name) }
+          .to change { command_class.properties[:arguments] }
           .to include expected
       end
     end
 
-    wrap_context 'when the action defines many arguments' do
+    wrap_context 'when the command defines many arguments' do
       it 'should add the argument to the properties' do
-        expect { action_class.send(:argument, name) }
-          .to change { action_class.properties[:arguments] }
+        expect { command_class.send(:argument, name) }
+          .to change { command_class.properties[:arguments] }
           .to include expected
       end
     end
@@ -189,17 +189,17 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       }
     end
 
-    it { expect(action_class).not_to respond_to(:keyword) }
+    it { expect(command_class).not_to respond_to(:keyword) }
 
     it 'should define the private method' do
-      expect(action_class)
+      expect(command_class)
         .to respond_to(:keyword, true)
         .with(1).argument.and_keywords(:required)
     end
 
     it 'should add the keyword to the properties' do
-      expect { action_class.send(:keyword, name) }
-        .to change { action_class.properties[:keywords] }
+      expect { command_class.send(:keyword, name) }
+        .to change { command_class.properties[:keywords] }
         .to include(expected[:name] => expected)
     end
 
@@ -207,8 +207,8 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       let(:name) { 'target' }
 
       it 'should add the keyword to the properties' do
-        expect { action_class.send(:keyword, name) }
-          .to change { action_class.properties[:keywords] }
+        expect { command_class.send(:keyword, name) }
+          .to change { command_class.properties[:keywords] }
           .to include(expected[:name] => expected)
       end
     end
@@ -222,8 +222,8 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       end
 
       it 'should add the keyword to the properties' do
-        expect { action_class.send(:keyword, name) }
-          .to change { action_class.properties[:keywords] }
+        expect { command_class.send(:keyword, name) }
+          .to change { command_class.properties[:keywords] }
           .to include(expected[:name] => expected)
       end
     end
@@ -237,16 +237,16 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       end
 
       it 'should add the keyword to the properties' do
-        expect { action_class.send(:keyword, name) }
-          .to change { action_class.properties[:keywords] }
+        expect { command_class.send(:keyword, name) }
+          .to change { command_class.properties[:keywords] }
           .to include(expected[:name] => expected)
       end
     end
 
     describe 'with required: false' do
       it 'should add the keyword to the properties' do
-        expect { action_class.send(:keyword, name, required: false) }
-          .to change { action_class.properties[:keywords] }
+        expect { command_class.send(:keyword, name, required: false) }
+          .to change { command_class.properties[:keywords] }
           .to include(expected[:name] => expected)
       end
     end
@@ -255,24 +255,24 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       let(:expected) { super().merge required: true }
 
       it 'should add the keyword to the properties' do
-        expect { action_class.send(:keyword, name, required: true) }
-          .to change { action_class.properties[:keywords] }
+        expect { command_class.send(:keyword, name, required: true) }
+          .to change { command_class.properties[:keywords] }
           .to include(expected[:name] => expected)
       end
     end
 
-    wrap_context 'when the action defines a keyword' do
+    wrap_context 'when the command defines a keyword' do
       it 'should add the keyword to the properties' do
-        expect { action_class.send(:keyword, name) }
-          .to change { action_class.properties[:keywords] }
+        expect { command_class.send(:keyword, name) }
+          .to change { command_class.properties[:keywords] }
           .to include(expected[:name] => expected)
       end
     end
 
-    wrap_context 'when the action defines many keywords' do
+    wrap_context 'when the command defines many keywords' do
       it 'should add the keyword to the properties' do
-        expect { action_class.send(:keyword, name) }
-          .to change { action_class.properties[:keywords] }
+        expect { command_class.send(:keyword, name) }
+          .to change { command_class.properties[:keywords] }
           .to include(expected[:name] => expected)
       end
     end
@@ -281,42 +281,42 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
   describe '::properties' do
     let(:expected) { properties }
 
-    it { expect(action_class).to have_reader(:properties) }
+    it { expect(command_class).to have_reader(:properties) }
 
-    it { expect(action_class.properties).to be == expected }
+    it { expect(command_class.properties).to be == expected }
 
-    wrap_context 'when the action defines an argument' do
-      it { expect(action_class.properties).to be == expected }
+    wrap_context 'when the command defines an argument' do
+      it { expect(command_class.properties).to be == expected }
     end
 
-    wrap_context 'when the action defines many arguments' do
-      it { expect(action_class.properties).to be == expected }
+    wrap_context 'when the command defines many arguments' do
+      it { expect(command_class.properties).to be == expected }
     end
 
-    wrap_context 'when the action defines a keyword' do
-      it { expect(action_class.properties).to be == expected }
+    wrap_context 'when the command defines a keyword' do
+      it { expect(command_class.properties).to be == expected }
     end
 
-    wrap_context 'when the action defines many keywords' do
-      it { expect(action_class.properties).to be == expected }
+    wrap_context 'when the command defines many keywords' do
+      it { expect(command_class.properties).to be == expected }
     end
 
-    context 'when the action defines many arguments and keywords' do
-      include_context 'when the action defines many arguments'
-      include_context 'when the action defines many keywords'
+    context 'when the command defines many arguments and keywords' do
+      include_context 'when the command defines many arguments'
+      include_context 'when the command defines many keywords'
 
-      it { expect(action_class.properties).to be == expected }
+      it { expect(command_class.properties).to be == expected }
     end
   end
 
   describe '::signature' do
-    let(:signature) { action_class.signature }
+    let(:signature) { command_class.signature }
 
-    it { expect(action_class).to have_reader(:signature) }
+    it { expect(command_class).to have_reader(:signature) }
 
-    it { expect(signature).to be_a Ephesus::Core::Actions::Signature }
+    it { expect(signature).to be_a Ephesus::Core::Commands::Signature }
 
-    it { expect(signature.action_class).to be action_class }
+    it { expect(signature.command_class).to be command_class }
 
     it { expect(signature.min_argument_count).to be 0 }
 
@@ -326,7 +326,7 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
 
     it { expect(signature.required_keywords).to be_empty }
 
-    wrap_context 'when the action defines an argument' do
+    wrap_context 'when the command defines an argument' do
       it { expect(signature.min_argument_count).to be 1 }
 
       it { expect(signature.max_argument_count).to be 1 }
@@ -336,7 +336,7 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       it { expect(signature.required_keywords).to be_empty }
     end
 
-    wrap_context 'when the action defines many arguments' do
+    wrap_context 'when the command defines many arguments' do
       it { expect(signature.min_argument_count).to be 2 }
 
       it { expect(signature.max_argument_count).to be 3 }
@@ -346,7 +346,7 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       it { expect(signature.required_keywords).to be_empty }
     end
 
-    wrap_context 'when the action defines a keyword' do
+    wrap_context 'when the command defines a keyword' do
       it { expect(signature.min_argument_count).to be 0 }
 
       it { expect(signature.max_argument_count).to be 0 }
@@ -356,7 +356,7 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       it { expect(signature.required_keywords).to be_empty }
     end
 
-    wrap_context 'when the action defines many keywords' do
+    wrap_context 'when the command defines many keywords' do
       it { expect(signature.min_argument_count).to be 0 }
 
       it { expect(signature.max_argument_count).to be 0 }
@@ -371,9 +371,9 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
       end
     end
 
-    context 'when the action defines many arguments and keywords' do
-      include_context 'when the action defines many arguments'
-      include_context 'when the action defines many keywords'
+    context 'when the command defines many arguments and keywords' do
+      include_context 'when the command defines many arguments'
+      include_context 'when the command defines many keywords'
 
       it { expect(signature.min_argument_count).to be 2 }
 

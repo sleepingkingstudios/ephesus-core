@@ -2,8 +2,8 @@
 
 require 'cuprum/command_factory'
 
-require 'ephesus/core/actions/invalid_action_result'
-require 'ephesus/core/actions/unavailable_action_result'
+require 'ephesus/core/commands/invalid_command_result'
+require 'ephesus/core/commands/unavailable_command_result'
 
 module Ephesus::Core
   # Abstract base class for Ephesus controllers. Define actions that permit a
@@ -101,7 +101,7 @@ module Ephesus::Core
     def handle_invalid_action(definition)
       return nil if definition
 
-      Ephesus::Core::Actions::InvalidActionResult.new
+      Ephesus::Core::Commands::InvalidCommandResult.new
     end
 
     def handle_invalid_arguments(definition, arguments, keywords)
@@ -115,10 +115,10 @@ module Ephesus::Core
       return nil if available?(definition)
 
       if definition[:secret]
-        return Ephesus::Core::Actions::InvalidActionResult.new
+        return Ephesus::Core::Commands::InvalidCommandResult.new
       end
 
-      Ephesus::Core::Actions::UnavailableActionResult.new
+      Ephesus::Core::Commands::UnavailableCommandResult.new
     end
 
     def split_arguments(arguments)
@@ -129,9 +129,9 @@ module Ephesus::Core
 
     def wrap_result(action_name, arguments, keywords)
       yield.tap do |result|
-        result.action_name = action_name
-        result.arguments   = arguments
-        result.keywords    = keywords
+        result.command_name = action_name
+        result.arguments    = arguments
+        result.keywords     = keywords
       end
     end
   end

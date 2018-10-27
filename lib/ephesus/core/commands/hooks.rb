@@ -2,14 +2,14 @@
 
 require 'sleeping_king_studios/tools/toolbox/mixin'
 
-require 'ephesus/core/actions'
+require 'ephesus/core/commands'
 
-module Ephesus::Core::Actions
-  # Processing hooks for evaluating code before and after an Action is called.
+module Ephesus::Core::Commands
+  # Processing hooks for evaluating code before and after a Command is called.
   module Hooks
     extend SleepingKingStudios::Tools::Toolbox::Mixin
 
-    # Class methods to include in Ephesus::Core::Action.
+    # Class methods to include in Ephesus::Core::Command.
     module ClassMethods
       def after(status = nil, **options, &block)
         raise ArgumentError, 'must provide a block' unless block_given?

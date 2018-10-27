@@ -352,11 +352,11 @@ RSpec.describe Ephesus::Core::Controller do
       let(:result) do
         instance.execute_action(invalid_name, *arguments)
       end
-      let(:expected_error) { :invalid_action }
+      let(:expected_error) { :invalid_command }
 
-      it { expect(result).to be_a Ephesus::Core::Actions::Result }
+      it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
-      it { expect(result.action_name).to be invalid_name }
+      it { expect(result.command_name).to be invalid_name }
 
       it { expect(result.success?).to be false }
 
@@ -368,7 +368,7 @@ RSpec.describe Ephesus::Core::Controller do
       describe 'with arguments' do
         let(:arguments) { [:one, :two, { three: 3 }] }
 
-        it { expect(result.action_name).to be invalid_name }
+        it { expect(result.command_name).to be invalid_name }
       end
       # rubocop:enable RSpec/NestedGroups
     end
@@ -380,11 +380,11 @@ RSpec.describe Ephesus::Core::Controller do
         let(:result) do
           instance.execute_action(invalid_name, *arguments)
         end
-        let(:expected_error) { :invalid_action }
+        let(:expected_error) { :invalid_command }
 
-        it { expect(result).to be_a Ephesus::Core::Actions::Result }
+        it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
-        it { expect(result.action_name).to be invalid_name }
+        it { expect(result.command_name).to be invalid_name }
 
         it { expect(result.success?).to be false }
 
@@ -396,13 +396,13 @@ RSpec.describe Ephesus::Core::Controller do
         describe 'with arguments' do
           let(:arguments) { [:one, :two, { three: 3 }] }
 
-          it { expect(result.action_name).to be invalid_name }
+          it { expect(result.command_name).to be invalid_name }
         end
         # rubocop:enable RSpec/NestedGroups
       end
 
       describe 'with a valid action name' do
-        let(:expected_result) { Ephesus::Core::Actions::Result.new }
+        let(:expected_result) { Ephesus::Core::Commands::Result.new }
         let(:action) do
           action_class.new(
             state,
@@ -427,7 +427,7 @@ RSpec.describe Ephesus::Core::Controller do
           expect(result).to be expected_result
         end
 
-        it { expect(result.action_name).to be action_name }
+        it { expect(result.command_name).to be action_name }
 
         it { expect(result.arguments).to be == [] }
 
@@ -456,11 +456,11 @@ RSpec.describe Ephesus::Core::Controller do
             expect(action).not_to have_received(:call)
           end
 
-          it { expect(result).to be_a Ephesus::Core::Actions::Result }
+          it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
           it { expect(result.success?).to be false }
 
-          it { expect(result.action_name).to be action_name }
+          it { expect(result.command_name).to be action_name }
 
           it { expect(result.arguments).to be == arguments }
 
@@ -500,11 +500,11 @@ RSpec.describe Ephesus::Core::Controller do
             expect(action).not_to have_received(:call)
           end
 
-          it { expect(result).to be_a Ephesus::Core::Actions::Result }
+          it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
           it { expect(result.success?).to be false }
 
-          it { expect(result.action_name).to be action_name }
+          it { expect(result.command_name).to be action_name }
 
           it { expect(result.arguments).to be == [] }
 
@@ -547,7 +547,7 @@ RSpec.describe Ephesus::Core::Controller do
 
             it { expect(result.errors).to be_empty }
 
-            it { expect(result.action_name).to be action_name }
+            it { expect(result.command_name).to be action_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -577,11 +577,11 @@ RSpec.describe Ephesus::Core::Controller do
               expect(action).not_to have_received(:call)
             end
 
-            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+            it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
             it { expect(result.success?).to be false }
 
-            it { expect(result.action_name).to be action_name }
+            it { expect(result.command_name).to be action_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -619,11 +619,11 @@ RSpec.describe Ephesus::Core::Controller do
               expect(action).not_to have_received(:call)
             end
 
-            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+            it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
             it { expect(result.success?).to be false }
 
-            it { expect(result.action_name).to be action_name }
+            it { expect(result.command_name).to be action_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -662,11 +662,11 @@ RSpec.describe Ephesus::Core::Controller do
               expect(action).not_to have_received(:call)
             end
 
-            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+            it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
             it { expect(result.success?).to be false }
 
-            it { expect(result.action_name).to be action_name }
+            it { expect(result.command_name).to be action_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -705,11 +705,11 @@ RSpec.describe Ephesus::Core::Controller do
               expect(action).not_to have_received(:call)
             end
 
-            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+            it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
             it { expect(result.success?).to be false }
 
-            it { expect(result.action_name).to be action_name }
+            it { expect(result.command_name).to be action_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -768,11 +768,11 @@ RSpec.describe Ephesus::Core::Controller do
               expect(action).not_to have_received(:call)
             end
 
-            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+            it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
             it { expect(result.success?).to be false }
 
-            it { expect(result.action_name).to be action_name }
+            it { expect(result.command_name).to be action_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -805,7 +805,7 @@ RSpec.describe Ephesus::Core::Controller do
             { if: ->(state) { state.get(:location) == :tarmac } }
           end
           let(:result)         { instance.execute_action(action_name) }
-          let(:expected_error) { :unavailable_action }
+          let(:expected_error) { :unavailable_command }
 
           it 'should not call the action' do
             instance.execute_action(action_name)
@@ -813,9 +813,9 @@ RSpec.describe Ephesus::Core::Controller do
             expect(action).not_to have_received(:call)
           end
 
-          it { expect(result).to be_a Ephesus::Core::Actions::Result }
+          it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
-          it { expect(result.action_name).to be action_name }
+          it { expect(result.command_name).to be action_name }
 
           it { expect(result.success?).to be false }
 
@@ -824,7 +824,7 @@ RSpec.describe Ephesus::Core::Controller do
           end
 
           wrap_context 'when the action is secret' do
-            let(:expected_error) { :invalid_action }
+            let(:expected_error) { :invalid_command }
 
             it 'should not call the action' do
               instance.execute_action(action_name)
@@ -832,9 +832,9 @@ RSpec.describe Ephesus::Core::Controller do
               expect(action).not_to have_received(:call)
             end
 
-            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+            it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
-            it { expect(result.action_name).to be action_name }
+            it { expect(result.command_name).to be action_name }
 
             it { expect(result.success?).to be false }
 
@@ -881,7 +881,7 @@ RSpec.describe Ephesus::Core::Controller do
             { unless: ->(state) { state.get(:landed) } }
           end
           let(:result)         { instance.execute_action(action_name) }
-          let(:expected_error) { :unavailable_action }
+          let(:expected_error) { :unavailable_command }
 
           it 'should not call the action' do
             instance.execute_action(action_name)
@@ -889,9 +889,9 @@ RSpec.describe Ephesus::Core::Controller do
             expect(action).not_to have_received(:call)
           end
 
-          it { expect(result).to be_a Ephesus::Core::Actions::Result }
+          it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
-          it { expect(result.action_name).to be action_name }
+          it { expect(result.command_name).to be action_name }
 
           it { expect(result.success?).to be false }
 
@@ -900,7 +900,7 @@ RSpec.describe Ephesus::Core::Controller do
           end
 
           wrap_context 'when the action is secret' do
-            let(:expected_error) { :invalid_action }
+            let(:expected_error) { :invalid_command }
 
             it 'should not call the action' do
               instance.execute_action(action_name)
@@ -908,9 +908,9 @@ RSpec.describe Ephesus::Core::Controller do
               expect(action).not_to have_received(:call)
             end
 
-            it { expect(result).to be_a Ephesus::Core::Actions::Result }
+            it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
-            it { expect(result.action_name).to be action_name }
+            it { expect(result.command_name).to be action_name }
 
             it { expect(result.success?).to be false }
 
