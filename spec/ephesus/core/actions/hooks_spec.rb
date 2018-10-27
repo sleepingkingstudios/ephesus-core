@@ -3,7 +3,6 @@
 require 'hamster'
 
 require 'ephesus/core/action'
-require 'ephesus/core/event_dispatcher'
 require 'ephesus/core/utils/dispatch_proxy'
 
 RSpec.describe Ephesus::Core::Actions::Hooks do
@@ -30,13 +29,8 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
   let(:expected_result)  { result }
   let(:action_class)     { Spec::ExampleAction }
   let(:state)            { {} }
-  let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
   let(:action) do
-    action_class.new(
-      state,
-      dispatcher:       dispatcher,
-      event_dispatcher: event_dispatcher
-    )
+    action_class.new(state, dispatcher: dispatcher)
   end
 
   example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Action \

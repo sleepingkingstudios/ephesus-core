@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'ephesus/core/event_dispatcher'
 require 'ephesus/flight/application'
 
 RSpec.describe Ephesus::Flight::Application do

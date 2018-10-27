@@ -2,7 +2,6 @@
 
 require 'hamster'
 
-require 'ephesus/core/event_dispatcher'
 require 'ephesus/core/utils/dispatch_proxy'
 require 'ephesus/flight/controllers/radio_controller'
 
@@ -36,20 +35,13 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
     it { expect(action.state).to be state }
   end
 
-  subject(:instance) do
-    described_class.new(
-      state,
-      dispatcher: dispatcher,
-      event_dispatcher: event_dispatcher
-    )
-  end
+  subject(:instance) { described_class.new(state, dispatcher: dispatcher) }
 
   let(:dispatcher) do
     instance_double(Ephesus::Core::Utils::DispatchProxy)
   end
-  let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
-  let(:initial_state)    { { landed: true, radio: true } }
-  let(:state)            { Hamster::Hash.new(initial_state) }
+  let(:initial_state) { { landed: true, radio: true } }
+  let(:state)         { Hamster::Hash.new(initial_state) }
 
   describe '#action?' do
     it { expect(instance.action? :do_something).to be false }

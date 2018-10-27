@@ -2,24 +2,16 @@
 
 require 'hamster'
 
-require 'ephesus/core/event_dispatcher'
 require 'ephesus/core/utils/dispatch_proxy'
 require 'ephesus/flight/actions/radio_on'
 
 RSpec.describe Ephesus::Flight::Actions::RadioOn do
-  subject(:instance) do
-    described_class.new(
-      state,
-      dispatcher:       dispatcher,
-      event_dispatcher: event_dispatcher
-    )
-  end
+  subject(:instance) { described_class.new(state, dispatcher: dispatcher) }
 
   let(:dispatcher) do
     instance_double(Ephesus::Core::Utils::DispatchProxy, dispatch: true)
   end
-  let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
-  let(:state)            { Hamster::Hash.new }
+  let(:state) { Hamster::Hash.new }
 
   describe '::properties' do
     let(:expected) { { arguments: [], keywords: {} } }
