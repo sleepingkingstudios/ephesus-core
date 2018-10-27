@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ephesus/core/action'
+require 'ephesus/core/command'
 require 'ephesus/core/actions/signature'
 
 RSpec.describe Ephesus::Core::Actions::Signature do
@@ -65,7 +65,7 @@ RSpec.describe Ephesus::Core::Actions::Signature do
 
   let(:action_class) { Spec::ExampleAction }
 
-  example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Action
+  example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Command
 
   describe '::new' do
     it { expect(described_class).to be_constructible.with(1).argument }

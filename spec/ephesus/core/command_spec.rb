@@ -2,10 +2,10 @@
 
 require 'hamster'
 
-require 'ephesus/core/action'
+require 'ephesus/core/command'
 require 'ephesus/core/utils/dispatch_proxy'
 
-RSpec.describe Ephesus::Core::Action do
+RSpec.describe Ephesus::Core::Command do
   subject(:instance) do
     described_class.new(
       state,
@@ -76,7 +76,7 @@ RSpec.describe Ephesus::Core::Action do
   describe '#options' do
     include_examples 'should have reader', :options, {}
 
-    context 'when the action is initialized with options' do
+    context 'when the command is initialized with options' do
       let(:options) do
         {
           data:  [{}, {}, {}],

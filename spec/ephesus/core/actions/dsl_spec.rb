@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ephesus/core/action'
+require 'ephesus/core/command'
 
 RSpec.describe Ephesus::Core::Actions::Dsl do
   shared_context 'when the action defines an argument' do
@@ -71,7 +71,7 @@ RSpec.describe Ephesus::Core::Actions::Dsl do
     end
   end
 
-  let(:action_class) { Class.new(Ephesus::Core::Action) }
+  let(:action_class) { Class.new(Ephesus::Core::Command) }
   let(:properties) do
     {
       arguments: [],

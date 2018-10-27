@@ -10,18 +10,18 @@ require 'ephesus/core/actions/hooks'
 require 'ephesus/core/actions/result'
 
 module Ephesus::Core
-  # Abstract base class for Ephesus actions. Takes and stores a state object
-  # representing the current game state.
-  class Action < Cuprum::Command
+  # Abstract base class for Ephesus commands. Takes and stores a state object
+  # representing the current game state, a dispatcher to dispatch state updates,
+  # and optional params passed from the controller object.
+  class Command < Cuprum::Command
     extend  Forwardable
     include Ephesus::Core::Actions::Hooks
     include Ephesus::Core::Actions::Dsl
 
     def initialize(state, dispatcher:, **options)
-      @state            = state
-      @dispatcher       = dispatcher
-      @options          = options
-      @repository       = options[:repository]
+      @state      = state
+      @dispatcher = dispatcher
+      @options    = options
     end
 
     attr_reader :dispatcher

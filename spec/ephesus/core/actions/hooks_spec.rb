@@ -2,7 +2,7 @@
 
 require 'hamster'
 
-require 'ephesus/core/action'
+require 'ephesus/core/command'
 require 'ephesus/core/utils/dispatch_proxy'
 
 RSpec.describe Ephesus::Core::Actions::Hooks do
@@ -33,7 +33,7 @@ RSpec.describe Ephesus::Core::Actions::Hooks do
     action_class.new(state, dispatcher: dispatcher)
   end
 
-  example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Action \
+  example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Command \
   do |klass|
     klass.send :include, described_class
   end

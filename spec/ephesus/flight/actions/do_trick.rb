@@ -2,12 +2,12 @@
 
 require 'sleeping_king_studios/tools/toolbelt'
 
-require 'ephesus/core/action'
+require 'ephesus/core/command'
 require 'ephesus/flight/actions'
 require 'ephesus/flight/state/actions'
 
 module Ephesus::Flight::Actions
-  class DoTrick < Ephesus::Core::Action
+  class DoTrick < Ephesus::Core::Command
     TRICK_VALUES = {
       barrel_roll:    10,
       loop:           20,

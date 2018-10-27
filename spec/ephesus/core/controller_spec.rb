@@ -2,7 +2,7 @@
 
 require 'hamster'
 
-require 'ephesus/core/action'
+require 'ephesus/core/command'
 require 'ephesus/core/controller'
 require 'ephesus/core/utils/dispatch_proxy'
 
@@ -14,7 +14,7 @@ RSpec.describe Ephesus::Core::Controller do
     let(:action_name)  { :do_something }
     let(:action_class) { Spec::ExampleAction }
 
-    example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Action
+    example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Command
 
     before(:example) do
       described_class.action action_name, action_class, **metadata
@@ -30,7 +30,7 @@ RSpec.describe Ephesus::Core::Controller do
     let(:action_class)    { Spec::ExampleActionWithArgs }
 
     example_class 'Spec::ExampleActionWithArgs',
-      base_class: Ephesus::Core::Action \
+      base_class: Ephesus::Core::Command \
     do |klass|
       klass.send :define_method, :initialize \
       do |state, *rest, dispatcher:, **options|
@@ -52,7 +52,7 @@ RSpec.describe Ephesus::Core::Controller do
     let(:action_class)    { Spec::ExampleActionWithArgs }
 
     example_class 'Spec::ExampleActionWithArgs',
-      base_class: Ephesus::Core::Action \
+      base_class: Ephesus::Core::Command \
     do |klass|
       klass.send :argument, :first_arg
       klass.send :argument, :second_arg

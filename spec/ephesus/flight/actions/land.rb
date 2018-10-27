@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'ephesus/core/action'
+require 'ephesus/core/command'
 require 'ephesus/flight/actions'
 require 'ephesus/flight/state/actions'
 
 module Ephesus::Flight::Actions
-  class Land < Ephesus::Core::Action
+  class Land < Ephesus::Core::Command
     private
 
     def process
