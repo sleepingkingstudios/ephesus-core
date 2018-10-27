@@ -1,15 +1,16 @@
 # frozen_string_literal: true
 
-require 'sleeping_king_studios/tools/toolbox/delegator'
+require 'forwardable'
 
 require 'ephesus/core'
+require 'ephesus/core/utils/dispatch_proxy'
 
 module Ephesus::Core
   # Class for managing state transitions in an Ephesus application. Each session
   # belongs to an application and has a controller corresponding to the
   # application state.
   class Session
-    extend SleepingKingStudios::Tools::Toolbox::Delegator
+    extend Forwardable
 
     class << self
       def controller(controller_type, **conditionals)
@@ -34,17 +35,15 @@ module Ephesus::Core
       @application = application
     end
 
-    attr_reader :application
-
-    delegate \
-      :event_dispatcher,
+    def_delegators :@application,
       :state,
-      to: :@application
+      :store
 
-    delegate \
+    def_delegators :controller,
       :available_actions,
-      :execute_action,
-      to: :controller
+      :execute_action
+
+    attr_reader :application
 
     def controller
       return @controller if @controller && @controller.state == state
@@ -64,8 +63,8 @@ module Ephesus::Core
     def build_controller(controller_type)
       controller_class(controller_type).new(
         state,
-        event_dispatcher: event_dispatcher,
-        repository: application.repository
+        dispatcher: Ephesus::Core::Utils::DispatchProxy.new(store),
+        **controller_options
       )
     end
 
@@ -73,6 +72,10 @@ module Ephesus::Core
       return controller_type if controller_type.is_a?(Class)
 
       Object.const_get(controller_type)
+    end
+
+    def controller_options
+      {}
     end
 
     def current_controller

@@ -63,15 +63,6 @@
   alias_action :do_trick, as: :do_a_trick
   alias_action :dance, as: %i[shake rattle roll]
 
-## Events
-
-- StateUpdateEvent:
-  - used for handling output
-  - CANNOT BE USED IN A REDUCER
-  - #parent_event
-  - #previous_state
-  - #current_state
-
 ## Ephesus::RSpec
 
 - matchers, examples, helpers for testing Ephesus applications

@@ -2,16 +2,16 @@
 
 require 'hamster'
 
-require 'ephesus/core/event_dispatcher'
+require 'ephesus/core/utils/dispatch_proxy'
 require 'ephesus/flight/actions/do_trick'
 
 RSpec.describe Ephesus::Flight::Actions::DoTrick do
-  subject(:instance) do
-    described_class.new(state, event_dispatcher: event_dispatcher)
-  end
+  subject(:instance) { described_class.new(state, dispatcher: dispatcher) }
 
-  let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
-  let(:state)            { Hamster::Hash.new }
+  let(:dispatcher) do
+    instance_double(Ephesus::Core::Utils::DispatchProxy, dispatch: true)
+  end
+  let(:state) { Hamster::Hash.new }
 
   describe '::properties' do
     let(:arguments) { [{ name: :trick, required: true }] }
@@ -29,6 +29,8 @@ RSpec.describe Ephesus::Flight::Actions::DoTrick do
   end
 
   describe '#call' do
+    let(:action) { Ephesus::Flight::State::Actions.update_score(by: amount) }
+
     describe 'with an invalid trick' do
       let(:trick)  { 'explode' }
       let(:result) { instance.call(trick) }
@@ -43,72 +45,58 @@ RSpec.describe Ephesus::Flight::Actions::DoTrick do
 
       it { expect(result.errors[:trick]).to include error }
 
-      it 'should not dispatch an event' do
-        allow(event_dispatcher).to receive(:dispatch_event)
-
+      it 'should not dispatch an action' do
         instance.call(trick)
 
-        expect(event_dispatcher).not_to have_received(:dispatch_event)
+        expect(dispatcher).not_to have_received(:dispatch)
       end
     end
 
     describe 'with "barrel roll"' do
       let(:trick)  { 'barrel roll' }
+      let(:amount) { 10 }
       let(:result) { instance.call(trick) }
-      let(:event)  { Ephesus::Flight::Events::UpdateScore.new(by: 10) }
 
       it { expect(result.success?).to be true }
 
       it { expect(result.errors).to be_empty }
 
-      it 'should dispatch an UPDATE_SCORE event' do
-        allow(event_dispatcher).to receive(:dispatch_event)
-
+      it 'should dispatch an UPDATE_SCORE action' do
         instance.call(trick)
 
-        expect(event_dispatcher)
-          .to have_received(:dispatch_event)
-          .with(be == event)
+        expect(dispatcher).to have_received(:dispatch).with(be == action)
       end
     end
 
     describe 'with "immelmann turn"' do
       let(:trick)  { 'immelmann turn' }
+      let(:amount) { 30 }
       let(:result) { instance.call(trick) }
-      let(:event)  { Ephesus::Flight::Events::UpdateScore.new(by: 30) }
 
       it { expect(result.success?).to be true }
 
       it { expect(result.errors).to be_empty }
 
-      it 'should dispatch an UPDATE_SCORE event' do
-        allow(event_dispatcher).to receive(:dispatch_event)
-
+      it 'should dispatch an UPDATE_SCORE action' do
         instance.call(trick)
 
-        expect(event_dispatcher)
-          .to have_received(:dispatch_event)
-          .with(be == event)
+        expect(dispatcher).to have_received(:dispatch).with(be == action)
       end
     end
 
     describe 'with "loop"' do
       let(:trick)  { 'loop' }
+      let(:amount) { 20 }
       let(:result) { instance.call(trick) }
-      let(:event)  { Ephesus::Flight::Events::UpdateScore.new(by: 20) }
 
       it { expect(result.success?).to be true }
 
       it { expect(result.errors).to be_empty }
 
-      it 'should dispatch an UPDATE_SCORE event' do
-        allow(event_dispatcher).to receive(:dispatch_event)
-
+      it 'should dispatch an UPDATE_SCORE action' do
         instance.call(trick)
 
-        expect(event_dispatcher)
-          .to have_received(:dispatch_event)
-          .with(be == event)
+        expect(dispatcher).to have_received(:dispatch).with(be == action)
       end
     end
   end

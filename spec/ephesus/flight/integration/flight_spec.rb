@@ -44,6 +44,7 @@ RSpec.describe Ephesus::Flight::Application do
       landing_clearance: false,
       location:          'hangar',
       radio:             false,
+      score:             0,
       takeoff_clearance: false
     }
   end

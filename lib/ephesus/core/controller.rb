@@ -22,8 +22,8 @@ module Ephesus::Core
           action_class.new(
             state,
             *args,
-            event_dispatcher: event_dispatcher,
-            repository:       repository,
+            dispatcher: dispatcher,
+            **options,
             &block
           )
         end
@@ -31,15 +31,15 @@ module Ephesus::Core
       # rubocop:enable Metrics/MethodLength
     end
 
-    def initialize(state, event_dispatcher:, repository: nil)
-      @state            = state
-      @event_dispatcher = event_dispatcher
-      @repository       = repository
+    def initialize(state, dispatcher:, **options)
+      @state      = state
+      @dispatcher = dispatcher
+      @options    = options
     end
 
-    attr_reader :event_dispatcher
+    attr_reader :dispatcher
 
-    attr_reader :repository
+    attr_reader :options
 
     attr_reader :state
 

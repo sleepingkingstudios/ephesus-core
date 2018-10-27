@@ -4,7 +4,7 @@ require 'sleeping_king_studios/tools/toolbelt'
 
 require 'ephesus/core/action'
 require 'ephesus/flight/actions'
-require 'ephesus/flight/events'
+require 'ephesus/flight/state/actions'
 
 module Ephesus::Flight::Actions
   class DoTrick < Ephesus::Core::Action
@@ -19,21 +19,21 @@ module Ephesus::Flight::Actions
     private
 
     def process(trick)
-      key = tools.string.underscore(trick).downcase.gsub(/\s+/, '_').intern
+      amount = score_trick(trick)
 
-      unless TRICK_VALUES.key?(key)
+      if amount.nil?
         result.errors[:trick].add(:invalid, trick: trick)
 
         return
       end
 
-      dispatch_event(score_event key)
+      dispatch(Ephesus::Flight::State::Actions.update_score by: amount)
     end
 
-    def score_event(key)
-      amount = TRICK_VALUES[key]
+    def score_trick(trick)
+      key = tools.string.underscore(trick).downcase.gsub(/\s+/, '_').intern
 
-      Ephesus::Flight::Events::UpdateScore.new(by: amount)
+      TRICK_VALUES[key]
     end
 
     def tools

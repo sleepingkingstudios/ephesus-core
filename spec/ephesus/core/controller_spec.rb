@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
-require 'bronze/collections/repository'
 require 'hamster'
 
 require 'ephesus/core/action'
 require 'ephesus/core/controller'
-require 'ephesus/core/event_dispatcher'
+require 'ephesus/core/utils/dispatch_proxy'
 
 RSpec.describe Ephesus::Core::Controller do
   shared_context 'when an action is defined' do
@@ -34,11 +33,11 @@ RSpec.describe Ephesus::Core::Controller do
       base_class: Ephesus::Core::Action \
     do |klass|
       klass.send :define_method, :initialize \
-      do |state, *rest, event_dispatcher:, repository: nil|
+      do |state, *rest, dispatcher:, **options|
         super(
           state,
-          event_dispatcher: event_dispatcher,
-          repository:       repository
+          dispatcher: dispatcher,
+          **options
         )
 
         @arguments = *rest
@@ -78,11 +77,13 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
-  shared_context 'when the controller has a repository' do
-    let(:repository) { Spec::ExampleRepository.new }
-
-    example_class 'Spec::ExampleRepository' do |klass|
-      klass.send(:include, Bronze::Collections::Repository)
+  shared_context 'when the controller is initialized with options' do
+    let(:options) do
+      {
+        data:  [{}, {}, {}],
+        flag:  true,
+        param: 'value'
+      }
     end
   end
 
@@ -98,21 +99,24 @@ RSpec.describe Ephesus::Core::Controller do
   subject(:instance) do
     described_class.new(
       state,
-      event_dispatcher: event_dispatcher,
-      repository:       repository
+      dispatcher: dispatcher,
+      **options
     )
   end
 
-  let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
-  let(:repository)       { nil }
-  let(:state)            { Hamster::Hash.new(landed: true, location: :hangar) }
+  let(:dispatcher) do
+    instance_double(Ephesus::Core::Utils::DispatchProxy)
+  end
+  let(:state)      { Hamster::Hash.new(landed: true, location: :hangar) }
+  let(:options)    { {} }
 
   describe '::new' do
     it 'should define the constructor' do
       expect(described_class)
         .to be_constructible
         .with(1).argument
-        .and_keywords(:event_dispatcher, :repository)
+        .and_keywords(:dispatcher)
+        .and_any_keywords
     end
   end
 
@@ -176,9 +180,7 @@ RSpec.describe Ephesus::Core::Controller do
 
         it { expect(action.state).to be state }
 
-        it { expect(action.event_dispatcher).to be event_dispatcher }
-
-        it { expect(action.repository).to be nil }
+        it { expect(action.options).to be == {} }
 
         wrap_context 'when the action constructor takes arguments' do
           let(:args)   { [:ichi, 'ni', san: 3] }
@@ -190,13 +192,11 @@ RSpec.describe Ephesus::Core::Controller do
 
           it { expect(action.arguments).to be == args }
 
-          it { expect(action.event_dispatcher).to be event_dispatcher }
-
-          it { expect(action.repository).to be nil }
+          it { expect(action.options).to be == {} }
         end
 
-        wrap_context 'when the controller has a repository' do
-          it { expect(action.repository).to be repository }
+        wrap_context 'when the controller is initialized with options' do
+          it { expect(action.options).to be == options }
         end
       end
     end
@@ -334,6 +334,10 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
+  describe '#dispatcher' do
+    include_examples 'should have reader', :dispatcher, -> { dispatcher }
+  end
+
   describe '#execute_action' do
     it 'should define the method' do
       expect(instance)
@@ -400,7 +404,10 @@ RSpec.describe Ephesus::Core::Controller do
       describe 'with a valid action name' do
         let(:expected_result) { Ephesus::Core::Actions::Result.new }
         let(:action) do
-          action_class.new(state, event_dispatcher: event_dispatcher)
+          action_class.new(
+            state,
+            dispatcher: dispatcher
+          )
         end
         let(:result) { instance.execute_action(action_name) }
 
@@ -917,17 +924,11 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
-  describe '#event_dispatcher' do
-    include_examples 'should have reader',
-      :event_dispatcher,
-      -> { event_dispatcher }
-  end
+  describe '#options' do
+    include_examples 'should have reader', :options, {}
 
-  describe '#repository' do
-    include_examples 'should have reader', :repository, nil
-
-    wrap_context 'when the controller has a repository' do
-      it { expect(instance.repository).to be repository }
+    wrap_context 'when the controller is initialized with options' do
+      it { expect(instance.options).to be == options }
     end
   end
 

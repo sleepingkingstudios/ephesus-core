@@ -1,94 +1,33 @@
 # frozen_string_literal: true
 
-require 'ephesus/core/event_dispatcher'
-require 'ephesus/core/reducer'
-require 'ephesus/core/utils/immutable'
+require 'forwardable'
+
+require 'ephesus/core/immutable_store'
 
 module Ephesus::Core
-  # Base class for Ephesus applications. An application has a single state, and
-  # is referenced by one or many sessions.
+  # Base class for Ephesus applications. An application has a single state
+  # managed by an immutable store, and can be referenced by one or many
+  # sessions. Applications can also reference additional resources, such as a
+  # data repository.
   class Application
-    def initialize(event_dispatcher: nil, repository: nil)
-      @event_dispatcher = event_dispatcher || Ephesus::Core::EventDispatcher.new
-      @repository       = repository
-      @state            =
-        Ephesus::Core::Utils::Immutable.from_object(initial_state)
+    extend Forwardable
 
-      initialize_reducers!
+    def initialize(state: nil)
+      @store = build_store(state || initial_state)
     end
 
-    attr_reader :event_dispatcher
+    def_delegator :@store, :state
 
-    attr_reader :repository
-
-    attr_reader :state
-
-    def add_event_listener(event_type, method_name = nil, &block)
-      if block_given?
-        add_block_listener(event_type, &block)
-      elsif method_name
-        add_method_listener(event_type, method_name)
-      else
-        raise ArgumentError, 'listener must be a method name or a block'
-      end
-    end
-
-    protected
-
-    attr_writer :state
+    attr_reader :store
 
     private
 
-    def add_block_listener(event_type, &block)
-      if block.arity.zero?
-        event_dispatcher.add_event_listener(event_type) do
-          instance_exec(&block)
-        end
-      else
-        event_dispatcher.add_event_listener(event_type) do |event|
-          instance_exec(event, &block)
-        end
-      end
-    end
-
-    def add_method_listener(event_type, method_name)
-      definition = method(method_name)
-
-      if definition.arity.zero?
-        event_dispatcher.add_event_listener(event_type) do
-          send(method_name)
-        end
-      else
-        event_dispatcher.add_event_listener(event_type) do |event|
-          send(method_name, event)
-        end
-      end
-    end
-
-    def build_reducer(definition)
-      if definition.is_a?(Proc)
-        return lambda do |event|
-          self.state = instance_exec(state, event, &definition)
-        end
-      end
-
-      ->(event) { self.state = send(definition, state, event) }
+    def build_store(state)
+      Ephesus::Core::ImmutableStore.new(state)
     end
 
     def initial_state
-      {}
-    end
-
-    def initialize_reducers!
-      reducers.each do |reducer|
-        reducer.listeners.each do |event_type, definition|
-          add_event_listener(event_type, &build_reducer(definition))
-        end
-      end
-    end
-
-    def reducers
-      self.class.ancestors.select { |mod| mod.is_a?(Ephesus::Core::Reducer) }
+      nil
     end
   end
 end

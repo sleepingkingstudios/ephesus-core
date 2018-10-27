@@ -2,7 +2,6 @@
 
 require 'ephesus/core/action'
 require 'ephesus/core/actions/signature'
-require 'ephesus/core/event_dispatcher'
 
 RSpec.describe Ephesus::Core::Actions::Signature do
   shared_context 'when the action has one optional argument' do

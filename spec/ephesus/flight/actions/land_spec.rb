@@ -2,16 +2,16 @@
 
 require 'hamster'
 
-require 'ephesus/core/event_dispatcher'
+require 'ephesus/core/utils/dispatch_proxy'
 require 'ephesus/flight/actions/land'
 
 RSpec.describe Ephesus::Flight::Actions::Land do
-  subject(:instance) do
-    described_class.new(state, event_dispatcher: event_dispatcher)
-  end
+  subject(:instance) { described_class.new(state, dispatcher: dispatcher) }
 
-  let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
-  let(:state)            { Hamster::Hash.new }
+  let(:dispatcher) do
+    instance_double(Ephesus::Core::Utils::DispatchProxy, dispatch: true)
+  end
+  let(:state) { Hamster::Hash.new }
 
   describe '::properties' do
     let(:expected) { { arguments: [], keywords: {} } }
@@ -29,20 +29,16 @@ RSpec.describe Ephesus::Flight::Actions::Land do
 
   describe '#call' do
     let(:result) { instance.call }
-    let(:event)  { Ephesus::Flight::Events::Land.new }
+    let(:action) { Ephesus::Flight::State::Actions.land }
 
     it { expect(result.success?).to be true }
 
     it { expect(result.errors).to be_empty }
 
-    it 'should dispatch a LAND event' do
-      allow(event_dispatcher).to receive(:dispatch_event)
-
+    it 'should dispatch a LAND action' do
       instance.call
 
-      expect(event_dispatcher)
-        .to have_received(:dispatch_event)
-        .with(be == event)
+      expect(dispatcher).to have_received(:dispatch).with(be == action)
     end
   end
 end
