@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-require 'bronze/collections/repository'
-
 require 'ephesus/core/application'
 require 'ephesus/core/controller'
-require 'ephesus/core/event_dispatcher'
 require 'ephesus/core/session'
 
 RSpec.describe Ephesus::Core::Session do
@@ -55,31 +52,13 @@ RSpec.describe Ephesus::Core::Session do
 
   subject(:instance) { described_class.new(application) }
 
-  let(:event_dispatcher) { Ephesus::Core::EventDispatcher.new }
-  let(:repository)       { Spec::ExampleRepository.new }
   let(:initial_state) do
     {
       landed:   true,
       location: :runway
     }
   end
-  let(:application) do
-    Spec::Application.new(
-      event_dispatcher: event_dispatcher,
-      repository:       repository
-    )
-  end
-
-  example_class 'Spec::Application',
-    base_class: Ephesus::Core::Application \
-  do |klass|
-    hsh = initial_state
-    klass.define_method(:initial_state) { hsh }
-  end
-
-  example_class 'Spec::ExampleRepository' do |klass|
-    klass.send(:include, Bronze::Collections::Repository)
-  end
+  let(:application) { Ephesus::Core::Application.new(state: initial_state) }
 
   describe '::new' do
     it { expect(described_class).to be_constructible.with(1).argument }
@@ -436,6 +415,31 @@ RSpec.describe Ephesus::Core::Session do
       end
     end
 
+    shared_examples 'should set the options' do
+      it { expect(controller.options).to be == {} }
+
+      context 'when the session defines controller options' do
+        let(:options) do
+          {
+            data:  [{}, {}, {}],
+            flag:  true,
+            param: 'value'
+          }
+        end
+
+        before(:example) do
+          opts = options
+
+          Spec::ExampleSession.send(
+            :define_method,
+            :controller_options
+          ) { opts }
+        end
+
+        it { expect(controller.options).to be == options }
+      end
+    end
+
     let(:error_message) do
       "unknown controller for state #{application.state.inspect}"
     end
@@ -469,6 +473,8 @@ RSpec.describe Ephesus::Core::Session do
       it { expect(controller.state).to be application.state }
 
       include_examples 'should set the dispatch proxy'
+
+      include_examples 'should set the options'
     end
 
     wrap_context 'with a non-matching conditional controller' do
@@ -490,6 +496,8 @@ RSpec.describe Ephesus::Core::Session do
       it { expect(controller.state).to be application.state }
 
       include_examples 'should set the dispatch proxy'
+
+      include_examples 'should set the options'
     end
 
     wrap_context 'with a non-conditional controller' do
@@ -502,6 +510,8 @@ RSpec.describe Ephesus::Core::Session do
       it { expect(controller.state).to be application.state }
 
       include_examples 'should set the dispatch proxy'
+
+      include_examples 'should set the options'
     end
 
     wrap_context 'with a chain of controllers' do
@@ -514,13 +524,9 @@ RSpec.describe Ephesus::Core::Session do
       it { expect(controller.state).to be application.state }
 
       include_examples 'should set the dispatch proxy'
-    end
-  end
 
-  describe '#event_dispatcher' do
-    include_examples 'should have reader',
-      :event_dispatcher,
-      -> { event_dispatcher }
+      include_examples 'should set the options'
+    end
   end
 
   describe '#execute_action' do

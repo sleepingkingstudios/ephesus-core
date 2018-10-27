@@ -36,7 +36,6 @@ module Ephesus::Core
     end
 
     def_delegators :@application,
-      :event_dispatcher,
       :state,
       :store
 
@@ -65,7 +64,7 @@ module Ephesus::Core
       controller_class(controller_type).new(
         state,
         dispatcher: Ephesus::Core::Utils::DispatchProxy.new(store),
-        repository: application.repository
+        **controller_options
       )
     end
 
@@ -73,6 +72,10 @@ module Ephesus::Core
       return controller_type if controller_type.is_a?(Class)
 
       Object.const_get(controller_type)
+    end
+
+    def controller_options
+      {}
     end
 
     def current_controller
