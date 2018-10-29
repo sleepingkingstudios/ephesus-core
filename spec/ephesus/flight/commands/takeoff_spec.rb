@@ -3,9 +3,9 @@
 require 'hamster'
 
 require 'ephesus/core/utils/dispatch_proxy'
-require 'ephesus/flight/actions/takeoff'
+require 'ephesus/flight/commands/takeoff'
 
-RSpec.describe Ephesus::Flight::Actions::Takeoff do
+RSpec.describe Ephesus::Flight::Commands::Takeoff do
   subject(:instance) { described_class.new(state, dispatcher: dispatcher) }
 
   let(:dispatcher) do

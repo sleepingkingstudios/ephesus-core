@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require 'ephesus/core/command'
-require 'ephesus/flight/actions'
+require 'ephesus/flight/commands'
 require 'ephesus/flight/state/actions'
 
-module Ephesus::Flight::Actions
+module Ephesus::Flight::Commands
   class Land < Ephesus::Core::Command
     private
 

@@ -70,11 +70,11 @@ RSpec.describe Ephesus::Flight::Controllers::LandedController do
 
     include_examples 'should be available',
       :radio_tower,
-      Ephesus::Flight::Actions::RadioOn
+      Ephesus::Flight::Commands::RadioOn
 
     include_examples 'should be available',
       :taxi,
-      Ephesus::Flight::Actions::Taxi
+      Ephesus::Flight::Commands::Taxi
 
     wrap_context 'when at the runway' do
       it { expect(instance.available_commands).not_to have_key :take_off }
@@ -82,7 +82,7 @@ RSpec.describe Ephesus::Flight::Controllers::LandedController do
       wrap_context 'when takeoff clearance has been granted' do
         include_examples 'should be available',
           :take_off,
-          Ephesus::Flight::Actions::Takeoff
+          Ephesus::Flight::Commands::Takeoff
       end
     end
 
@@ -102,18 +102,18 @@ RSpec.describe Ephesus::Flight::Controllers::LandedController do
   describe '#radio_tower' do
     include_examples 'should define command',
       :radio_tower,
-      Ephesus::Flight::Actions::RadioOn
+      Ephesus::Flight::Commands::RadioOn
   end
 
   describe '#take_off' do
     include_examples 'should define command',
       :take_off,
-      Ephesus::Flight::Actions::Takeoff
+      Ephesus::Flight::Commands::Takeoff
   end
 
   describe '#taxi' do
     include_examples 'should define command',
       :taxi,
-      Ephesus::Flight::Actions::Taxi
+      Ephesus::Flight::Commands::Taxi
   end
 end

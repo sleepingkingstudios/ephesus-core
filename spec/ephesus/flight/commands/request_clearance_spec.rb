@@ -3,9 +3,9 @@
 require 'hamster'
 
 require 'ephesus/core/utils/dispatch_proxy'
-require 'ephesus/flight/actions/request_clearance'
+require 'ephesus/flight/commands/request_clearance'
 
-RSpec.describe Ephesus::Flight::Actions::RequestClearance do
+RSpec.describe Ephesus::Flight::Commands::RequestClearance do
   subject(:instance) { described_class.new(state, dispatcher: dispatcher) }
 
   let(:dispatcher) do

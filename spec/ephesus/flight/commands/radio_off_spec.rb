@@ -3,9 +3,9 @@
 require 'hamster'
 
 require 'ephesus/core/utils/dispatch_proxy'
-require 'ephesus/flight/actions/radio_off'
+require 'ephesus/flight/commands/radio_off'
 
-RSpec.describe Ephesus::Flight::Actions::RadioOff do
+RSpec.describe Ephesus::Flight::Commands::RadioOff do
   subject(:instance) { described_class.new(state, dispatcher: dispatcher) }
 
   let(:dispatcher) do

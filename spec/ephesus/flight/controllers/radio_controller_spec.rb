@@ -64,16 +64,16 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
 
     include_examples 'should be available',
       :request_clearance,
-      Ephesus::Flight::Actions::RequestClearance
+      Ephesus::Flight::Commands::RequestClearance
 
     include_examples 'should be available',
       :turn_off_radio,
-      Ephesus::Flight::Actions::RadioOff
+      Ephesus::Flight::Commands::RadioOff
 
     wrap_context 'when flying' do
       include_examples 'should be available',
         :request_clearance,
-        Ephesus::Flight::Actions::RequestClearance
+        Ephesus::Flight::Commands::RequestClearance
 
       wrap_context 'when landing clearance has been granted' do
         it 'should not include :request_clearance' do
@@ -92,12 +92,12 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
   describe '#request_clearance' do
     include_examples 'should define command',
       :request_clearance,
-      Ephesus::Flight::Actions::RequestClearance
+      Ephesus::Flight::Commands::RequestClearance
   end
 
   describe '#turn_off_radio' do
     include_examples 'should define command',
       :turn_off_radio,
-      Ephesus::Flight::Actions::RadioOff
+      Ephesus::Flight::Commands::RadioOff
   end
 end
