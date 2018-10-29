@@ -10,7 +10,6 @@ module Ephesus::Core
   # user to interact with the game state.
   class Controller < Cuprum::CommandFactory
     class << self
-      # rubocop:disable Metrics/MethodLength
       def action(name, action_class, **metadata)
         metadata = metadata.merge(
           action:     true,
@@ -18,17 +17,8 @@ module Ephesus::Core
           signature:  action_class.signature
         )
 
-        command(name, metadata) do |*args, &block|
-          action_class.new(
-            state,
-            *args,
-            dispatcher: dispatcher,
-            **options,
-            &block
-          )
-        end
+        command(name, action_class, metadata)
       end
-      # rubocop:enable Metrics/MethodLength
     end
 
     def initialize(state, dispatcher:, **options)
@@ -92,6 +82,17 @@ module Ephesus::Core
       return false if defn.key?(:unless) && defn[:unless].call(state)
 
       true
+    end
+
+    def build_command(command_class, *args, &block)
+      super(
+        command_class,
+        state,
+        *args,
+        dispatcher: dispatcher,
+        **options,
+        &block
+      )
     end
 
     def definition_for(action_name)

@@ -145,8 +145,8 @@ RSpec.describe Ephesus::Core::Controller do
         expect(definition).to be_a Hash
       end
 
-      it 'should not set a class definition' do
-        expect(definition[:__const_defn__]).to be nil
+      it 'should set the class definition' do
+        expect(definition[:__const_defn__]).to be action_class
       end
 
       it 'should set the metadata' do
@@ -161,8 +161,8 @@ RSpec.describe Ephesus::Core::Controller do
           expect(definition).to be_a Hash
         end
 
-        it 'should not set a class definition' do
-          expect(definition[:__const_defn__]).to be nil
+        it 'should set the class definition' do
+          expect(definition[:__const_defn__]).to be action_class
         end
 
         it 'should set the metadata' do
