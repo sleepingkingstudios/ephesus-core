@@ -7,32 +7,32 @@ require 'ephesus/flight/session'
 # rubocop:disable RSpec/NestedGroups
 RSpec.describe Ephesus::Flight::Application do
   shared_context 'when at the runway' do
-    before(:example) { session.execute_action :taxi, to: 'runway' }
+    before(:example) { session.execute_command :taxi, to: 'runway' }
   end
 
   shared_context 'when on the tarmac' do
-    before(:example) { session.execute_action :taxi, to: 'tarmac' }
+    before(:example) { session.execute_command :taxi, to: 'tarmac' }
   end
 
   shared_context 'when flying' do
     before(:example) do
-      session.execute_action :radio_tower
-      session.execute_action :request_clearance
-      session.execute_action :turn_off_radio
-      session.execute_action :taxi, to: 'runway'
-      session.execute_action :take_off
+      session.execute_command :radio_tower
+      session.execute_command :request_clearance
+      session.execute_command :turn_off_radio
+      session.execute_command :taxi, to: 'runway'
+      session.execute_command :take_off
     end
   end
 
   shared_context 'when radioing the tower' do
-    before(:example) { session.execute_action :radio_tower }
+    before(:example) { session.execute_command :radio_tower }
   end
 
   shared_context 'when clearance has been granted' do
     before(:example) do
-      session.execute_action :radio_tower
-      session.execute_action :request_clearance
-      session.execute_action :turn_off_radio
+      session.execute_command :radio_tower
+      session.execute_command :request_clearance
+      session.execute_command :turn_off_radio
     end
   end
 
@@ -49,17 +49,17 @@ RSpec.describe Ephesus::Flight::Application do
     }
   end
 
-  describe '#available_actions' do
+  describe '#available_commands' do
     context 'when in the hangar' do
       let(:expected) { %i[radio_tower taxi] }
 
       it 'should return the actions' do
-        expect(session.available_actions.keys).to contain_exactly(*expected)
+        expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
       wrap_context 'when clearance has been granted' do
         it 'should return the actions' do
-          expect(session.available_actions.keys).to contain_exactly(*expected)
+          expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
     end
@@ -68,14 +68,14 @@ RSpec.describe Ephesus::Flight::Application do
       let(:expected) { %i[radio_tower taxi] }
 
       it 'should return the actions' do
-        expect(session.available_actions.keys).to contain_exactly(*expected)
+        expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
       wrap_context 'when clearance has been granted' do
         let(:expected) { super() << :take_off }
 
         it 'should return the actions' do
-          expect(session.available_actions.keys).to contain_exactly(*expected)
+          expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
     end
@@ -84,12 +84,12 @@ RSpec.describe Ephesus::Flight::Application do
       let(:expected) { %i[radio_tower taxi] }
 
       it 'should return the actions' do
-        expect(session.available_actions.keys).to contain_exactly(*expected)
+        expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
       wrap_context 'when clearance has been granted' do
         it 'should return the actions' do
-          expect(session.available_actions.keys).to contain_exactly(*expected)
+          expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
     end
@@ -100,16 +100,16 @@ RSpec.describe Ephesus::Flight::Application do
       let(:expected) { %i[request_clearance turn_off_radio] }
 
       it 'should return the actions' do
-        expect(session.available_actions.keys).to contain_exactly(*expected)
+        expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
       context 'when takeoff clearance has been granted' do
         let(:expected) { super().tap { |ary| ary.delete(:request_clearance) } }
 
-        before(:example) { session.execute_action :request_clearance }
+        before(:example) { session.execute_command :request_clearance }
 
         it 'should return the actions' do
-          expect(session.available_actions.keys).to contain_exactly(*expected)
+          expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
     end
@@ -118,14 +118,14 @@ RSpec.describe Ephesus::Flight::Application do
       let(:expected) { %i[do_trick radio_tower] }
 
       it 'should return the actions' do
-        expect(session.available_actions.keys).to contain_exactly(*expected)
+        expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
       wrap_context 'when clearance has been granted' do
         let(:expected) { super() << :land }
 
         it 'should return the actions' do
-          expect(session.available_actions.keys).to contain_exactly(*expected)
+          expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
     end
@@ -137,16 +137,16 @@ RSpec.describe Ephesus::Flight::Application do
       let(:expected) { %i[request_clearance turn_off_radio] }
 
       it 'should return the actions' do
-        expect(session.available_actions.keys).to contain_exactly(*expected)
+        expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
       context 'when landing clearance has been granted' do
         let(:expected) { super().tap { |ary| ary.delete(:request_clearance) } }
 
-        before(:example) { session.execute_action :request_clearance }
+        before(:example) { session.execute_command :request_clearance }
 
         it 'should return the actions' do
-          expect(session.available_actions.keys).to contain_exactly(*expected)
+          expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
     end
@@ -160,28 +160,28 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(radio: true) }
 
         it 'should update the state' do
-          expect { session.execute_action :radio_tower }
+          expect { session.execute_command :radio_tower }
             .to change(application, :state).to be == expected
         end
       end
 
       describe 'taking off' do
         it 'should not update the state' do
-          expect { session.execute_action :take_off }
+          expect { session.execute_command :take_off }
             .not_to change(application, :state)
         end
       end
 
       describe 'taxi-ing to an invalid location' do
         it 'should not update the state' do
-          expect { session.execute_action :taxi, to: 'tower' }
+          expect { session.execute_command :taxi, to: 'tower' }
             .not_to change(application, :state)
         end
       end
 
       describe 'taxi-ing to the hangar' do
         it 'should not update the state' do
-          expect { session.execute_action :taxi, to: 'hangar' }
+          expect { session.execute_command :taxi, to: 'hangar' }
             .not_to change(application, :state)
         end
       end
@@ -190,7 +190,7 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(location: 'runway') }
 
         it 'should update the state' do
-          expect { session.execute_action :taxi, to: 'runway' }
+          expect { session.execute_command :taxi, to: 'runway' }
             .to change(application, :state).to be == expected
         end
       end
@@ -199,7 +199,7 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(location: 'tarmac') }
 
         it 'should update the state' do
-          expect { session.execute_action :taxi, to: 'tarmac' }
+          expect { session.execute_command :taxi, to: 'tarmac' }
             .to change(application, :state).to be == expected
         end
       end
@@ -213,9 +213,9 @@ RSpec.describe Ephesus::Flight::Application do
         end
 
         before(:example) do
-          session.execute_action :radio_tower
-          session.execute_action :request_clearance
-          session.execute_action :turn_off_radio
+          session.execute_command :radio_tower
+          session.execute_command :request_clearance
+          session.execute_command :turn_off_radio
         end
 
         it { expect(application.state).to be == initial_state }
@@ -224,28 +224,28 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(radio: true) }
 
           it 'should update the state' do
-            expect { session.execute_action :radio_tower }
+            expect { session.execute_command :radio_tower }
               .to change(application, :state).to be == expected
           end
         end
 
         describe 'taking off' do
           it 'should not update the state' do
-            expect { session.execute_action :take_off }
+            expect { session.execute_command :take_off }
               .not_to change(application, :state)
           end
         end
 
         describe 'taxi-ing to an invalid location' do
           it 'should not update the state' do
-            expect { session.execute_action :taxi, to: 'tower' }
+            expect { session.execute_command :taxi, to: 'tower' }
               .not_to change(application, :state)
           end
         end
 
         describe 'taxi-ing to the hangar' do
           it 'should not update the state' do
-            expect { session.execute_action :taxi, to: 'hangar' }
+            expect { session.execute_command :taxi, to: 'hangar' }
               .not_to change(application, :state)
           end
         end
@@ -254,7 +254,7 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(location: 'runway') }
 
           it 'should update the state' do
-            expect { session.execute_action :taxi, to: 'runway' }
+            expect { session.execute_command :taxi, to: 'runway' }
               .to change(application, :state).to be == expected
           end
         end
@@ -263,7 +263,7 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(location: 'tarmac') }
 
           it 'should update the state' do
-            expect { session.execute_action :taxi, to: 'tarmac' }
+            expect { session.execute_command :taxi, to: 'tarmac' }
               .to change(application, :state).to be == expected
           end
         end
@@ -279,21 +279,21 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(radio: true) }
 
         it 'should update the state' do
-          expect { session.execute_action :radio_tower }
+          expect { session.execute_command :radio_tower }
             .to change(application, :state).to be == expected
         end
       end
 
       describe 'taking off' do
         it 'should not update the state' do
-          expect { session.execute_action :take_off }
+          expect { session.execute_command :take_off }
             .not_to change(application, :state)
         end
       end
 
       describe 'taxi-ing to an invalid location' do
         it 'should not update the state' do
-          expect { session.execute_action :taxi, to: 'tower' }
+          expect { session.execute_command :taxi, to: 'tower' }
             .not_to change(application, :state)
         end
       end
@@ -302,14 +302,14 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(location: 'hangar') }
 
         it 'should update the state' do
-          expect { session.execute_action :taxi, to: 'hangar' }
+          expect { session.execute_command :taxi, to: 'hangar' }
             .to change(application, :state).to be == expected
         end
       end
 
       describe 'taxi-ing to the runway' do
         it 'should not update the state' do
-          expect { session.execute_action :taxi, to: 'runway' }
+          expect { session.execute_command :taxi, to: 'runway' }
             .not_to change(application, :state)
         end
       end
@@ -318,7 +318,7 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(location: 'tarmac') }
 
         it 'should update the state' do
-          expect { session.execute_action :taxi, to: 'tarmac' }
+          expect { session.execute_command :taxi, to: 'tarmac' }
             .to change(application, :state).to be == expected
         end
       end
@@ -337,7 +337,7 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(radio: true) }
 
           it 'should update the state' do
-            expect { session.execute_action :radio_tower }
+            expect { session.execute_command :radio_tower }
               .to change(application, :state).to be == expected
           end
         end
@@ -353,14 +353,14 @@ RSpec.describe Ephesus::Flight::Application do
           end
 
           it 'should update the state' do
-            expect { session.execute_action :take_off }
+            expect { session.execute_command :take_off }
               .to change(application, :state).to be == expected
           end
         end
 
         describe 'taxi-ing to an invalid location' do
           it 'should not update the state' do
-            expect { session.execute_action :taxi, to: 'tower' }
+            expect { session.execute_command :taxi, to: 'tower' }
               .not_to change(application, :state)
           end
         end
@@ -369,14 +369,14 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(location: 'hangar') }
 
           it 'should update the state' do
-            expect { session.execute_action :taxi, to: 'hangar' }
+            expect { session.execute_command :taxi, to: 'hangar' }
               .to change(application, :state).to be == expected
           end
         end
 
         describe 'taxi-ing to the runway' do
           it 'should not update the state' do
-            expect { session.execute_action :taxi, to: 'runway' }
+            expect { session.execute_command :taxi, to: 'runway' }
               .not_to change(application, :state)
           end
         end
@@ -385,7 +385,7 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(location: 'tarmac') }
 
           it 'should update the state' do
-            expect { session.execute_action :taxi, to: 'tarmac' }
+            expect { session.execute_command :taxi, to: 'tarmac' }
               .to change(application, :state).to be == expected
           end
         end
@@ -401,21 +401,21 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(radio: true) }
 
         it 'should update the state' do
-          expect { session.execute_action :radio_tower }
+          expect { session.execute_command :radio_tower }
             .to change(application, :state).to be == expected
         end
       end
 
       describe 'taking off' do
         it 'should not update the state' do
-          expect { session.execute_action :take_off }
+          expect { session.execute_command :take_off }
             .not_to change(application, :state)
         end
       end
 
       describe 'taxi-ing to an invalid location' do
         it 'should not update the state' do
-          expect { session.execute_action :taxi, to: 'tower' }
+          expect { session.execute_command :taxi, to: 'tower' }
             .not_to change(application, :state)
         end
       end
@@ -424,7 +424,7 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(location: 'hangar') }
 
         it 'should update the state' do
-          expect { session.execute_action :taxi, to: 'hangar' }
+          expect { session.execute_command :taxi, to: 'hangar' }
             .to change(application, :state).to be == expected
         end
       end
@@ -433,14 +433,14 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(location: 'runway') }
 
         it 'should update the state' do
-          expect { session.execute_action :taxi, to: 'runway' }
+          expect { session.execute_command :taxi, to: 'runway' }
             .to change(application, :state).to be == expected
         end
       end
 
       describe 'taxi-ing to the tarmac' do
         it 'should not update the state' do
-          expect { session.execute_action :taxi, to: 'tarmac' }
+          expect { session.execute_command :taxi, to: 'tarmac' }
             .not_to change(application, :state)
         end
       end
@@ -459,21 +459,21 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(radio: true) }
 
           it 'should update the state' do
-            expect { session.execute_action :radio_tower }
+            expect { session.execute_command :radio_tower }
               .to change(application, :state).to be == expected
           end
         end
 
         describe 'taking off' do
           it 'should not update the state' do
-            expect { session.execute_action :take_off }
+            expect { session.execute_command :take_off }
               .not_to change(application, :state)
           end
         end
 
         describe 'taxi-ing to an invalid location' do
           it 'should not update the state' do
-            expect { session.execute_action :taxi, to: 'tower' }
+            expect { session.execute_command :taxi, to: 'tower' }
               .not_to change(application, :state)
           end
         end
@@ -482,7 +482,7 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(location: 'hangar') }
 
           it 'should update the state' do
-            expect { session.execute_action :taxi, to: 'hangar' }
+            expect { session.execute_command :taxi, to: 'hangar' }
               .to change(application, :state).to be == expected
           end
         end
@@ -491,14 +491,14 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(location: 'runway') }
 
           it 'should update the state' do
-            expect { session.execute_action :taxi, to: 'runway' }
+            expect { session.execute_command :taxi, to: 'runway' }
               .to change(application, :state).to be == expected
           end
         end
 
         describe 'taxi-ing to the tarmac' do
           it 'should not update the state' do
-            expect { session.execute_action :taxi, to: 'tarmac' }
+            expect { session.execute_command :taxi, to: 'tarmac' }
               .not_to change(application, :state)
           end
         end
@@ -516,7 +516,7 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(takeoff_clearance: true) }
 
         it 'should update the state' do
-          expect { session.execute_action :request_clearance }
+          expect { session.execute_command :request_clearance }
             .to change(application, :state).to be == expected
         end
       end
@@ -525,7 +525,7 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(radio: false) }
 
         it 'should update the state' do
-          expect { session.execute_action :turn_off_radio }
+          expect { session.execute_command :turn_off_radio }
             .to change(application, :state).to be == expected
         end
       end
@@ -533,13 +533,13 @@ RSpec.describe Ephesus::Flight::Application do
       context 'when takeoff clearance has been granted' do
         let(:initial_state) { super().merge takeoff_clearance: true }
 
-        before(:example) { session.execute_action :request_clearance }
+        before(:example) { session.execute_command :request_clearance }
 
         it { expect(application.state).to be == initial_state }
 
         describe 'requesting takeoff clearance' do
           it 'should not update the state' do
-            expect { session.execute_action :request_clearance }
+            expect { session.execute_command :request_clearance }
               .not_to change(application, :state)
           end
         end
@@ -548,7 +548,7 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(radio: false) }
 
           it 'should update the state' do
-            expect { session.execute_action :turn_off_radio }
+            expect { session.execute_command :turn_off_radio }
               .to change(application, :state).to be == expected
           end
         end
@@ -570,7 +570,7 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(score: 10) }
 
         it 'should update the state' do
-          expect { session.execute_action :do_trick, 'barrel roll' }
+          expect { session.execute_command :do_trick, 'barrel roll' }
             .to change(application, :state).to be == expected
         end
       end
@@ -579,7 +579,7 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(score: 30) }
 
         it 'should update the state' do
-          expect { session.execute_action :do_trick, 'Immelmann turn' }
+          expect { session.execute_command :do_trick, 'Immelmann turn' }
             .to change(application, :state).to be == expected
         end
       end
@@ -588,14 +588,14 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(score: 20) }
 
         it 'should update the state' do
-          expect { session.execute_action :do_trick, 'loop' }
+          expect { session.execute_command :do_trick, 'loop' }
             .to change(application, :state).to be == expected
         end
       end
 
       describe 'landing' do
         it 'should not update the state' do
-          expect { session.execute_action :land }
+          expect { session.execute_command :land }
             .not_to change(application, :state)
         end
       end
@@ -604,7 +604,7 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(radio: true) }
 
         it 'should update the state' do
-          expect { session.execute_action :radio_tower }
+          expect { session.execute_command :radio_tower }
             .to change(application, :state).to be == expected
         end
       end
@@ -616,7 +616,7 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(score: 10) }
 
           it 'should update the state' do
-            expect { session.execute_action :do_trick, 'barrel roll' }
+            expect { session.execute_command :do_trick, 'barrel roll' }
               .to change(application, :state).to be == expected
           end
         end
@@ -625,7 +625,7 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(score: 30) }
 
           it 'should update the state' do
-            expect { session.execute_action :do_trick, 'Immelmann turn' }
+            expect { session.execute_command :do_trick, 'Immelmann turn' }
               .to change(application, :state).to be == expected
           end
         end
@@ -634,7 +634,7 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(score: 20) }
 
           it 'should update the state' do
-            expect { session.execute_action :do_trick, 'loop' }
+            expect { session.execute_command :do_trick, 'loop' }
               .to change(application, :state).to be == expected
           end
         end
@@ -650,7 +650,7 @@ RSpec.describe Ephesus::Flight::Application do
           end
 
           it 'should update the state' do
-            expect { session.execute_action :land }
+            expect { session.execute_command :land }
               .to change(application, :state).to be == expected
           end
         end
@@ -659,7 +659,7 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(radio: true) }
 
           it 'should update the state' do
-            expect { session.execute_action :radio_tower }
+            expect { session.execute_command :radio_tower }
               .to change(application, :state).to be == expected
           end
         end
@@ -677,12 +677,12 @@ RSpec.describe Ephesus::Flight::Application do
       end
 
       before(:example) do
-        session.execute_action :radio_tower
-        session.execute_action :request_clearance
-        session.execute_action :turn_off_radio
-        session.execute_action :taxi, to: 'runway'
-        session.execute_action :take_off
-        session.execute_action :radio_tower
+        session.execute_command :radio_tower
+        session.execute_command :request_clearance
+        session.execute_command :turn_off_radio
+        session.execute_command :taxi, to: 'runway'
+        session.execute_command :take_off
+        session.execute_command :radio_tower
       end
 
       it { expect(application.state).to be == initial_state }
@@ -691,7 +691,7 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(landing_clearance: true) }
 
         it 'should update the state' do
-          expect { session.execute_action :request_clearance }
+          expect { session.execute_command :request_clearance }
             .to change(application, :state).to be == expected
         end
       end
@@ -700,7 +700,7 @@ RSpec.describe Ephesus::Flight::Application do
         let(:expected) { initial_state.merge(radio: false) }
 
         it 'should update the state' do
-          expect { session.execute_action :turn_off_radio }
+          expect { session.execute_command :turn_off_radio }
             .to change(application, :state).to be == expected
         end
       end
@@ -708,11 +708,11 @@ RSpec.describe Ephesus::Flight::Application do
       context 'when landing clearance has been granted' do
         let(:initial_state) { super().merge(landing_clearance: true) }
 
-        before(:example) { session.execute_action :request_clearance }
+        before(:example) { session.execute_command :request_clearance }
 
         describe 'requesting landing clearance' do
           it 'should not update the state' do
-            expect { session.execute_action :request_clearance }
+            expect { session.execute_command :request_clearance }
               .not_to change(application, :state)
           end
         end
@@ -721,7 +721,7 @@ RSpec.describe Ephesus::Flight::Application do
           let(:expected) { initial_state.merge(radio: false) }
 
           it 'should update the state' do
-            expect { session.execute_action :turn_off_radio }
+            expect { session.execute_command :turn_off_radio }
               .to change(application, :state).to be == expected
           end
         end

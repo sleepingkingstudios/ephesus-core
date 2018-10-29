@@ -8,12 +8,12 @@ require 'ephesus/flight/controllers'
 
 module Ephesus::Flight::Controllers
   class FlyingController < Ephesus::Core::Controller
-    action :do_trick, Ephesus::Flight::Actions::DoTrick
+    command :do_trick, Ephesus::Flight::Actions::DoTrick
 
-    action :land,
+    command :land,
       Ephesus::Flight::Actions::Land,
       if: ->(state) { state.get(:landing_clearance) }
 
-    action :radio_tower, Ephesus::Flight::Actions::RadioOn
+    command :radio_tower, Ephesus::Flight::Actions::RadioOn
   end
 end

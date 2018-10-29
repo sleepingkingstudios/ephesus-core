@@ -365,8 +365,8 @@ RSpec.describe Ephesus::Core::Session do
     include_examples 'should have reader', :application, -> { application }
   end
 
-  describe '#available_actions' do
-    it { expect(instance).to respond_to(:available_actions).with(0).arguments }
+  describe '#available_commands' do
+    it { expect(instance).to respond_to(:available_commands).with(0).arguments }
 
     wrap_context 'with a non-conditional controller' do
       include_context 'with a session subclass'
@@ -381,17 +381,17 @@ RSpec.describe Ephesus::Core::Session do
 
       before(:example) do
         allow(instance.controller)
-          .to receive(:available_actions)
+          .to receive(:available_commands)
           .and_return(actions)
       end
 
-      it { expect(instance.available_actions).to be actions }
+      it { expect(instance.available_commands).to be actions }
 
       it 'should delegate to the controller' do
-        instance.available_actions
+        instance.available_commands
 
         expect(instance.controller)
-          .to have_received(:available_actions)
+          .to have_received(:available_commands)
           .with(no_args)
       end
     end
@@ -529,9 +529,9 @@ RSpec.describe Ephesus::Core::Session do
     end
   end
 
-  describe '#execute_action' do
+  describe '#execute_command' do
     it 'should define the method' do
-      expect(instance).to respond_to(:execute_action).with(1..2).arguments
+      expect(instance).to respond_to(:execute_command).with(1..2).arguments
     end
 
     wrap_context 'with a non-conditional controller' do
@@ -541,14 +541,14 @@ RSpec.describe Ephesus::Core::Session do
       let(:action_params) { { opt: 'value' } }
 
       before(:example) do
-        allow(instance.controller).to receive(:execute_action)
+        allow(instance.controller).to receive(:execute_command)
       end
 
       it 'should delegate to the controller' do
-        instance.execute_action(action_name, **action_params)
+        instance.execute_command(action_name, **action_params)
 
         expect(instance.controller)
-          .to have_received(:execute_action)
+          .to have_received(:execute_command)
           .with(action_name, action_params)
       end
     end

@@ -7,74 +7,22 @@ require 'ephesus/core/controller'
 require 'ephesus/core/utils/dispatch_proxy'
 
 RSpec.describe Ephesus::Core::Controller do
-  shared_context 'when an action is defined' do
-    include_context 'with a controller subclass'
-
-    let(:metadata)     { {} }
-    let(:action_name)  { :do_something }
-    let(:action_class) { Spec::ExampleAction }
-
-    example_class 'Spec::ExampleAction', base_class: Ephesus::Core::Command
-
-    before(:example) do
-      described_class.action action_name, action_class, **metadata
-    end
-  end
-
-  shared_context 'when the action is secret' do
-    let(:metadata) { super().merge secret: true }
-  end
-
-  shared_context 'when the action constructor takes arguments' do
-    let(:action_name)     { :do_something_else }
-    let(:action_class)    { Spec::ExampleActionWithArgs }
-
-    example_class 'Spec::ExampleActionWithArgs',
-      base_class: Ephesus::Core::Command \
-    do |klass|
-      klass.send :define_method, :initialize \
-      do |state, *rest, dispatcher:, **options|
-        super(
-          state,
-          dispatcher: dispatcher,
-          **options
-        )
-
-        @arguments = *rest
-      end
-
-      klass.attr_reader :arguments
-    end
-  end
-
-  shared_context 'when the action takes arguments' do
-    let(:action_name)     { :do_something_else }
-    let(:action_class)    { Spec::ExampleActionWithArgs }
-
-    example_class 'Spec::ExampleActionWithArgs',
-      base_class: Ephesus::Core::Command \
-    do |klass|
-      klass.send :argument, :first_arg
-      klass.send :argument, :second_arg
-      klass.send :argument, :third_arg, required: false
-
-      klass.send :keyword, :first_key
-      klass.send :keyword, :second_key, required: true
-      klass.send :keyword, :third_key
-    end
-  end
-
   shared_context 'when a command is defined' do
     include_context 'with a controller subclass'
 
-    let(:command_name)  { :calculate_something }
-    let(:command_class) { Spec::ExampleCommand }
+    let(:metadata)      { {} }
+    let(:command_name)  { :do_something }
+    let(:command_class) { Spec::DoTheMarioCommand }
 
-    example_class 'Spec::ExampleCommand', base_class: Cuprum::Command
+    example_class 'Spec::DoTheMarioCommand', base_class: Ephesus::Core::Command
 
     before(:example) do
-      described_class.command command_name, command_class
+      described_class.command command_name, command_class, **metadata
     end
+  end
+
+  shared_context 'when the command is secret' do
+    let(:metadata) { super().merge secret: true }
   end
 
   shared_context 'when the controller is initialized with options' do
@@ -96,6 +44,32 @@ RSpec.describe Ephesus::Core::Controller do
     # rubocop:enable RSpec/DescribedClass
   end
 
+  shared_examples 'should define the constant' do
+    describe '::${CommandName}' do
+      before(:example) { define_command }
+
+      it 'should define the constant' do
+        expect(instance)
+          .to have_constant(constant_name)
+          .with_value(command_class)
+      end
+    end
+  end
+
+  shared_examples 'should define the helper method' do
+    describe '#${command_name}' do
+      before(:example) { define_command }
+
+      def build_command
+        instance.send(command_name)
+      end
+
+      it { expect(instance).to respond_to(command_name).with(0).arguments }
+
+      it { expect(build_command).to be_a command_class }
+    end
+  end
+
   subject(:instance) do
     described_class.new(
       state,
@@ -107,8 +81,8 @@ RSpec.describe Ephesus::Core::Controller do
   let(:dispatcher) do
     instance_double(Ephesus::Core::Utils::DispatchProxy)
   end
-  let(:state)      { Hamster::Hash.new(landed: true, location: :hangar) }
-  let(:options)    { {} }
+  let(:state)   { Hamster::Hash.new(landed: true, location: :hangar) }
+  let(:options) { {} }
 
   describe '::new' do
     it 'should define the constructor' do
@@ -120,124 +94,120 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
-  describe '::action' do
+  describe '::command' do
+    include_context 'with a controller subclass'
+
+    let(:metadata)      { {} }
+    let(:command_name)  { :do_something }
+    let(:command_class) { Spec::DoTheMarioCommand }
+    let(:constant_name) { tools.string.camelize(command_name) }
+    let(:definition) do
+      described_class.send(:command_definitions)[command_name.intern]
+    end
+    let(:tools) do
+      SleepingKingStudios::Tools::Toolbelt.instance
+    end
+    let(:expected_metadata) do
+      metadata
+        .merge(
+          properties: command_class.properties,
+          signature:  command_class.signature
+        )
+    end
+
+    example_class 'Spec::DoTheMarioCommand', base_class: Ephesus::Core::Command
+
     it 'should define the class method' do
       expect(described_class)
-        .to respond_to(:action)
+        .to respond_to(:command)
         .with(2).arguments
         .and_any_keywords
     end
 
-    wrap_context 'when an action is defined' do
-      let(:definition) do
-        described_class.send(:command_definitions)[action_name.intern]
-      end
-      let(:expected_metadata) do
-        metadata
-          .merge(
-            action:     true,
-            properties: action_class.properties,
-            signature:  action_class.signature
-          )
+    describe 'with an invalid command class' do
+      let(:command_class) { Cuprum::Command }
+      let(:error_message) do
+        'expected command class to be a subclass of Ephesus::Core::Command, ' \
+        "but was #{command_class.inspect}"
       end
 
+      it 'should raise an error' do
+        expect { described_class.command(command_name, command_class) }
+          .to raise_error ArgumentError, error_message
+      end
+    end
+
+    describe 'with a name and a command class' do
+      def define_command
+        described_class.command(command_name, command_class)
+      end
+
+      include_examples 'should define the constant'
+
+      include_examples 'should define the helper method'
+
       it 'should set the definition' do
+        define_command
+
         expect(definition).to be_a Hash
       end
 
       it 'should set the class definition' do
-        expect(definition[:__const_defn__]).to be action_class
+        define_command
+
+        expect(definition[:__const_defn__]).to be command_class
       end
 
       it 'should set the metadata' do
+        define_command
+
         expect(definition.reject { |k, _| k == :__const_defn__ })
           .to be == expected_metadata
       end
+    end
 
-      describe 'with metadata' do
-        let(:metadata) { { key: 'value', opt: 5 } }
+    describe 'with a name, a command class, and metadata' do
+      let(:metadata) { { key: 'value', opt: 5 } }
 
-        it 'should set the definition' do
-          expect(definition).to be_a Hash
-        end
-
-        it 'should set the class definition' do
-          expect(definition[:__const_defn__]).to be action_class
-        end
-
-        it 'should set the metadata' do
-          expect(definition.reject { |k, _| k == :__const_defn__ })
-            .to be == expected_metadata
-        end
+      def define_command
+        described_class.command(command_name, command_class, **metadata)
       end
 
-      describe '#${action_name}' do
-        let(:action) { instance.send action_name }
+      include_examples 'should define the constant'
 
-        it { expect(instance).to respond_to(action_name) }
+      include_examples 'should define the helper method'
 
-        it { expect(action).to be_a action_class }
+      it 'should set the definition' do
+        define_command
 
-        it { expect(action.state).to be state }
+        expect(definition).to be_a Hash
+      end
 
-        it { expect(action.options).to be == {} }
+      it 'should set the class definition' do
+        define_command
 
-        wrap_context 'when the action constructor takes arguments' do
-          let(:args)   { [:ichi, 'ni', san: 3] }
-          let(:action) { instance.send action_name, *args }
+        expect(definition[:__const_defn__]).to be command_class
+      end
 
-          it { expect(action).to be_a action_class }
+      it 'should set the metadata' do
+        define_command
 
-          it { expect(action.state).to be state }
-
-          it { expect(action.arguments).to be == args }
-
-          it { expect(action.options).to be == {} }
-        end
-
-        wrap_context 'when the controller is initialized with options' do
-          it { expect(action.options).to be == options }
-        end
+        expect(definition.reject { |k, _| k == :__const_defn__ })
+          .to be == expected_metadata
       end
     end
   end
 
-  describe '#action?' do
-    it { expect(instance).to respond_to(:action?).with(1).argument }
+  describe '#available_commands' do
+    include_examples 'should have reader', :available_commands
 
-    it { expect(instance.action? :do_nothing).to be false }
-
-    wrap_context 'when an action is defined' do
-      it { expect(instance.action? :do_something).to be true }
-    end
+    it { expect(instance.available_commands).to be == {} }
 
     wrap_context 'when a command is defined' do
-      it { expect(instance.action? :calculate_something).to be false }
-    end
-  end
+      let(:expected) { command_class.properties }
 
-  describe '#actions' do
-    include_examples 'should have reader', :actions, []
-
-    wrap_context 'when an action is defined' do
-      it { expect(instance.actions).to include :do_something }
-    end
-
-    wrap_context 'when a command is defined' do
-      it { expect(instance.actions).not_to include :calculate_something }
-    end
-  end
-
-  describe '#available_actions' do
-    include_examples 'should have reader', :available_actions
-
-    it { expect(instance.available_actions).to be == {} }
-
-    wrap_context 'when an action is defined' do
-      let(:expected) { action_class.properties }
-
-      it 'should return the actions and properties' do
-        expect(instance.available_actions).to be == { do_something: expected }
+      it 'should return the commands and properties' do
+        expect(instance.available_commands).to be == { do_something: expected }
       end
 
       context 'with an if conditional' do
@@ -247,7 +217,7 @@ RSpec.describe Ephesus::Core::Controller do
         end
 
         it 'should yield the state to the conditional' do
-          expect { instance.available_actions }
+          expect { instance.available_commands }
             .to change { arguments }
             .to be == [state]
         end
@@ -258,7 +228,7 @@ RSpec.describe Ephesus::Core::Controller do
           { if: ->(state) { state.get(:location) == :tarmac } }
         end
 
-        it { expect(instance.available_actions).to be == {} }
+        it { expect(instance.available_commands).to be == {} }
       end
 
       context 'with a matching :if conditional' do
@@ -266,8 +236,9 @@ RSpec.describe Ephesus::Core::Controller do
           { if: ->(state) { state.get(:landed) } }
         end
 
-        it 'should return the actions and properties' do
-          expect(instance.available_actions).to be == { do_something: expected }
+        it 'should return the commands and properties' do
+          expect(instance.available_commands)
+            .to be == { do_something: expected }
         end
       end
 
@@ -278,7 +249,7 @@ RSpec.describe Ephesus::Core::Controller do
         end
 
         it 'should yield the state to the conditional' do
-          expect { instance.available_actions }
+          expect { instance.available_commands }
             .to change { arguments }
             .to be == [state]
         end
@@ -289,8 +260,9 @@ RSpec.describe Ephesus::Core::Controller do
           { unless: ->(state) { state.get(:location) == :tarmac } }
         end
 
-        it 'should return the actions and properties' do
-          expect(instance.available_actions).to be == { do_something: expected }
+        it 'should return the commands and properties' do
+          expect(instance.available_commands)
+            .to be == { do_something: expected }
         end
       end
 
@@ -299,12 +271,8 @@ RSpec.describe Ephesus::Core::Controller do
           { unless: ->(state) { state.get(:landed) } }
         end
 
-        it { expect(instance.available_actions).to be == {} }
+        it { expect(instance.available_commands).to be == {} }
       end
-    end
-
-    wrap_context 'when a command is defined' do
-      it { expect(instance.available_actions).to be == {} }
     end
   end
 
@@ -313,24 +281,16 @@ RSpec.describe Ephesus::Core::Controller do
 
     it { expect(instance.command? :do_nothing).to be false }
 
-    wrap_context 'when an action is defined' do
-      it { expect(instance.command? :do_something).to be true }
-    end
-
     wrap_context 'when a command is defined' do
-      it { expect(instance.command? :calculate_something).to be true }
+      it { expect(instance.command? :do_something).to be true }
     end
   end
 
   describe '#commands' do
     include_examples 'should have reader', :commands, []
 
-    wrap_context 'when an action is defined' do
-      it { expect(instance.commands).to include :do_something }
-    end
-
     wrap_context 'when a command is defined' do
-      it { expect(instance.commands).to include :calculate_something }
+      it { expect(instance.commands).to include :do_something }
     end
   end
 
@@ -338,19 +298,19 @@ RSpec.describe Ephesus::Core::Controller do
     include_examples 'should have reader', :dispatcher, -> { dispatcher }
   end
 
-  describe '#execute_action' do
+  describe '#execute_command' do
     it 'should define the method' do
       expect(instance)
-        .to respond_to(:execute_action)
+        .to respond_to(:execute_command)
         .with(1).argument
         .and_unlimited_arguments
     end
 
-    describe 'with an invalid action name' do
+    describe 'with an invalid command name' do
       let(:invalid_name) { :defenestrate }
       let(:arguments)    { [] }
       let(:result) do
-        instance.execute_action(invalid_name, *arguments)
+        instance.execute_command(invalid_name, *arguments)
       end
       let(:expected_error) { :invalid_command }
 
@@ -373,12 +333,12 @@ RSpec.describe Ephesus::Core::Controller do
       # rubocop:enable RSpec/NestedGroups
     end
 
-    wrap_context 'when an action is defined' do
-      describe 'with an invalid action name' do
+    wrap_context 'when a command is defined' do
+      describe 'with an invalid command name' do
         let(:invalid_name) { :defenestrate }
         let(:arguments)    { [] }
         let(:result) do
-          instance.execute_action(invalid_name, *arguments)
+          instance.execute_command(invalid_name, *arguments)
         end
         let(:expected_error) { :invalid_command }
 
@@ -401,33 +361,30 @@ RSpec.describe Ephesus::Core::Controller do
         # rubocop:enable RSpec/NestedGroups
       end
 
-      describe 'with a valid action name' do
+      describe 'with a valid command name' do
         let(:expected_result) { Ephesus::Core::Commands::Result.new }
-        let(:action) do
-          action_class.new(
-            state,
-            dispatcher: dispatcher
-          )
+        let(:command) do
+          command_class.new(state, dispatcher: dispatcher)
         end
-        let(:result) { instance.execute_action(action_name) }
+        let(:result) { instance.execute_command(command_name) }
 
         before(:example) do
-          allow(action_class).to receive(:new).and_return(action)
+          allow(command_class).to receive(:new).and_return(command)
 
-          allow(action).to receive(:call).and_return(expected_result)
+          allow(command).to receive(:call).and_return(expected_result)
         end
 
-        it 'should call the action' do
-          instance.execute_action(action_name)
+        it 'should call the command' do
+          instance.execute_command(command_name)
 
-          expect(action).to have_received(:call).with(no_args)
+          expect(command).to have_received(:call).with(no_args)
         end
 
         it 'should return the result' do
           expect(result).to be expected_result
         end
 
-        it { expect(result.command_name).to be action_name }
+        it { expect(result.command_name).to be command_name }
 
         it { expect(result.arguments).to be == [] }
 
@@ -437,7 +394,7 @@ RSpec.describe Ephesus::Core::Controller do
         describe 'with too many arguments' do
           let(:arguments) { %w[ichi ni san] }
           let(:result) do
-            instance.execute_action(action_name, *arguments)
+            instance.execute_command(command_name, *arguments)
           end
           let(:expected_error) { :invalid_arguments }
           let(:arguments_error) do
@@ -450,17 +407,17 @@ RSpec.describe Ephesus::Core::Controller do
             }
           end
 
-          it 'should not call the action' do
-            instance.execute_action(action_name, *arguments)
+          it 'should not call the command' do
+            instance.execute_command(command_name, *arguments)
 
-            expect(action).not_to have_received(:call)
+            expect(command).not_to have_received(:call)
           end
 
           it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
           it { expect(result.success?).to be false }
 
-          it { expect(result.command_name).to be action_name }
+          it { expect(result.command_name).to be command_name }
 
           it { expect(result.arguments).to be == arguments }
 
@@ -480,7 +437,7 @@ RSpec.describe Ephesus::Core::Controller do
         describe 'with invalid keywords' do
           let(:keywords) { { yon: 4, go: 5, roku: 6 } }
           let(:result) do
-            instance.execute_action(action_name, **keywords)
+            instance.execute_command(command_name, **keywords)
           end
           let(:expected_error) { :invalid_arguments }
           let(:keywords_error) do
@@ -494,17 +451,17 @@ RSpec.describe Ephesus::Core::Controller do
             }
           end
 
-          it 'should not call the action' do
-            instance.execute_action(action_name, **keywords)
+          it 'should not call the command' do
+            instance.execute_command(command_name, **keywords)
 
-            expect(action).not_to have_received(:call)
+            expect(command).not_to have_received(:call)
           end
 
           it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
           it { expect(result.success?).to be false }
 
-          it { expect(result.command_name).to be action_name }
+          it { expect(result.command_name).to be command_name }
 
           it { expect(result.arguments).to be == [] }
 
@@ -521,24 +478,39 @@ RSpec.describe Ephesus::Core::Controller do
         # rubocop:enable RSpec/NestedGroups
 
         # rubocop:disable RSpec/NestedGroups
-        wrap_context 'when the action takes arguments' do
+        context 'when the command takes arguments' do
+          let(:command_name)  { :do_something_else }
+          let(:command_class) { Spec::ExampleCommandWithArgs }
+
+          example_class 'Spec::ExampleCommandWithArgs',
+            base_class: Ephesus::Core::Command \
+          do |klass|
+            klass.send :argument, :first_arg
+            klass.send :argument, :second_arg
+            klass.send :argument, :third_arg, required: false
+
+            klass.send :keyword, :first_key
+            klass.send :keyword, :second_key, required: true
+            klass.send :keyword, :third_key
+          end
+
           describe 'with valid arguments and keywords' do
             let(:arguments) { %w[ichi ni san] }
             let(:keywords)  { { second_key: 'value' } }
             let(:result) do
-              instance.execute_action(action_name, *arguments, **keywords)
+              instance.execute_command(command_name, *arguments, **keywords)
             end
 
-            it 'should call the action' do
-              instance.execute_action(action_name, *arguments, **keywords)
+            it 'should call the command' do
+              instance.execute_command(command_name, *arguments, **keywords)
 
-              expect(action)
+              expect(command)
                 .to have_received(:call).with(*arguments, **keywords)
             end
 
             it 'should return the result' do
               expect(
-                instance.execute_action(action_name, *arguments, **keywords)
+                instance.execute_command(command_name, *arguments, **keywords)
               )
                 .to be expected_result
             end
@@ -547,7 +519,7 @@ RSpec.describe Ephesus::Core::Controller do
 
             it { expect(result.errors).to be_empty }
 
-            it { expect(result.command_name).to be action_name }
+            it { expect(result.command_name).to be command_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -558,7 +530,7 @@ RSpec.describe Ephesus::Core::Controller do
             let(:arguments) { %w[ichi] }
             let(:keywords)  { { second_key: 'value' } }
             let(:result) do
-              instance.execute_action(action_name, *arguments, **keywords)
+              instance.execute_command(command_name, *arguments, **keywords)
             end
             let(:expected_error) { :invalid_arguments }
             let(:arguments_error) do
@@ -571,17 +543,17 @@ RSpec.describe Ephesus::Core::Controller do
               }
             end
 
-            it 'should not call the action' do
-              instance.execute_action(action_name, *arguments, **keywords)
+            it 'should not call the command' do
+              instance.execute_command(command_name, *arguments, **keywords)
 
-              expect(action).not_to have_received(:call)
+              expect(command).not_to have_received(:call)
             end
 
             it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
             it { expect(result.success?).to be false }
 
-            it { expect(result.command_name).to be action_name }
+            it { expect(result.command_name).to be command_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -600,7 +572,7 @@ RSpec.describe Ephesus::Core::Controller do
             let(:arguments) { %w[ichi ni san yon go roku] }
             let(:keywords)  { { second_key: 'value' } }
             let(:result) do
-              instance.execute_action(action_name, *arguments, **keywords)
+              instance.execute_command(command_name, *arguments, **keywords)
             end
             let(:expected_error) { :invalid_arguments }
             let(:arguments_error) do
@@ -613,17 +585,17 @@ RSpec.describe Ephesus::Core::Controller do
               }
             end
 
-            it 'should not call the action' do
-              instance.execute_action(action_name, *arguments, **keywords)
+            it 'should not call the command' do
+              instance.execute_command(command_name, *arguments, **keywords)
 
-              expect(action).not_to have_received(:call)
+              expect(command).not_to have_received(:call)
             end
 
             it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
             it { expect(result.success?).to be false }
 
-            it { expect(result.command_name).to be action_name }
+            it { expect(result.command_name).to be command_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -642,7 +614,7 @@ RSpec.describe Ephesus::Core::Controller do
             let(:arguments) { %w[ichi ni san] }
             let(:keywords)  { { second_key: 'value', yon: 4, go: 5, roku: 6 } }
             let(:result) do
-              instance.execute_action(action_name, *arguments, **keywords)
+              instance.execute_command(command_name, *arguments, **keywords)
             end
             let(:expected_error) { :invalid_arguments }
             let(:keywords_error) do
@@ -656,17 +628,17 @@ RSpec.describe Ephesus::Core::Controller do
               }
             end
 
-            it 'should not call the action' do
-              instance.execute_action(action_name, *arguments, **keywords)
+            it 'should not call the command' do
+              instance.execute_command(command_name, *arguments, **keywords)
 
-              expect(action).not_to have_received(:call)
+              expect(command).not_to have_received(:call)
             end
 
             it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
             it { expect(result.success?).to be false }
 
-            it { expect(result.command_name).to be action_name }
+            it { expect(result.command_name).to be command_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -685,7 +657,7 @@ RSpec.describe Ephesus::Core::Controller do
             let(:arguments) { %w[ichi ni san] }
             let(:keywords)  { { first_key: 'value' } }
             let(:result) do
-              instance.execute_action(action_name, *arguments, **keywords)
+              instance.execute_command(command_name, *arguments, **keywords)
             end
             let(:expected_error) { :invalid_arguments }
             let(:keywords_error) do
@@ -699,17 +671,17 @@ RSpec.describe Ephesus::Core::Controller do
               }
             end
 
-            it 'should not call the action' do
-              instance.execute_action(action_name, *arguments, **keywords)
+            it 'should not call the command' do
+              instance.execute_command(command_name, *arguments, **keywords)
 
-              expect(action).not_to have_received(:call)
+              expect(command).not_to have_received(:call)
             end
 
             it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
             it { expect(result.success?).to be false }
 
-            it { expect(result.command_name).to be action_name }
+            it { expect(result.command_name).to be command_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -729,7 +701,7 @@ RSpec.describe Ephesus::Core::Controller do
             let(:arguments) { %w[ichi ni san yon go roku] }
             let(:keywords)  { { first_key: 'value', yon: 4, go: 5, roku: 6 } }
             let(:result) do
-              instance.execute_action(action_name, *arguments, **keywords)
+              instance.execute_command(command_name, *arguments, **keywords)
             end
             let(:expected_error) { :invalid_arguments }
             let(:arguments_error) do
@@ -762,17 +734,17 @@ RSpec.describe Ephesus::Core::Controller do
               }
             end
 
-            it 'should not call the action' do
-              instance.execute_action(action_name, *arguments, **keywords)
+            it 'should not call the command' do
+              instance.execute_command(command_name, *arguments, **keywords)
 
-              expect(action).not_to have_received(:call)
+              expect(command).not_to have_received(:call)
             end
 
             it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
             it { expect(result.success?).to be false }
 
-            it { expect(result.command_name).to be action_name }
+            it { expect(result.command_name).to be command_name }
 
             it { expect(result.arguments).to be == arguments }
 
@@ -804,18 +776,18 @@ RSpec.describe Ephesus::Core::Controller do
           let(:metadata) do
             { if: ->(state) { state.get(:location) == :tarmac } }
           end
-          let(:result)         { instance.execute_action(action_name) }
+          let(:result)         { instance.execute_command(command_name) }
           let(:expected_error) { :unavailable_command }
 
-          it 'should not call the action' do
-            instance.execute_action(action_name)
+          it 'should not call the command' do
+            instance.execute_command(command_name)
 
-            expect(action).not_to have_received(:call)
+            expect(command).not_to have_received(:call)
           end
 
           it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
-          it { expect(result.command_name).to be action_name }
+          it { expect(result.command_name).to be command_name }
 
           it { expect(result.success?).to be false }
 
@@ -823,18 +795,18 @@ RSpec.describe Ephesus::Core::Controller do
             expect(result.errors).to include(expected_error)
           end
 
-          wrap_context 'when the action is secret' do
+          wrap_context 'when the command is secret' do
             let(:expected_error) { :invalid_command }
 
-            it 'should not call the action' do
-              instance.execute_action(action_name)
+            it 'should not call the command' do
+              instance.execute_command(command_name)
 
-              expect(action).not_to have_received(:call)
+              expect(command).not_to have_received(:call)
             end
 
             it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
-            it { expect(result.command_name).to be action_name }
+            it { expect(result.command_name).to be command_name }
 
             it { expect(result.success?).to be false }
 
@@ -849,14 +821,14 @@ RSpec.describe Ephesus::Core::Controller do
             { if: ->(state) { state.get(:landed) } }
           end
 
-          it 'should call the action' do
-            instance.execute_action(action_name)
+          it 'should call the command' do
+            instance.execute_command(command_name)
 
-            expect(action).to have_received(:call).with(no_args)
+            expect(command).to have_received(:call).with(no_args)
           end
 
           it 'should return the result' do
-            expect(instance.execute_action(action_name)).to be expected_result
+            expect(instance.execute_command(command_name)).to be expected_result
           end
         end
 
@@ -865,14 +837,14 @@ RSpec.describe Ephesus::Core::Controller do
             { unless: ->(state) { state.get(:location) == :tarmac } }
           end
 
-          it 'should call the action' do
-            instance.execute_action(action_name)
+          it 'should call the command' do
+            instance.execute_command(command_name)
 
-            expect(action).to have_received(:call).with(no_args)
+            expect(command).to have_received(:call).with(no_args)
           end
 
           it 'should return the result' do
-            expect(instance.execute_action(action_name)).to be expected_result
+            expect(instance.execute_command(command_name)).to be expected_result
           end
         end
 
@@ -880,18 +852,18 @@ RSpec.describe Ephesus::Core::Controller do
           let(:metadata) do
             { unless: ->(state) { state.get(:landed) } }
           end
-          let(:result)         { instance.execute_action(action_name) }
+          let(:result)         { instance.execute_command(command_name) }
           let(:expected_error) { :unavailable_command }
 
-          it 'should not call the action' do
-            instance.execute_action(action_name)
+          it 'should not call the command' do
+            instance.execute_command(command_name)
 
-            expect(action).not_to have_received(:call)
+            expect(command).not_to have_received(:call)
           end
 
           it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
-          it { expect(result.command_name).to be action_name }
+          it { expect(result.command_name).to be command_name }
 
           it { expect(result.success?).to be false }
 
@@ -899,18 +871,18 @@ RSpec.describe Ephesus::Core::Controller do
             expect(result.errors).to include(expected_error)
           end
 
-          wrap_context 'when the action is secret' do
+          wrap_context 'when the command is secret' do
             let(:expected_error) { :invalid_command }
 
-            it 'should not call the action' do
-              instance.execute_action(action_name)
+            it 'should not call the command' do
+              instance.execute_command(command_name)
 
-              expect(action).not_to have_received(:call)
+              expect(command).not_to have_received(:call)
             end
 
             it { expect(result).to be_a Ephesus::Core::Commands::Result }
 
-            it { expect(result.command_name).to be action_name }
+            it { expect(result.command_name).to be command_name }
 
             it { expect(result.success?).to be false }
 

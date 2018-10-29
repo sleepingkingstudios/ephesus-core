@@ -10,21 +10,21 @@ RSpec.describe Ephesus::Flight::Controllers::FlyingController do
     let(:initial_state) { super().merge landing_clearance: true }
   end
 
-  shared_examples 'should be available' do |action_name, action_class|
-    it 'should return the action properties' do
-      expect(instance.available_actions[action_name])
-        .to be == action_class.properties
+  shared_examples 'should be available' do |command_name, command_class|
+    it 'should return the command properties' do
+      expect(instance.available_commands[command_name])
+        .to be == command_class.properties
     end
   end
 
-  shared_examples 'should define action' do |action_name, action_class|
-    let(:action) { instance.send(action_name) }
+  shared_examples 'should define command' do |command_name, command_class|
+    let(:command) { instance.send(command_name) }
 
-    it { expect(instance).to respond_to(action_name).with(0).arguments }
+    it { expect(instance).to respond_to(command_name).with(0).arguments }
 
-    it { expect(action).to be_a action_class }
+    it { expect(command).to be_a command_class }
 
-    it { expect(action.state).to be state }
+    it { expect(command.state).to be state }
   end
 
   subject(:instance) { described_class.new(state, dispatcher: dispatcher) }
@@ -35,30 +35,30 @@ RSpec.describe Ephesus::Flight::Controllers::FlyingController do
   let(:initial_state) { {} }
   let(:state)         { Hamster::Hash.new(initial_state) }
 
-  describe '#action?' do
-    it { expect(instance.action? :do_something).to be false }
+  describe '#command?' do
+    it { expect(instance.command? :do_something).to be false }
 
-    it { expect(instance.action? :do_trick).to be true }
+    it { expect(instance.command? :do_trick).to be true }
 
-    it { expect(instance.action? :land).to be true }
+    it { expect(instance.command? :land).to be true }
 
-    it { expect(instance.action? :radio_tower).to be true }
+    it { expect(instance.command? :radio_tower).to be true }
   end
 
-  describe '#actions' do
-    it { expect(instance.actions).not_to include :do_something }
+  describe '#commands' do
+    it { expect(instance.commands).not_to include :do_something }
 
-    it { expect(instance.actions).to include :do_trick }
+    it { expect(instance.commands).to include :do_trick }
 
-    it { expect(instance.actions).to include :land }
+    it { expect(instance.commands).to include :land }
 
-    it { expect(instance.actions).to include :radio_tower }
+    it { expect(instance.commands).to include :radio_tower }
   end
 
-  describe '#available_actions' do
-    it { expect(instance.available_actions).not_to have_key :do_something }
+  describe '#available_commands' do
+    it { expect(instance.available_commands).not_to have_key :do_something }
 
-    it { expect(instance.available_actions).not_to have_key :land }
+    it { expect(instance.available_commands).not_to have_key :land }
 
     include_examples 'should be available',
       :do_trick,
@@ -76,19 +76,19 @@ RSpec.describe Ephesus::Flight::Controllers::FlyingController do
   end
 
   describe '#do_trick' do
-    include_examples 'should define action',
+    include_examples 'should define command',
       :do_trick,
       Ephesus::Flight::Actions::DoTrick
   end
 
   describe '#land' do
-    include_examples 'should define action',
+    include_examples 'should define command',
       :land,
       Ephesus::Flight::Actions::Land
   end
 
   describe '#radio_tower' do
-    include_examples 'should define action',
+    include_examples 'should define command',
       :radio_tower,
       Ephesus::Flight::Actions::RadioOn
   end
