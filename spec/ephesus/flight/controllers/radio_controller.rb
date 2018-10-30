@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
 require 'ephesus/core/controller'
-require 'ephesus/flight/actions/radio_off'
-require 'ephesus/flight/actions/request_clearance'
+require 'ephesus/flight/commands/radio_off'
+require 'ephesus/flight/commands/request_clearance'
 require 'ephesus/flight/controllers'
 
 module Ephesus::Flight::Controllers
   class RadioController < Ephesus::Core::Controller
-    action :request_clearance,
-      Ephesus::Flight::Actions::RequestClearance,
+    command :request_clearance,
+      Ephesus::Flight::Commands::RequestClearance,
       if: lambda { |state|
         (state.get(:landed) && !state.get(:takeoff_clearance)) ||
           (!state.get(:landed) && !state.get(:landing_clearance))
       }
 
-    action :turn_off_radio, Ephesus::Flight::Actions::RadioOff
+    command :turn_off_radio, Ephesus::Flight::Commands::RadioOff
   end
 end

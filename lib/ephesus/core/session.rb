@@ -40,8 +40,8 @@ module Ephesus::Core
       :store
 
     def_delegators :controller,
-      :available_actions,
-      :execute_action
+      :available_commands,
+      :execute_command
 
     attr_reader :application
 

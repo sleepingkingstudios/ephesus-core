@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
 require 'ephesus/core/controller'
-require 'ephesus/flight/actions/radio_on'
-require 'ephesus/flight/actions/takeoff'
-require 'ephesus/flight/actions/taxi'
+require 'ephesus/flight/commands/radio_on'
+require 'ephesus/flight/commands/takeoff'
+require 'ephesus/flight/commands/taxi'
 require 'ephesus/flight/controllers'
 
 module Ephesus::Flight::Controllers
   class LandedController < Ephesus::Core::Controller
-    action :radio_tower, Ephesus::Flight::Actions::RadioOn
-    action :take_off,
-      Ephesus::Flight::Actions::Takeoff,
+    command :radio_tower, Ephesus::Flight::Commands::RadioOn
+    command :take_off,
+      Ephesus::Flight::Commands::Takeoff,
       if: lambda { |state|
         state.get(:location) == 'runway' && state.get(:takeoff_clearance)
       }
-    action :taxi, Ephesus::Flight::Actions::Taxi
+    command :taxi, Ephesus::Flight::Commands::Taxi
   end
 end

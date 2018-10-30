@@ -2,33 +2,38 @@
 
 require 'cuprum/command_factory'
 
-require 'ephesus/core/actions/invalid_action_result'
-require 'ephesus/core/actions/unavailable_action_result'
+require 'ephesus/core/commands/invalid_command_result'
+require 'ephesus/core/commands/unavailable_command_result'
 
 module Ephesus::Core
-  # Abstract base class for Ephesus controllers. Define actions that permit a
+  # Abstract base class for Ephesus controllers. Define commands that permit a
   # user to interact with the game state.
   class Controller < Cuprum::CommandFactory
     class << self
-      # rubocop:disable Metrics/MethodLength
-      def action(name, action_class, **metadata)
+      def command(name, command_class, **metadata)
+        unless command_class?(command_class)
+          raise ArgumentError,
+            'expected command class to be a subclass of ' \
+            "Ephesus::Core::Command, but was #{command_class.inspect}"
+        end
+
         metadata = metadata.merge(
-          action:     true,
-          properties: action_class.properties,
-          signature:  action_class.signature
+          properties: command_class.properties,
+          signature:  command_class.signature
         )
 
-        command(name, metadata) do |*args, &block|
-          action_class.new(
-            state,
-            *args,
-            dispatcher: dispatcher,
-            **options,
-            &block
-          )
-        end
+        super(name, command_class, metadata)
       end
-      # rubocop:enable Metrics/MethodLength
+
+      private :command_class # rubocop:disable Style/AccessModifierDeclarations
+
+      private
+
+      def command_class?(value)
+        return false unless value.is_a?(Class)
+
+        value < Ephesus::Core::Command
+      end
     end
 
     def initialize(state, dispatcher:, **options)
@@ -43,43 +48,28 @@ module Ephesus::Core
 
     attr_reader :state
 
-    def action?(action_name)
-      action_name = normalize_command_name(action_name)
-
-      actions.include?(action_name)
-    end
-
-    def actions
-      self
-        .class
-        .send(:command_definitions)
-        .select { |_, hsh| hsh.fetch(:action, false) }
-        .keys
-    end
-
-    def available_actions
+    def available_commands
       self
         .class
         .send(:command_definitions)
         .each
         .with_object({}) \
-      do |(action_name, definition), hsh|
-        next unless definition.fetch(:action, false)
+      do |(command_name, definition), hsh|
         next unless available?(definition)
 
-        hsh[action_name] = definition.fetch(:properties, {})
+        hsh[command_name] = definition.fetch(:properties, {})
       end
     end
 
-    def execute_action(action_name, *args)
-      definition = definition_for(action_name)
+    def execute_command(command_name, *args)
+      definition = definition_for(command_name)
       arguments, keywords = split_arguments(args)
 
-      wrap_result(action_name, arguments, keywords) do
-        handle_invalid_action(definition) ||
-          handle_unavailable_action(definition) ||
+      wrap_result(command_name, arguments, keywords) do
+        handle_invalid_command(definition) ||
+          handle_unavailable_command(definition) ||
           handle_invalid_arguments(definition, arguments, keywords) ||
-          send(action_name).call(*args)
+          send(command_name).call(*args)
       end
     end
 
@@ -94,14 +84,25 @@ module Ephesus::Core
       true
     end
 
-    def definition_for(action_name)
-      self.class.send(:command_definitions)[action_name]
+    def build_command(command_class, *args, &block)
+      super(
+        command_class,
+        state,
+        *args,
+        dispatcher: dispatcher,
+        **options,
+        &block
+      )
     end
 
-    def handle_invalid_action(definition)
+    def definition_for(command_name)
+      self.class.send(:command_definitions)[command_name]
+    end
+
+    def handle_invalid_command(definition)
       return nil if definition
 
-      Ephesus::Core::Actions::InvalidActionResult.new
+      Ephesus::Core::Commands::InvalidCommandResult.new
     end
 
     def handle_invalid_arguments(definition, arguments, keywords)
@@ -111,14 +112,14 @@ module Ephesus::Core
       success ? nil : error_result
     end
 
-    def handle_unavailable_action(definition)
+    def handle_unavailable_command(definition)
       return nil if available?(definition)
 
       if definition[:secret]
-        return Ephesus::Core::Actions::InvalidActionResult.new
+        return Ephesus::Core::Commands::InvalidCommandResult.new
       end
 
-      Ephesus::Core::Actions::UnavailableActionResult.new
+      Ephesus::Core::Commands::UnavailableCommandResult.new
     end
 
     def split_arguments(arguments)
@@ -127,11 +128,11 @@ module Ephesus::Core
       [arguments[0...-1], arguments.last]
     end
 
-    def wrap_result(action_name, arguments, keywords)
+    def wrap_result(command_name, arguments, keywords)
       yield.tap do |result|
-        result.action_name = action_name
-        result.arguments   = arguments
-        result.keywords    = keywords
+        result.command_name = command_name
+        result.arguments    = arguments
+        result.keywords     = keywords
       end
     end
   end
