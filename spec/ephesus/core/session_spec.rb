@@ -554,6 +554,10 @@ RSpec.describe Ephesus::Core::Session do
     end
   end
 
+  describe '#state' do
+    include_examples 'should have reader', :state, -> { application.state }
+  end
+
   describe '#store' do
     include_examples 'should have reader', :store, -> { application.store }
   end

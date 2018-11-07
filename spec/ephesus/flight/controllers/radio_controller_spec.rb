@@ -43,22 +43,6 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
   let(:initial_state) { { landed: true, radio: true } }
   let(:state)         { Hamster::Hash.new(initial_state) }
 
-  describe '#command?' do
-    it { expect(instance.command? :do_something).to be false }
-
-    it { expect(instance.command? :request_clearance).to be true }
-
-    it { expect(instance.command? :turn_off_radio).to be true }
-  end
-
-  describe '#commands' do
-    it { expect(instance.commands).not_to include :do_something }
-
-    it { expect(instance.commands).to include :request_clearance }
-
-    it { expect(instance.commands).to include :turn_off_radio }
-  end
-
   describe '#available_commands' do
     it { expect(instance.available_commands).not_to have_key :do_something }
 
@@ -87,6 +71,22 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
         expect(instance.available_commands).not_to have_key :request_clearance
       end
     end
+  end
+
+  describe '#command?' do
+    it { expect(instance.command? :do_something).to be false }
+
+    it { expect(instance.command? :request_clearance).to be true }
+
+    it { expect(instance.command? :turn_off_radio).to be true }
+  end
+
+  describe '#commands' do
+    it { expect(instance.commands).not_to include :do_something }
+
+    it { expect(instance.commands).to include :request_clearance }
+
+    it { expect(instance.commands).to include :turn_off_radio }
   end
 
   describe '#request_clearance' do

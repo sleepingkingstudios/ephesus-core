@@ -35,26 +35,6 @@ RSpec.describe Ephesus::Flight::Controllers::FlyingController do
   let(:initial_state) { {} }
   let(:state)         { Hamster::Hash.new(initial_state) }
 
-  describe '#command?' do
-    it { expect(instance.command? :do_something).to be false }
-
-    it { expect(instance.command? :do_trick).to be true }
-
-    it { expect(instance.command? :land).to be true }
-
-    it { expect(instance.command? :radio_tower).to be true }
-  end
-
-  describe '#commands' do
-    it { expect(instance.commands).not_to include :do_something }
-
-    it { expect(instance.commands).to include :do_trick }
-
-    it { expect(instance.commands).to include :land }
-
-    it { expect(instance.commands).to include :radio_tower }
-  end
-
   describe '#available_commands' do
     it { expect(instance.available_commands).not_to have_key :do_something }
 
@@ -73,6 +53,26 @@ RSpec.describe Ephesus::Flight::Controllers::FlyingController do
         :land,
         Ephesus::Flight::Commands::Land
     end
+  end
+
+  describe '#command?' do
+    it { expect(instance.command? :do_something).to be false }
+
+    it { expect(instance.command? :do_trick).to be true }
+
+    it { expect(instance.command? :land).to be true }
+
+    it { expect(instance.command? :radio_tower).to be true }
+  end
+
+  describe '#commands' do
+    it { expect(instance.commands).not_to include :do_something }
+
+    it { expect(instance.commands).to include :do_trick }
+
+    it { expect(instance.commands).to include :land }
+
+    it { expect(instance.commands).to include :radio_tower }
   end
 
   describe '#do_trick' do

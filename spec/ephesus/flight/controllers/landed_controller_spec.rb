@@ -43,26 +43,6 @@ RSpec.describe Ephesus::Flight::Controllers::LandedController do
   let(:initial_state) { { location: 'hangar' } }
   let(:state)         { Hamster::Hash.new(initial_state) }
 
-  describe '#command?' do
-    it { expect(instance.command? :do_something).to be false }
-
-    it { expect(instance.command? :radio_tower).to be true }
-
-    it { expect(instance.command? :take_off).to be true }
-
-    it { expect(instance.command? :taxi).to be true }
-  end
-
-  describe '#commands' do
-    it { expect(instance.commands).not_to include :do_something }
-
-    it { expect(instance.commands).to include :radio_tower }
-
-    it { expect(instance.commands).to include :take_off }
-
-    it { expect(instance.commands).to include :taxi }
-  end
-
   describe '#available_commands' do
     it { expect(instance.available_commands).not_to have_key :do_something }
 
@@ -97,6 +77,26 @@ RSpec.describe Ephesus::Flight::Controllers::LandedController do
     wrap_context 'when takeoff clearance has been granted' do
       it { expect(instance.available_commands).not_to have_key :take_off }
     end
+  end
+
+  describe '#command?' do
+    it { expect(instance.command? :do_something).to be false }
+
+    it { expect(instance.command? :radio_tower).to be true }
+
+    it { expect(instance.command? :take_off).to be true }
+
+    it { expect(instance.command? :taxi).to be true }
+  end
+
+  describe '#commands' do
+    it { expect(instance.commands).not_to include :do_something }
+
+    it { expect(instance.commands).to include :radio_tower }
+
+    it { expect(instance.commands).to include :take_off }
+
+    it { expect(instance.commands).to include :taxi }
   end
 
   describe '#radio_tower' do
