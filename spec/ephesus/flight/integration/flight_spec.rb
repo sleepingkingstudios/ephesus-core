@@ -53,12 +53,12 @@ RSpec.describe Ephesus::Flight::Application do
     context 'when in the hangar' do
       let(:expected) { %i[radio_tower taxi] }
 
-      it 'should return the actions' do
+      it 'should return the commands' do
         expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
       wrap_context 'when clearance has been granted' do
-        it 'should return the actions' do
+        it 'should return the commands' do
           expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
@@ -67,14 +67,14 @@ RSpec.describe Ephesus::Flight::Application do
     wrap_context 'when at the runway' do
       let(:expected) { %i[radio_tower taxi] }
 
-      it 'should return the actions' do
+      it 'should return the commands' do
         expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
       wrap_context 'when clearance has been granted' do
         let(:expected) { super() << :take_off }
 
-        it 'should return the actions' do
+        it 'should return the commands' do
           expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
@@ -83,12 +83,12 @@ RSpec.describe Ephesus::Flight::Application do
     wrap_context 'when on the tarmac' do
       let(:expected) { %i[radio_tower taxi] }
 
-      it 'should return the actions' do
+      it 'should return the commands' do
         expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
       wrap_context 'when clearance has been granted' do
-        it 'should return the actions' do
+        it 'should return the commands' do
           expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
@@ -99,7 +99,7 @@ RSpec.describe Ephesus::Flight::Application do
 
       let(:expected) { %i[request_clearance turn_off_radio] }
 
-      it 'should return the actions' do
+      it 'should return the commands' do
         expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
@@ -108,7 +108,7 @@ RSpec.describe Ephesus::Flight::Application do
 
         before(:example) { session.execute_command :request_clearance }
 
-        it 'should return the actions' do
+        it 'should return the commands' do
           expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
@@ -117,14 +117,14 @@ RSpec.describe Ephesus::Flight::Application do
     wrap_context 'when flying' do
       let(:expected) { %i[do_trick radio_tower] }
 
-      it 'should return the actions' do
+      it 'should return the commands' do
         expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
       wrap_context 'when clearance has been granted' do
         let(:expected) { super() << :land }
 
-        it 'should return the actions' do
+        it 'should return the commands' do
           expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
@@ -136,7 +136,7 @@ RSpec.describe Ephesus::Flight::Application do
 
       let(:expected) { %i[request_clearance turn_off_radio] }
 
-      it 'should return the actions' do
+      it 'should return the commands' do
         expect(session.available_commands.keys).to contain_exactly(*expected)
       end
 
@@ -145,7 +145,7 @@ RSpec.describe Ephesus::Flight::Application do
 
         before(:example) { session.execute_command :request_clearance }
 
-        it 'should return the actions' do
+        it 'should return the commands' do
           expect(session.available_commands.keys).to contain_exactly(*expected)
         end
       end
