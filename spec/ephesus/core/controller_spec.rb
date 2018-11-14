@@ -13,6 +13,12 @@ RSpec.describe Ephesus::Core::Controller do
     let(:metadata)      { {} }
     let(:command_name)  { :do_something }
     let(:command_class) { Spec::DoTheMarioCommand }
+    let(:tools) do
+      SleepingKingStudios::Tools::Toolbelt.instance
+    end
+    let(:normalized_command_name) do
+      tools.string.underscore(command_name).tr('_', ' ')
+    end
 
     example_class 'Spec::DoTheMarioCommand', base_class: Ephesus::Core::Command
 
@@ -107,9 +113,14 @@ RSpec.describe Ephesus::Core::Controller do
     let(:tools) do
       SleepingKingStudios::Tools::Toolbelt.instance
     end
+    let(:normalized_command_name) do
+      tools.string.underscore(command_name).tr('_', ' ')
+    end
+    let(:expected_aliases) { [normalized_command_name] }
     let(:expected_metadata) do
       metadata
         .merge(
+          aliases:    expected_aliases,
           properties: command_class.properties,
           signature:  command_class.signature
         )
@@ -195,6 +206,20 @@ RSpec.describe Ephesus::Core::Controller do
         expect(definition.reject { |k, _| k == :__const_defn__ })
           .to be == expected_metadata
       end
+
+      describe 'with aliases: []' do # rubocop:disable RSpec/NestedGroups
+        let(:metadata) { super().merge aliases: [:do_the_thing, 'DoTheMario'] }
+        let(:expected_aliases) do
+          [normalized_command_name, 'do the thing', 'do the mario'].sort
+        end
+
+        it 'should set the metadata' do
+          define_command
+
+          expect(definition.reject { |k, _| k == :__const_defn__ })
+            .to be == expected_metadata
+        end
+      end
     end
   end
 
@@ -204,7 +229,9 @@ RSpec.describe Ephesus::Core::Controller do
     it { expect(instance.available_commands).to be == {} }
 
     wrap_context 'when a command is defined' do
-      let(:expected) { command_class.properties }
+      let(:expected) do
+        command_class.properties.merge(aliases: [normalized_command_name])
+      end
 
       it 'should return the commands and properties' do
         expect(instance.available_commands).to be == { do_something: expected }
@@ -272,6 +299,19 @@ RSpec.describe Ephesus::Core::Controller do
         end
 
         it { expect(instance.available_commands).to be == {} }
+      end
+
+      context 'when the command has aliases' do
+        let(:aliases)  { ['do the thing', 'do the mario'] }
+        let(:metadata) { super().merge aliases: aliases }
+        let(:expected) do
+          super().merge aliases: [normalized_command_name, *aliases].sort
+        end
+
+        it 'should return the commands and properties' do
+          expect(instance.available_commands)
+            .to be == { do_something: expected }
+        end
       end
     end
   end

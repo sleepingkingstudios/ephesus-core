@@ -17,27 +17,6 @@ RSpec.describe Ephesus::Core::Commands::Result do
     end
   end
 
-  describe '#command_name' do
-    include_examples 'should have property', :command_name, nil
-
-    context 'when initialized with an command name' do
-      let(:command_name) { :do_something }
-      let(:instance) do
-        described_class.new(value, command_name: command_name, errors: errors)
-      end
-
-      it { expect(instance.command_name).to be command_name }
-    end
-
-    context 'when the command name is set' do
-      let(:command_name) { :do_something }
-
-      before(:example) { instance.command_name = command_name }
-
-      it { expect(instance.command_name).to be command_name }
-    end
-  end
-
   describe '#arguments' do
     include_examples 'should have property', :arguments, []
 
@@ -63,6 +42,27 @@ RSpec.describe Ephesus::Core::Commands::Result do
     it { expect(instance.send(:build_errors)).to be_a Bronze::Errors }
 
     it { expect(instance.send(:build_errors)).to be_empty }
+  end
+
+  describe '#command_name' do
+    include_examples 'should have property', :command_name, nil
+
+    context 'when initialized with an command name' do
+      let(:command_name) { :do_something }
+      let(:instance) do
+        described_class.new(value, command_name: command_name, errors: errors)
+      end
+
+      it { expect(instance.command_name).to be command_name }
+    end
+
+    context 'when the command name is set' do
+      let(:command_name) { :do_something }
+
+      before(:example) { instance.command_name = command_name }
+
+      it { expect(instance.command_name).to be command_name }
+    end
   end
 
   describe '#errors' do
