@@ -5,7 +5,11 @@ require 'hamster'
 require 'ephesus/core/utils/dispatch_proxy'
 require 'ephesus/flight/controllers/radio_controller'
 
+require 'support/examples/controller_examples'
+
 RSpec.describe Ephesus::Flight::Controllers::RadioController do
+  include Spec::Support::Examples::ControllerExamples
+
   shared_context 'when flying' do
     let(:initial_state) { super().merge landed: false }
   end
@@ -16,23 +20,6 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
 
   shared_context 'when takeoff clearance has been granted' do
     let(:initial_state) { super().merge takeoff_clearance: true }
-  end
-
-  shared_examples 'should be available' do |command_name, command_class|
-    it 'should return the command properties' do
-      expect(instance.available_commands[command_name])
-        .to be == command_class.properties
-    end
-  end
-
-  shared_examples 'should define command' do |command_name, command_class|
-    let(:command) { instance.send(command_name) }
-
-    it { expect(instance).to respond_to(command_name).with(0).arguments }
-
-    it { expect(command).to be_a command_class }
-
-    it { expect(command.state).to be state }
   end
 
   subject(:instance) { described_class.new(state, dispatcher: dispatcher) }
@@ -46,16 +33,16 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
   describe '#available_commands' do
     it { expect(instance.available_commands).not_to have_key :do_something }
 
-    include_examples 'should be available',
+    include_examples 'should have available command',
       :request_clearance,
       Ephesus::Flight::Commands::RequestClearance
 
-    include_examples 'should be available',
+    include_examples 'should have available command',
       :turn_off_radio,
       Ephesus::Flight::Commands::RadioOff
 
     wrap_context 'when flying' do
-      include_examples 'should be available',
+      include_examples 'should have available command',
         :request_clearance,
         Ephesus::Flight::Commands::RequestClearance
 

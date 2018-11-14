@@ -5,26 +5,13 @@ require 'hamster'
 require 'ephesus/core/utils/dispatch_proxy'
 require 'ephesus/flight/controllers/flying_controller'
 
+require 'support/examples/controller_examples'
+
 RSpec.describe Ephesus::Flight::Controllers::FlyingController do
+  include Spec::Support::Examples::ControllerExamples
+
   shared_context 'when landing clearance has been granted' do
     let(:initial_state) { super().merge landing_clearance: true }
-  end
-
-  shared_examples 'should be available' do |command_name, command_class|
-    it 'should return the command properties' do
-      expect(instance.available_commands[command_name])
-        .to be == command_class.properties
-    end
-  end
-
-  shared_examples 'should define command' do |command_name, command_class|
-    let(:command) { instance.send(command_name) }
-
-    it { expect(instance).to respond_to(command_name).with(0).arguments }
-
-    it { expect(command).to be_a command_class }
-
-    it { expect(command.state).to be state }
   end
 
   subject(:instance) { described_class.new(state, dispatcher: dispatcher) }
@@ -40,16 +27,16 @@ RSpec.describe Ephesus::Flight::Controllers::FlyingController do
 
     it { expect(instance.available_commands).not_to have_key :land }
 
-    include_examples 'should be available',
+    include_examples 'should have available command',
       :do_trick,
       Ephesus::Flight::Commands::DoTrick
 
-    include_examples 'should be available',
+    include_examples 'should have available command',
       :radio_tower,
       Ephesus::Flight::Commands::RadioOn
 
     wrap_context 'when landing clearance has been granted' do
-      include_examples 'should be available',
+      include_examples 'should have available command',
         :land,
         Ephesus::Flight::Commands::Land
     end

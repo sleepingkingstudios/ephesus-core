@@ -5,6 +5,7 @@ require 'cuprum/command_factory'
 require 'ephesus/core/commands/invalid_command_result'
 require 'ephesus/core/commands/unavailable_command_result'
 
+# rubocop:disable Metrics/ClassLength
 module Ephesus::Core
   # Abstract base class for Ephesus controllers. Define commands that permit a
   # user to interact with the game state.
@@ -17,10 +18,8 @@ module Ephesus::Core
             "Ephesus::Core::Command, but was #{command_class.inspect}"
         end
 
-        metadata = metadata.merge(
-          properties: command_class.properties,
-          signature:  command_class.signature
-        )
+        metadata =
+          merge_metadata(metadata, command_class: command_class, name: name)
 
         super(name, command_class, metadata)
       end
@@ -33,6 +32,27 @@ module Ephesus::Core
         return false unless value.is_a?(Class)
 
         value < Ephesus::Core::Command
+      end
+
+      def merge_aliases(command_name, aliases)
+        [command_name, *aliases]
+          .map { |str| tools.string.underscore(str).tr('_', ' ') }
+          .uniq
+          .sort
+      end
+
+      def merge_metadata(metadata, command_class:, name:)
+        hsh = tools.hash.convert_keys_to_symbols(metadata)
+
+        hsh.merge(
+          aliases:    merge_aliases(name, metadata[:aliases]),
+          properties: command_class.properties,
+          signature:  command_class.signature
+        )
+      end
+
+      def tools
+        SleepingKingStudios::Tools::Toolbelt.instance
       end
     end
 
@@ -48,7 +68,7 @@ module Ephesus::Core
 
     attr_reader :state
 
-    def available_commands
+    def available_commands # rubocop:disable Metrics/MethodLength
       self
         .class
         .send(:command_definitions)
@@ -57,7 +77,10 @@ module Ephesus::Core
       do |(command_name, definition), hsh|
         next unless available?(definition)
 
-        hsh[command_name] = definition.fetch(:properties, {})
+        hsh[command_name] =
+          definition
+          .fetch(:properties, {})
+          .merge(aliases: definition.fetch(:aliases, []))
       end
     end
 
@@ -137,3 +160,4 @@ module Ephesus::Core
     end
   end
 end
+# rubocop:enable Metrics/ClassLength
