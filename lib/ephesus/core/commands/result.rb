@@ -19,16 +19,24 @@ module Ephesus::Core::Commands
     )
       super(value, errors: errors)
 
-      @command_name = command_name
-      @arguments    = arguments
-      @keywords     = keywords
+      @data = {
+        arguments:    arguments,
+        command_name: command_name,
+        keywords:     keywords
+      }
     end
 
-    attr_accessor :command_name
+    %i[
+      arguments
+      command_name
+      keywords
+    ].each do |method_name|
+      define_method(method_name) { @data[method_name] }
 
-    attr_accessor :arguments
+      define_method(:"#{method_name}=") { |value| @data[method_name] = value }
+    end
 
-    attr_accessor :keywords
+    attr_reader :data
 
     private
 

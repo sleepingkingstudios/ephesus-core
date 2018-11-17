@@ -65,6 +65,83 @@ RSpec.describe Ephesus::Core::Commands::Result do
     end
   end
 
+  describe '#data' do
+    let(:expected) do
+      {
+        arguments:    [],
+        command_name: nil,
+        keywords:     {}
+      }
+    end
+
+    include_examples 'should have reader', :data, -> { be == expected }
+
+    context 'when initialized with arguments' do
+      let(:arguments) { %w[ichi ni san] }
+      let(:instance) do
+        described_class.new(value, arguments: arguments, errors: errors)
+      end
+      let(:expected) { super().merge arguments: arguments }
+
+      it { expect(instance.data).to be == expected }
+    end
+
+    context 'when the arguments are set' do
+      let(:arguments) { %w[ichi ni san] }
+      let(:expected)  { super().merge arguments: arguments }
+
+      before(:example) { instance.arguments = arguments }
+
+      it { expect(instance.data).to be == expected }
+    end
+
+    context 'when initialized with an command name' do
+      let(:command_name) { :do_something }
+      let(:instance) do
+        described_class.new(value, command_name: command_name, errors: errors)
+      end
+      let(:expected) { super().merge command_name: command_name }
+
+      it { expect(instance.data).to be == expected }
+    end
+
+    context 'when the command name is set' do
+      let(:command_name) { :do_something }
+      let(:expected)     { super().merge command_name: command_name }
+
+      before(:example) { instance.command_name = command_name }
+
+      it { expect(instance.data).to be == expected }
+    end
+
+    context 'when initialized with keywords' do
+      let(:keywords) { { yon: 4, go: 5, roku: 6 } }
+      let(:instance) do
+        described_class.new(value, keywords: keywords, errors: errors)
+      end
+      let(:expected) { super().merge keywords: keywords }
+
+      it { expect(instance.data).to be == expected }
+    end
+
+    context 'when the keywords are set' do
+      let(:keywords) { { yon: 4, go: 5, roku: 6 } }
+      let(:expected) { super().merge keywords: keywords }
+
+      before(:example) { instance.keywords = keywords }
+
+      it { expect(instance.data).to be == expected }
+    end
+
+    context 'when custom data is set' do
+      let(:expected) { super().merge custom_key: 'custom value' }
+
+      before(:example) { instance.data[:custom_key] = 'custom value' }
+
+      it { expect(instance.data).to be == expected }
+    end
+  end
+
   describe '#errors' do
     include_examples 'should have reader', :errors
 
