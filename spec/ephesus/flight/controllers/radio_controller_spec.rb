@@ -2,13 +2,12 @@
 
 require 'hamster'
 
+require 'ephesus/core/rspec/examples/controller_examples'
 require 'ephesus/core/utils/dispatch_proxy'
 require 'ephesus/flight/controllers/radio_controller'
 
-require 'support/examples/controller_examples'
-
 RSpec.describe Ephesus::Flight::Controllers::RadioController do
-  include Spec::Support::Examples::ControllerExamples
+  include Ephesus::Core::RSpec::Examples::ControllerExamples
 
   shared_context 'when flying' do
     let(:initial_state) { super().merge landed: false }
@@ -33,18 +32,12 @@ RSpec.describe Ephesus::Flight::Controllers::RadioController do
   describe '#available_commands' do
     it { expect(instance.available_commands).not_to have_key :do_something }
 
-    include_examples 'should have available command',
-      :request_clearance,
-      Ephesus::Flight::Commands::RequestClearance
+    include_examples 'should have available command', :request_clearance
 
-    include_examples 'should have available command',
-      :turn_off_radio,
-      Ephesus::Flight::Commands::RadioOff
+    include_examples 'should have available command', :turn_off_radio
 
     wrap_context 'when flying' do
-      include_examples 'should have available command',
-        :request_clearance,
-        Ephesus::Flight::Commands::RequestClearance
+      include_examples 'should have available command', :request_clearance
 
       wrap_context 'when landing clearance has been granted' do
         it 'should not include :request_clearance' do
