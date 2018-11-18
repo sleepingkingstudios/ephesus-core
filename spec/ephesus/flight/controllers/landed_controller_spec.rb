@@ -2,13 +2,12 @@
 
 require 'hamster'
 
+require 'ephesus/core/rspec/examples/controller_examples'
 require 'ephesus/core/utils/dispatch_proxy'
 require 'ephesus/flight/controllers/landed_controller'
 
-require 'support/examples/controller_examples'
-
 RSpec.describe Ephesus::Flight::Controllers::LandedController do
-  include Spec::Support::Examples::ControllerExamples
+  include Ephesus::Core::RSpec::Examples::ControllerExamples
 
   shared_context 'when at the runway' do
     before(:example) { initial_state.update(location: 'runway') }
@@ -35,21 +34,15 @@ RSpec.describe Ephesus::Flight::Controllers::LandedController do
 
     it { expect(instance.available_commands).not_to have_key :take_off }
 
-    include_examples 'should have available command',
-      :radio_tower,
-      Ephesus::Flight::Commands::RadioOn
+    include_examples 'should have available command', :radio_tower
 
-    include_examples 'should have available command',
-      :taxi,
-      Ephesus::Flight::Commands::Taxi
+    include_examples 'should have available command', :taxi
 
     wrap_context 'when at the runway' do
       it { expect(instance.available_commands).not_to have_key :take_off }
 
       wrap_context 'when takeoff clearance has been granted' do
-        include_examples 'should have available command',
-          :take_off,
-          Ephesus::Flight::Commands::Takeoff
+        include_examples 'should have available command', :take_off
       end
     end
 

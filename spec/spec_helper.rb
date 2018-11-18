@@ -4,6 +4,10 @@ unless ENV['COVERAGE'] == 'false'
   require 'simplecov'
 
   SimpleCov.start
+
+  if ENV['COVERAGE_COMMAND_NAME']
+    SimpleCov.command_name ENV['COVERAGE_COMMAND_NAME']
+  end
 end
 
 require 'rspec/sleeping_king_studios/all'
