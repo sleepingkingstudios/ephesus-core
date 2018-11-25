@@ -37,15 +37,33 @@ module Ephesus::Core::RSpec::Examples
       end
     end
 
+    # rubocop:disable Metrics/BlockLength
     shared_examples 'should have available command' \
       do |command_name, **options|
+        def interpolate_examples(examples, command_name:)
+          examples.map do |hsh|
+            hsh.merge(
+              command: hsh[:command].gsub('$COMMAND', command_name)
+            )
+          end
+        end
+
         it 'should return the command properties' do
           begin
             command  = instance.send(command_name)
             tools    = SleepingKingStudios::Tools::Toolbelt.instance
             name     = tools.string.underscore(command_name).tr('_', ' ')
             aliases  = [name, *options.fetch(:aliases, [])].sort
-            expected = command.class.properties.merge(aliases: aliases)
+            examples =
+              interpolate_examples(
+                command.class.properties.fetch(:examples, []),
+                command_name: name
+              )
+            expected =
+              command
+              .class
+              .properties
+              .merge(aliases: aliases, examples: examples)
 
             if options.key? :aliases
               aliases  = [name, *Array(options.fetch(:aliases))].sort
@@ -58,5 +76,6 @@ module Ephesus::Core::RSpec::Examples
           end
         end
       end
+    # rubocop:enable Metrics/BlockLength
   end
 end

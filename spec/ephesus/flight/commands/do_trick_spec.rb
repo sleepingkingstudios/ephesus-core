@@ -26,12 +26,12 @@ RSpec.describe Ephesus::Flight::Commands::DoTrick do
     let(:examples) do
       [
         {
-          command:     'do a barrel roll',
+          command:     '$COMMAND barrel roll',
           description: 'Do a barrel roll. Earns 10 points.',
           header:      nil
         },
         {
-          command:     'do a immelmann turn',
+          command:     '$COMMAND immelmann turn',
           description: 'Do an Immelmann turn. Earns 30 points!',
           header:      'Advanced Tricks'
         }
