@@ -8,6 +8,14 @@ module Ephesus::Flight::Commands
   class RequestClearance < Ephesus::Core::Command
     description 'Request permission to take off or land.'
 
+    full_description <<~DESCRIPTION
+      Contact the control tower.
+
+      If you are currently on the ground, request clearance to take off.
+
+      If you are currently flying, request clearance to land.
+    DESCRIPTION
+
     private
 
     def process

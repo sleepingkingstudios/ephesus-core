@@ -81,12 +81,24 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     end
   end
 
+  shared_context 'when the command has a full description' do
+    before(:example) do
+      description =
+        'Does something, probably. With a few details here and there.'
+
+      command_class.send :full_description, description
+
+      properties[:full_description] = description
+    end
+  end
+
   let(:command_class) { Class.new(Ephesus::Core::Command) }
   let(:properties) do
     {
-      arguments:   [],
-      description: nil,
-      keywords:    {}
+      arguments:        [],
+      description:      nil,
+      full_description: nil,
+      keywords:         {}
     }
   end
 
@@ -204,6 +216,26 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     it 'should add the description to the properties' do
       expect { command_class.send(:description, string) }
         .to change { command_class.properties[:description] }
+        .to be == string
+    end
+  end
+
+  describe '::full_description' do
+    let(:string) do
+      'Does something, probably. With a few details here and there.'
+    end
+
+    it { expect(command_class).not_to respond_to(:full_description) }
+
+    it 'should define the private method' do
+      expect(command_class)
+        .to respond_to(:full_description, true)
+        .with(1).argument
+    end
+
+    it 'should add the full_description to the properties' do
+      expect { command_class.send(:full_description, string) }
+        .to change { command_class.properties[:full_description] }
         .to be == string
     end
   end
@@ -338,6 +370,10 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     end
 
     wrap_context 'when the command has a description' do
+      it { expect(command_class.properties).to be == expected }
+    end
+
+    wrap_context 'when the command has a full description' do
       it { expect(command_class.properties).to be == expected }
     end
   end

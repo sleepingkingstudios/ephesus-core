@@ -14,12 +14,19 @@ RSpec.describe Ephesus::Flight::Commands::Taxi do
   let(:state) { Hamster::Hash.new(location: 'hangar') }
 
   describe '::properties' do
+    let(:full_description) do
+      <<~DESCRIPTION
+        Move to another part of the airport. You can move to the hangar, the
+        tarmac, and the runway.
+      DESCRIPTION
+    end
     let(:keywords) { { to: { name: :to, required: true } } }
     let(:expected) do
       {
-        arguments:   [],
-        description: 'Move to another part of the airport.',
-        keywords:    keywords
+        arguments:        [],
+        description:      'Move to another part of the airport.',
+        full_description: full_description,
+        keywords:         keywords
       }
     end
 

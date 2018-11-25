@@ -16,9 +16,10 @@ RSpec.describe Ephesus::Flight::Commands::Takeoff do
   describe '::properties' do
     let(:expected) do
       {
-        arguments:   [],
-        description: 'Soar into the sky!',
-        keywords:    {}
+        arguments:        [],
+        description:      'Soar into the sky!',
+        full_description: nil,
+        keywords:         {}
       }
     end
 

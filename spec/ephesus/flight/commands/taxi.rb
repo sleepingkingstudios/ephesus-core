@@ -10,6 +10,11 @@ module Ephesus::Flight::Commands
 
     description 'Move to another part of the airport.'
 
+    full_description <<~DESCRIPTION
+      Move to another part of the airport. You can move to the hangar, the
+      tarmac, and the runway.
+    DESCRIPTION
+
     keyword :to, required: true
 
     private

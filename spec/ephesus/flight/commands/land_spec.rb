@@ -16,9 +16,10 @@ RSpec.describe Ephesus::Flight::Commands::Land do
   describe '::properties' do
     let(:expected) do
       {
-        arguments:   [],
-        description: 'Land on the runway.',
-        keywords:    {}
+        arguments:        [],
+        description:      'Land on the runway.',
+        full_description: nil,
+        keywords:         {}
       }
     end
 

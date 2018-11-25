@@ -17,9 +17,10 @@ module Ephesus::Core::Commands
         return @properties if @properties
 
         @properties = {
-          arguments:   [],
-          description: nil,
-          keywords:    {}
+          arguments:        [],
+          description:      nil,
+          full_description: nil,
+          keywords:         {}
         }
       end
 
@@ -40,6 +41,10 @@ module Ephesus::Core::Commands
 
       def description(string)
         properties[:description] = string
+      end
+
+      def full_description(string)
+        properties[:full_description] = string
       end
 
       def keyword(name, required: false)

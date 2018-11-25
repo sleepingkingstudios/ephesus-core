@@ -15,11 +15,22 @@ RSpec.describe Ephesus::Flight::Commands::DoTrick do
 
   describe '::properties' do
     let(:arguments) { [{ name: :trick, required: true }] }
+    let(:full_description) do
+      <<~DESCRIPTION
+        Earn points by doing tricks in the air.
+
+        The following tricks are available:
+          barrel roll     10 points
+          loop            20 points
+          immelmann turn  30 points
+      DESCRIPTION
+    end
     let(:expected) do
       {
-        arguments:   arguments,
-        description: 'Do some fancy flying to earn points.',
-        keywords:    {}
+        arguments:        arguments,
+        description:      'Do some fancy flying to earn points.',
+        full_description: full_description,
+        keywords:         {}
       }
     end
 

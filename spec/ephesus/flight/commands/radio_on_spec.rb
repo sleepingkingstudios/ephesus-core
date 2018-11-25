@@ -16,9 +16,10 @@ RSpec.describe Ephesus::Flight::Commands::RadioOn do
   describe '::properties' do
     let(:expected) do
       {
-        arguments:   [],
-        description: 'Turn on the radio.',
-        keywords:    {}
+        arguments:        [],
+        description:      'Turn on the radio.',
+        full_description: nil,
+        keywords:         {}
       }
     end
 

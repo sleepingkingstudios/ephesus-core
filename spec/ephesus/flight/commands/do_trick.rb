@@ -18,6 +18,15 @@ module Ephesus::Flight::Commands
 
     description 'Do some fancy flying to earn points.'
 
+    full_description <<~DESCRIPTION
+      Earn points by doing tricks in the air.
+
+      The following tricks are available:
+        barrel roll     10 points
+        loop            20 points
+        immelmann turn  30 points
+    DESCRIPTION
+
     private
 
     def process(trick)
