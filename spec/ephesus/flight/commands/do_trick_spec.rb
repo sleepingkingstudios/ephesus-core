@@ -23,6 +23,20 @@ RSpec.describe Ephesus::Flight::Commands::DoTrick do
         }
       ]
     end
+    let(:examples) do
+      [
+        {
+          command:     'do a barrel roll',
+          description: 'Do a barrel roll. Earns 10 points.',
+          header:      nil
+        },
+        {
+          command:     'do a immelmann turn',
+          description: 'Do an Immelmann turn. Earns 30 points!',
+          header:      'Advanced Tricks'
+        }
+      ]
+    end
     let(:full_description) do
       <<~DESCRIPTION
         Earn points by doing tricks in the air.
@@ -37,6 +51,7 @@ RSpec.describe Ephesus::Flight::Commands::DoTrick do
       {
         arguments:        arguments,
         description:      'Do some fancy flying to earn points.',
+        examples:         examples,
         full_description: full_description,
         keywords:         {}
       }

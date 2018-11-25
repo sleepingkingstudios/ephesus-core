@@ -18,6 +18,7 @@ RSpec.describe Ephesus::Flight::Commands::Takeoff do
       {
         arguments:        [],
         description:      'Soar into the sky!',
+        examples:         [],
         full_description: nil,
         keywords:         {}
       }

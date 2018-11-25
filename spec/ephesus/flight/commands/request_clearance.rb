@@ -16,6 +16,14 @@ module Ephesus::Flight::Commands
       If you are currently flying, request clearance to land.
     DESCRIPTION
 
+    example 'request clearance',
+      description: 'Request takeoff clearance.',
+      header:      'When Landed'
+
+    example 'request clearance',
+      description: 'Request landing clearance.',
+      header:      'When Flying'
+
     private
 
     def process

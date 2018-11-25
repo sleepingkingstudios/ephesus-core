@@ -18,6 +18,7 @@ RSpec.describe Ephesus::Flight::Commands::Land do
       {
         arguments:        [],
         description:      'Land on the runway.',
+        examples:         [],
         full_description: nil,
         keywords:         {}
       }

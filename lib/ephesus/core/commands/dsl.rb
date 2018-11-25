@@ -19,6 +19,7 @@ module Ephesus::Core::Commands
         @properties = {
           arguments:        [],
           description:      nil,
+          examples:         [],
           full_description: nil,
           keywords:         {}
         }
@@ -42,6 +43,14 @@ module Ephesus::Core::Commands
 
       def description(string)
         properties[:description] = string
+      end
+
+      def example(command, description:, header: nil)
+        properties[:examples] << {
+          command:     command,
+          header:      header,
+          description: description
+        }
       end
 
       def full_description(string)

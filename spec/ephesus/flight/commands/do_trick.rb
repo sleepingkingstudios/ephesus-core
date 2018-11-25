@@ -27,6 +27,13 @@ module Ephesus::Flight::Commands
         immelmann turn  30 points
     DESCRIPTION
 
+    example 'do a barrel roll',
+      description: 'Do a barrel roll. Earns 10 points.'
+
+    example 'do a immelmann turn',
+      description: 'Do an Immelmann turn. Earns 30 points!',
+      header:      'Advanced Tricks'
+
     private
 
     def process(trick)

@@ -18,6 +18,7 @@ RSpec.describe Ephesus::Flight::Commands::RadioOff do
       {
         arguments:        [],
         description:      'Turn off the radio.',
+        examples:         [],
         full_description: nil,
         keywords:         {}
       }

@@ -532,8 +532,8 @@ RSpec.describe Ephesus::Core::RSpec::Examples::ControllerExamples do
         failure_message = <<-MESSAGE
      Failure/Error: expect(instance.available_commands[command_name]).to be >= expected
 
-       expected: >= {:aliases=>["do nothing", "do something"], :arguments=>[], :description=>nil, :full_description=>nil, :keywords=>{}}
-            got:    {:aliases=>["do something", "do the mario"], :arguments=>[], :description=>nil, :full_description=>nil, :keywords=>{}}
+       expected: >= {:aliases=>["do nothing", "do something"], :arguments=>[], :description=>nil, :examples=>[], :full_description=>nil, :keywords=>{}}
+            got:    {:aliases=>["do something", "do the mario"], :arguments=>[], :description=>nil, :examples=>[], :full_description=>nil, :keywords=>{}}
         MESSAGE
 
         expect(output).to include failure_message

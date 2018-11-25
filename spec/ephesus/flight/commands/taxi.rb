@@ -19,6 +19,9 @@ module Ephesus::Flight::Commands
       description: 'The destination to taxi to.',
       required:    true
 
+    example 'taxi to tarmac',
+      description: 'Move to the tarmac.'
+
     private
 
     def process(to:)

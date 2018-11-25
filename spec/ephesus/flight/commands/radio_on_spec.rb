@@ -18,6 +18,7 @@ RSpec.describe Ephesus::Flight::Commands::RadioOn do
       {
         arguments:        [],
         description:      'Turn on the radio.',
+        examples:         [],
         full_description: nil,
         keywords:         {}
       }

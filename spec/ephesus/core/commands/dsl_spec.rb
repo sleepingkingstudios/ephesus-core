@@ -104,11 +104,87 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     end
   end
 
+  shared_context 'when the command has an example' do
+    before(:example) do
+      command     = 'an example'
+      description = 'An example description'
+
+      command_class.send :example, command, description: description
+
+      properties[:examples] << {
+        command:     command,
+        description: description,
+        header:      nil
+      }
+    end
+  end
+
+  shared_context 'when the command has many examples' do
+    before(:example) do
+      command_class.send :example,
+        'basic example',
+        description: 'A basic example'
+
+      command_class.send :example,
+        'example with header',
+        description: 'An example with a header',
+        header:      'Example With Header'
+
+      command_class.send :example,
+        'another example',
+        description: 'Another example',
+        header:      'Another Example'
+
+      properties[:examples] << {
+        command:     'basic example',
+        description: 'A basic example',
+        header:      nil
+      }
+
+      properties[:examples] << {
+        command:     'example with header',
+        description: 'An example with a header',
+        header:      'Example With Header'
+      }
+
+      properties[:examples] << {
+        command:     'another example',
+        description: 'Another example',
+        header:      'Another Example'
+      }
+    end
+
+    before(:example) do
+      command_class.send :argument, :argument_one
+      command_class.send :argument, :argument_two,   required: true
+      command_class.send :argument, :argument_three, required: false
+
+      properties[:arguments] << {
+        name:        :argument_one,
+        description: nil,
+        required:    true
+      }
+
+      properties[:arguments] << {
+        name:        :argument_two,
+        description: nil,
+        required:    true
+      }
+
+      properties[:arguments] << {
+        name:        :argument_three,
+        description: nil,
+        required:    false
+      }
+    end
+  end
+
   let(:command_class) { Class.new(Ephesus::Core::Command) }
   let(:properties) do
     {
       arguments:        [],
       description:      nil,
+      examples:         [],
       full_description: nil,
       keywords:         {}
     }
@@ -241,6 +317,112 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
       expect { command_class.send(:description, string) }
         .to change { command_class.properties[:description] }
         .to be == string
+    end
+  end
+
+  describe '::example' do
+    let(:command)     { 'do something' }
+    let(:description) { 'Does something.' }
+    let(:expected) do
+      {
+        command:     command,
+        header:      nil,
+        description: description
+      }
+    end
+
+    it { expect(command_class).not_to respond_to(:example) }
+
+    it 'should define the private method' do
+      expect(command_class)
+        .to respond_to(:example, true)
+        .with(1).argument.and_keywords(:description, :header)
+    end
+
+    it 'should add the example to the properties' do
+      expect { command_class.send(:example, command, description: description) }
+        .to change { command_class.properties[:examples] }
+        .to include expected
+    end
+
+    describe 'with a header' do
+      let(:header)   { 'Doing Something Else' }
+      let(:expected) { super().merge header: header }
+
+      # rubocop:disable RSpec/ExampleLength
+      it 'should add the example to the properties' do
+        expect do
+          command_class.send(
+            :example,
+            command,
+            description: description,
+            header:      header
+          )
+        end
+          .to change { command_class.properties[:examples] }
+          .to include expected
+      end
+      # rubocop:enable RSpec/ExampleLength
+    end
+
+    wrap_context 'when the command has an example' do
+      it 'should add the example to the properties' do
+        expect do
+          command_class.send(:example, command, description: description)
+        end
+          .to change { command_class.properties[:examples] }
+          .to include expected
+      end
+
+      describe 'with a header' do
+        let(:header)   { 'Doing Something Else' }
+        let(:expected) { super().merge header: header }
+
+        # rubocop:disable RSpec/ExampleLength
+        it 'should add the example to the properties' do
+          expect do
+            command_class.send(
+              :example,
+              command,
+              description: description,
+              header:      header
+            )
+          end
+            .to change { command_class.properties[:examples] }
+            .to include expected
+        end
+        # rubocop:enable RSpec/ExampleLength
+      end
+    end
+
+    wrap_context 'when the command has many examples' do
+      it 'should add the example to the properties' do
+        expect do
+          command_class.send(:example, command, description: description)
+        end
+          .to change { command_class.properties[:examples] }
+          .to include expected
+      end
+
+      describe 'with a header' do
+        let(:header)   { 'Doing Something Else' }
+        let(:expected) { super().merge header: header }
+
+        # rubocop:disable RSpec/ExampleLength
+        it 'should add the example to the properties' do
+          expect do
+            command_class.send(
+              :example,
+              command,
+              description: description,
+              header:      header
+            )
+          end
+            .to change { command_class.properties[:examples] }
+            .to include expected
+        end
+        # rubocop:enable RSpec/ExampleLength
+      end
     end
   end
 
@@ -410,6 +592,14 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     end
 
     wrap_context 'when the command has a full description' do
+      it { expect(command_class.properties).to be == expected }
+    end
+
+    wrap_context 'when the command has an example' do
+      it { expect(command_class.properties).to be == expected }
+    end
+
+    wrap_context 'when the command has many examples' do
       it { expect(command_class.properties).to be == expected }
     end
   end

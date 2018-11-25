@@ -15,6 +15,20 @@ RSpec.describe Ephesus::Flight::Commands::RequestClearance do
   let(:state)         { Hamster::Hash.new(initial_state) }
 
   describe '::properties' do
+    let(:examples) do
+      [
+        {
+          command:     'request clearance',
+          description: 'Request takeoff clearance.',
+          header:      'When Landed'
+        },
+        {
+          command:     'request clearance',
+          description: 'Request landing clearance.',
+          header:      'When Flying'
+        }
+      ]
+    end
     let(:full_description) do
       <<~DESCRIPTION
         Contact the control tower.
@@ -28,6 +42,7 @@ RSpec.describe Ephesus::Flight::Commands::RequestClearance do
       {
         arguments:        [],
         description:      'Request permission to take off or land.',
+        examples:         examples,
         full_description: full_description,
         keywords:         {}
       }
