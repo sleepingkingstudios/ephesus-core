@@ -16,6 +16,8 @@ module Ephesus::Flight::Commands
 
     argument :trick
 
+    description 'Do some fancy flying to earn points.'
+
     private
 
     def process(trick)

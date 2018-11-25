@@ -6,6 +6,8 @@ require 'ephesus/flight/state/actions'
 
 module Ephesus::Flight::Commands
   class Takeoff < Ephesus::Core::Command
+    description 'Soar into the sky!'
+
     private
 
     def process

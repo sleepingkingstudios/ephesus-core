@@ -15,7 +15,13 @@ RSpec.describe Ephesus::Flight::Commands::Taxi do
 
   describe '::properties' do
     let(:keywords) { { to: { name: :to, required: true } } }
-    let(:expected) { { arguments: [], keywords: keywords } }
+    let(:expected) do
+      {
+        arguments:   [],
+        description: 'Move to another part of the airport.',
+        keywords:    keywords
+      }
+    end
 
     it { expect(described_class.properties).to be == expected }
   end

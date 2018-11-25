@@ -15,7 +15,13 @@ RSpec.describe Ephesus::Flight::Commands::DoTrick do
 
   describe '::properties' do
     let(:arguments) { [{ name: :trick, required: true }] }
-    let(:expected)  { { arguments: arguments, keywords: {} } }
+    let(:expected) do
+      {
+        arguments:   arguments,
+        description: 'Do some fancy flying to earn points.',
+        keywords:    {}
+      }
+    end
 
     it { expect(described_class.properties).to be == expected }
   end

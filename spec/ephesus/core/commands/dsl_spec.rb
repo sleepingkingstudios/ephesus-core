@@ -71,11 +71,22 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     end
   end
 
+  shared_context 'when the command has a description' do
+    before(:example) do
+      description = 'Does something, probably.'
+
+      command_class.send :description, description
+
+      properties[:description] = description
+    end
+  end
+
   let(:command_class) { Class.new(Ephesus::Core::Command) }
   let(:properties) do
     {
-      arguments: [],
-      keywords:  {}
+      arguments:   [],
+      description: nil,
+      keywords:    {}
     }
   end
 
@@ -176,6 +187,24 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
           .to change { command_class.properties[:arguments] }
           .to include expected
       end
+    end
+  end
+
+  describe '::description' do
+    let(:string) { 'Does something, probably.' }
+
+    it { expect(command_class).not_to respond_to(:description) }
+
+    it 'should define the private method' do
+      expect(command_class)
+        .to respond_to(:description, true)
+        .with(1).argument
+    end
+
+    it 'should add the description to the properties' do
+      expect { command_class.send(:description, string) }
+        .to change { command_class.properties[:description] }
+        .to be == string
     end
   end
 
@@ -305,6 +334,10 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
       include_context 'when the command defines many arguments'
       include_context 'when the command defines many keywords'
 
+      it { expect(command_class.properties).to be == expected }
+    end
+
+    wrap_context 'when the command has a description' do
       it { expect(command_class.properties).to be == expected }
     end
   end

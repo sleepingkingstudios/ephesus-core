@@ -14,7 +14,13 @@ RSpec.describe Ephesus::Flight::Commands::Takeoff do
   let(:state) { Hamster::Hash.new }
 
   describe '::properties' do
-    let(:expected) { { arguments: [], keywords: {} } }
+    let(:expected) do
+      {
+        arguments:   [],
+        description: 'Soar into the sky!',
+        keywords:    {}
+      }
+    end
 
     it { expect(described_class.properties).to be == expected }
   end

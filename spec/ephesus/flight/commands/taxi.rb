@@ -8,6 +8,8 @@ module Ephesus::Flight::Commands
   class Taxi < Ephesus::Core::Command
     VALID_DESTINATIONS = %w[hangar runway tarmac].freeze
 
+    description 'Move to another part of the airport.'
+
     keyword :to, required: true
 
     private

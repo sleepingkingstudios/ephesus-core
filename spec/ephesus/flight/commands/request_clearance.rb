@@ -6,6 +6,8 @@ require 'ephesus/flight/state/actions'
 
 module Ephesus::Flight::Commands
   class RequestClearance < Ephesus::Core::Command
+    description 'Request permission to take off or land.'
+
     private
 
     def process

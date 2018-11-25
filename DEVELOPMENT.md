@@ -63,6 +63,12 @@
   alias_action :do_trick, as: :do_a_trick
   alias_action :dance, as: %i[shake rattle roll]
 
+## Results
+
+- error messages should be namespaced strings
+- Command::Result#command_class
+  => name of class (can be different from command name)
+
 ## Ephesus::RSpec
 
 - matchers, examples, helpers for testing Ephesus applications

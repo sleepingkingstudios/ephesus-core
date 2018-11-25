@@ -15,7 +15,13 @@ RSpec.describe Ephesus::Flight::Commands::RequestClearance do
   let(:state)         { Hamster::Hash.new(initial_state) }
 
   describe '::properties' do
-    let(:expected) { { arguments: [], keywords: {} } }
+    let(:expected) do
+      {
+        arguments:   [],
+        description: 'Request permission to take off or land.',
+        keywords:    {}
+      }
+    end
 
     it { expect(described_class.properties).to be == expected }
   end
