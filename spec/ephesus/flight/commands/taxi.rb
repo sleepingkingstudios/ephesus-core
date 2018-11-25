@@ -15,7 +15,9 @@ module Ephesus::Flight::Commands
       tarmac, and the runway.
     DESCRIPTION
 
-    keyword :to, required: true
+    keyword :to,
+      description: 'The destination to taxi to.',
+      required:    true
 
     private
 

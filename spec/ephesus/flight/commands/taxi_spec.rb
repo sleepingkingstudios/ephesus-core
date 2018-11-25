@@ -20,7 +20,15 @@ RSpec.describe Ephesus::Flight::Commands::Taxi do
         tarmac, and the runway.
       DESCRIPTION
     end
-    let(:keywords) { { to: { name: :to, required: true } } }
+    let(:keywords) do
+      {
+        to: {
+          name:        :to,
+          description: 'The destination to taxi to.',
+          required:    true
+        }
+      }
+    end
     let(:expected) do
       {
         arguments:        [],

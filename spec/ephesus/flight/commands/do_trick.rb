@@ -14,7 +14,7 @@ module Ephesus::Flight::Commands
       immelmann_turn: 30
     }.freeze
 
-    argument :trick
+    argument :trick, description: 'The trick to perform.'
 
     description 'Do some fancy flying to earn points.'
 

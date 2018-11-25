@@ -14,7 +14,15 @@ RSpec.describe Ephesus::Flight::Commands::DoTrick do
   let(:state) { Hamster::Hash.new }
 
   describe '::properties' do
-    let(:arguments) { [{ name: :trick, required: true }] }
+    let(:arguments) do
+      [
+        {
+          name:        :trick,
+          description: 'The trick to perform.',
+          required:    true
+        }
+      ]
+    end
     let(:full_description) do
       <<~DESCRIPTION
         Earn points by doing tricks in the air.

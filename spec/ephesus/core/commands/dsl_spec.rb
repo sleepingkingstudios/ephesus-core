@@ -5,11 +5,14 @@ require 'ephesus/core/command'
 RSpec.describe Ephesus::Core::Commands::Dsl do
   shared_context 'when the command defines an argument' do
     before(:example) do
-      command_class.send :argument, :do_something
+      description = 'Some argument, apparently.'
+
+      command_class.send :argument, :some_argument, description: description
 
       properties[:arguments] << {
-        name:     :do_something,
-        required: true
+        name:        :some_argument,
+        description: description,
+        required:    true
       }
     end
   end
@@ -21,29 +24,35 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
       command_class.send :argument, :argument_three, required: false
 
       properties[:arguments] << {
-        name:     :argument_one,
-        required: true
+        name:        :argument_one,
+        description: nil,
+        required:    true
       }
 
       properties[:arguments] << {
-        name:     :argument_two,
-        required: true
+        name:        :argument_two,
+        description: nil,
+        required:    true
       }
 
       properties[:arguments] << {
-        name:     :argument_three,
-        required: false
+        name:        :argument_three,
+        description: nil,
+        required:    false
       }
     end
   end
 
   shared_context 'when the command defines a keyword' do
     before(:example) do
-      command_class.send :keyword, :with_option
+      description = 'An option, apparently.'
+
+      command_class.send :keyword, :with_option, description: description
 
       properties[:keywords][:with_option] = {
-        name:     :with_option,
-        required: false
+        name:        :with_option,
+        description: description,
+        required:    false
       }
     end
   end
@@ -55,18 +64,21 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
       command_class.send :keyword, :keyword_three, required: true
 
       properties[:keywords][:keyword_one] = {
-        name:     :keyword_one,
-        required: false
+        name:        :keyword_one,
+        description: nil,
+        required:    false
       }
 
       properties[:keywords][:keyword_two] = {
-        name:     :keyword_two,
-        required: false
+        name:        :keyword_two,
+        description: nil,
+        required:    false
       }
 
       properties[:keywords][:keyword_three] = {
-        name:     :keyword_three,
-        required: true
+        name:        :keyword_three,
+        description: nil,
+        required:    true
       }
     end
   end
@@ -108,8 +120,9 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     let(:name) { :spell }
     let(:expected) do
       {
-        name:     name.intern,
-        required: true
+        name:        name.intern,
+        description: nil,
+        required:    true
       }
     end
 
@@ -118,7 +131,7 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     it 'should define the private method' do
       expect(command_class)
         .to respond_to(:argument, true)
-        .with(1).argument.and_keywords(:required)
+        .with(1).argument.and_keywords(:description, :required)
     end
 
     it 'should add the argument to the properties' do
@@ -162,6 +175,17 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
 
       it 'should add the argument to the properties' do
         expect { command_class.send(:argument, name) }
+          .to change { command_class.properties[:arguments] }
+          .to include expected
+      end
+    end
+
+    describe 'with a description' do
+      let(:string)   { 'The spell to cast.' }
+      let(:expected) { super().merge description: string }
+
+      it 'should add the argument to the properties' do
+        expect { command_class.send(:argument, name, description: string) }
           .to change { command_class.properties[:arguments] }
           .to include expected
       end
@@ -245,8 +269,9 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     let(:type) { String }
     let(:expected) do
       {
-        name:     name.intern,
-        required: false
+        name:        name.intern,
+        description: nil,
+        required:    false
       }
     end
 
@@ -255,7 +280,7 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     it 'should define the private method' do
       expect(command_class)
         .to respond_to(:keyword, true)
-        .with(1).argument.and_keywords(:required)
+        .with(1).argument.and_keywords(:description, :required)
     end
 
     it 'should add the keyword to the properties' do
@@ -299,6 +324,17 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
 
       it 'should add the keyword to the properties' do
         expect { command_class.send(:keyword, name) }
+          .to change { command_class.properties[:keywords] }
+          .to include(expected[:name] => expected)
+      end
+    end
+
+    describe 'with a description' do
+      let(:string)   { 'The target of the spell.' }
+      let(:expected) { super().merge description: string }
+
+      it 'should add the argument to the properties' do
+        expect { command_class.send(:keyword, name, description: string) }
           .to change { command_class.properties[:keywords] }
           .to include(expected[:name] => expected)
       end

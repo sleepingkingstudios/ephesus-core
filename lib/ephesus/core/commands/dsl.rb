@@ -30,12 +30,13 @@ module Ephesus::Core::Commands
 
       private
 
-      def argument(name, required: true)
+      def argument(name, description: nil, required: true)
         name = normalize_name(name)
 
         properties[:arguments] << {
-          name:     name,
-          required: required
+          name:        name,
+          description: description,
+          required:    required
         }
       end
 
@@ -47,12 +48,13 @@ module Ephesus::Core::Commands
         properties[:full_description] = string
       end
 
-      def keyword(name, required: false)
+      def keyword(name, description: nil, required: false)
         name = normalize_name(name)
 
         properties[:keywords][name] = {
-          name:     name,
-          required: required
+          name:        name,
+          description: description,
+          required:    required
         }
       end
 
