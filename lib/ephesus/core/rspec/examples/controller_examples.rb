@@ -40,40 +40,56 @@ module Ephesus::Core::RSpec::Examples
     # rubocop:disable Metrics/BlockLength
     shared_examples 'should have available command' \
       do |command_name, **options|
-        def interpolate_examples(examples, command_name:)
-          examples.map do |hsh|
-            hsh.merge(
-              command: hsh[:command].gsub('$COMMAND', command_name)
-            )
+        it "should include the #{command_name.inspect} command" do
+          expect(instance.available_commands.keys).to include command_name
+        end
+
+        it "should include the properties for the #{command_name.inspect} " \
+           'command' \
+        do
+          unless instance.available_commands.key?(command_name)
+            pending "Command #{command_name.inspect} is not available"
+          end
+
+          properties = instance.available_commands.fetch(command_name)
+          command    = instance.send(command_name)
+
+          %w[arguments keywords description full_description].each do |p_name|
+            expect(properties[p_name])
+              .to be == command.class.properties[p_name]
           end
         end
 
-        it 'should return the command properties' do
-          begin
-            command  = instance.send(command_name)
-            tools    = SleepingKingStudios::Tools::Toolbelt.instance
-            name     = tools.string.underscore(command_name).tr('_', ' ')
-            aliases  = [name, *options.fetch(:aliases, [])].sort
-            examples =
-              interpolate_examples(
-                command.class.properties.fetch(:examples, []),
-                command_name: name
-              )
-            expected =
-              command
-              .class
-              .properties
-              .merge(aliases: aliases, examples: examples)
+        it "should return the aliases for the #{command_name} command" do
+          unless instance.available_commands.key?(command_name)
+            pending "Command #{command_name.inspect} is not available"
+          end
 
-            if options.key? :aliases
-              aliases  = [name, *Array(options.fetch(:aliases))].sort
-              expected = expected.merge(aliases: aliases)
+          properties = instance.available_commands.fetch(command_name)
+          tools      = SleepingKingStudios::Tools::Toolbelt.instance
+          name       = tools.string.underscore(command_name).tr('_', ' ')
+          aliases    = [name, *options.fetch(:aliases, [])].sort
+
+          expect(properties[:aliases]).to be == aliases
+        end
+
+        it "should return the examples for the #{command_name} command" do
+          unless instance.available_commands.key?(command_name)
+            pending "Command #{command_name.inspect} is not available"
+          end
+
+          properties = instance.available_commands.fetch(command_name)
+          command    = instance.send(command_name)
+          tools      = SleepingKingStudios::Tools::Toolbelt.instance
+          name       = tools.string.underscore(command_name).tr('_', ' ')
+          examples   =
+            command.class.properties.fetch(:examples, []).map do |hsh|
+              hsh.merge(
+                command: hsh[:command].gsub('$COMMAND', name)
+              )
             end
 
-            expect(instance.available_commands[command_name]).to be >= expected
-          rescue NoMethodError
-            expect(instance.available_commands.keys).to include command_name
-          end
+          expect(properties[:examples]).to be == examples
         end
       end
     # rubocop:enable Metrics/BlockLength
