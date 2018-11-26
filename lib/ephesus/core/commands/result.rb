@@ -10,25 +10,17 @@ module Ephesus::Core::Commands
   # command. Includes additional metadata including the name of the called
   # command and the arguments and keywords used.
   class Result < Cuprum::Result
-    def initialize(
-      value = nil,
-      command_name: nil,
-      arguments:    [],
-      errors:       nil,
-      keywords:     {}
-    )
+    def initialize(value = nil, errors: nil, **data)
       super(value, errors: errors)
 
-      @data = {
-        arguments:    arguments,
-        command_name: command_name,
-        keywords:     keywords
-      }
+      @data = default_data.merge(data)
     end
 
     %i[
       arguments
+      command_class
       command_name
+      controller
       keywords
     ].each do |method_name|
       define_method(method_name) { @data[method_name] }
@@ -42,6 +34,16 @@ module Ephesus::Core::Commands
 
     def build_errors
       Bronze::Errors.new
+    end
+
+    def default_data
+      {
+        arguments:     [],
+        command_class: nil,
+        command_name:  nil,
+        controller:    nil,
+        keywords:      {}
+      }
     end
   end
 end

@@ -458,7 +458,11 @@ RSpec.describe Ephesus::Core::Controller do
           expect(result).to be expected_result
         end
 
+        it { expect(result.command_class).to be command_class.name }
+
         it { expect(result.command_name).to be command_name }
+
+        it { expect(result.controller).to be == described_class.name }
 
         it { expect(result.arguments).to be == [] }
 
