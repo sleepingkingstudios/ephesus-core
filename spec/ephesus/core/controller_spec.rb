@@ -313,6 +313,40 @@ RSpec.describe Ephesus::Core::Controller do
             .to be == { do_something: expected }
         end
       end
+
+      context 'when the command has examples' do
+        let(:examples) do
+          [
+            {
+              command:     'do something',
+              description: 'Swing your arms from side to side!',
+              header:      nil
+            },
+            {
+              command:     'do something else',
+              description: 'Do the Mario!',
+              header:      'Once More, With Feeling'
+            }
+          ]
+        end
+        let(:expected) { super().merge(examples: examples) }
+
+        before(:example) do
+          Spec::DoTheMarioCommand.send :example,
+            '$COMMAND',
+            description: 'Swing your arms from side to side!'
+
+          Spec::DoTheMarioCommand.send :example,
+            '$COMMAND else',
+            description: 'Do the Mario!',
+            header:      'Once More, With Feeling'
+        end
+
+        it 'should interpolate the examples with the command name' do
+          expect(instance.available_commands)
+            .to be == { do_something: expected }
+        end
+      end
     end
   end
 

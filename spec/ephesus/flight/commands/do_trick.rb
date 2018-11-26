@@ -14,7 +14,25 @@ module Ephesus::Flight::Commands
       immelmann_turn: 30
     }.freeze
 
-    argument :trick
+    argument :trick, description: 'The trick to perform.'
+
+    description 'Do some fancy flying to earn points.'
+
+    full_description <<~DESCRIPTION
+      Earn points by doing tricks in the air.
+
+      The following tricks are available:
+        barrel roll     10 points
+        loop            20 points
+        immelmann turn  30 points
+    DESCRIPTION
+
+    example '$COMMAND barrel roll',
+      description: 'Do a barrel roll. Earns 10 points.'
+
+    example '$COMMAND immelmann turn',
+      description: 'Do an Immelmann turn. Earns 30 points!',
+      header:      'Advanced Tricks'
 
     private
 

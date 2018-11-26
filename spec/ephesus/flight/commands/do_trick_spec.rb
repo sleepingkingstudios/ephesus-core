@@ -14,8 +14,48 @@ RSpec.describe Ephesus::Flight::Commands::DoTrick do
   let(:state) { Hamster::Hash.new }
 
   describe '::properties' do
-    let(:arguments) { [{ name: :trick, required: true }] }
-    let(:expected)  { { arguments: arguments, keywords: {} } }
+    let(:arguments) do
+      [
+        {
+          name:        :trick,
+          description: 'The trick to perform.',
+          required:    true
+        }
+      ]
+    end
+    let(:examples) do
+      [
+        {
+          command:     '$COMMAND barrel roll',
+          description: 'Do a barrel roll. Earns 10 points.',
+          header:      nil
+        },
+        {
+          command:     '$COMMAND immelmann turn',
+          description: 'Do an Immelmann turn. Earns 30 points!',
+          header:      'Advanced Tricks'
+        }
+      ]
+    end
+    let(:full_description) do
+      <<~DESCRIPTION
+        Earn points by doing tricks in the air.
+
+        The following tricks are available:
+          barrel roll     10 points
+          loop            20 points
+          immelmann turn  30 points
+      DESCRIPTION
+    end
+    let(:expected) do
+      {
+        arguments:        arguments,
+        description:      'Do some fancy flying to earn points.',
+        examples:         examples,
+        full_description: full_description,
+        keywords:         {}
+      }
+    end
 
     it { expect(described_class.properties).to be == expected }
   end

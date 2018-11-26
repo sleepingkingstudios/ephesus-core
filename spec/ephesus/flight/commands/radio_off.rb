@@ -6,6 +6,8 @@ require 'ephesus/flight/state/actions'
 
 module Ephesus::Flight::Commands
   class RadioOff < Ephesus::Core::Command
+    description 'Turn off the radio.'
+
     private
 
     def process

@@ -14,7 +14,15 @@ RSpec.describe Ephesus::Flight::Commands::Land do
   let(:state) { Hamster::Hash.new }
 
   describe '::properties' do
-    let(:expected) { { arguments: [], keywords: {} } }
+    let(:expected) do
+      {
+        arguments:        [],
+        description:      'Land on the runway.',
+        examples:         [],
+        full_description: nil,
+        keywords:         {}
+      }
+    end
 
     it { expect(described_class.properties).to be == expected }
   end

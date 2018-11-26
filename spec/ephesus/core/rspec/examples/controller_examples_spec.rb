@@ -339,9 +339,9 @@ RSpec.describe Ephesus::Core::RSpec::Examples::ControllerExamples do
         RUBY
       end
 
-      it { expect(output).to include '1 example, 1 failure' }
+      it { expect(output).to include '4 examples, 1 failure, 3 pending' }
 
-      it 'should not list the command as available' do
+      it 'should validate the presence of the command' do
         failure_message = <<-MESSAGE
      Failure/Error: expect(instance.available_commands.keys).to include command_name
 
@@ -387,9 +387,9 @@ RSpec.describe Ephesus::Core::RSpec::Examples::ControllerExamples do
         RUBY
       end
 
-      it { expect(output).to include '1 example, 1 failure' }
+      it { expect(output).to include '4 examples, 1 failure, 3 pending' }
 
-      it 'should not list the command as available' do
+      it 'should validate the presence of the command' do
         failure_message = <<-MESSAGE
      Failure/Error: expect(instance.available_commands.keys).to include command_name
 
@@ -435,7 +435,7 @@ RSpec.describe Ephesus::Core::RSpec::Examples::ControllerExamples do
         RUBY
       end
 
-      it { expect(output).to include '1 example, 0 failures' }
+      it { expect(output).to include '4 examples, 0 failures' }
     end
 
     context 'when the command is unavailable' do
@@ -473,9 +473,9 @@ RSpec.describe Ephesus::Core::RSpec::Examples::ControllerExamples do
         RUBY
       end
 
-      it { expect(output).to include '1 example, 1 failure' }
+      it { expect(output).to include '4 examples, 1 failure, 3 pending' }
 
-      it 'should not list the command as available' do
+      it 'should validate the presence of the command' do
         failure_message = <<-MESSAGE
      Failure/Error: expect(instance.available_commands.keys).to include command_name
 
@@ -486,7 +486,7 @@ RSpec.describe Ephesus::Core::RSpec::Examples::ControllerExamples do
       end
     end
 
-    context 'with an invalid :aliases option' do
+    describe 'with an invalid :aliases option' do
       include_context 'when a spec file is defined'
       include_context 'when the spec is run'
 
@@ -525,15 +525,15 @@ RSpec.describe Ephesus::Core::RSpec::Examples::ControllerExamples do
         RUBY
       end
 
-      it { expect(output).to include '1 example, 1 failure' }
+      it { expect(output).to include '4 examples, 1 failure' }
 
       # rubocop:disable RSpec/ExampleLength
-      it 'should not return the command properties' do
+      it 'should validate the command aliases' do
         failure_message = <<-MESSAGE
-     Failure/Error: expect(instance.available_commands[command_name]).to be >= expected
+     Failure/Error: expect(properties[:aliases]).to be == aliases
 
-       expected: >= {:aliases=>["do nothing", "do something"], :arguments=>[], :keywords=>{}}
-            got:    {:aliases=>["do something", "do the mario"], :arguments=>[], :keywords=>{}}
+       expected: == ["do nothing", "do something"]
+            got:    ["do something", "do the mario"]
         MESSAGE
 
         expect(output).to include failure_message
@@ -541,7 +541,7 @@ RSpec.describe Ephesus::Core::RSpec::Examples::ControllerExamples do
       # rubocop:enable RSpec/ExampleLength
     end
 
-    context 'with a valid :aliases option' do
+    describe 'with a valid :aliases option' do
       include_context 'when a spec file is defined'
       include_context 'when the spec is run'
 
@@ -580,7 +580,52 @@ RSpec.describe Ephesus::Core::RSpec::Examples::ControllerExamples do
         RUBY
       end
 
-      it { expect(output).to include '1 example, 0 failures' }
+      it { expect(output).to include '4 examples, 0 failures' }
+    end
+
+    context 'when the command has examples' do
+      include_context 'when a spec file is defined'
+      include_context 'when the spec is run'
+
+      def spec_file
+        <<~RUBY
+          # frozen_string_literal: true
+
+          require 'spec_helper'
+
+          require 'ephesus/core/command'
+          require 'ephesus/core/controller'
+          require 'ephesus/core/rspec/examples/controller_examples'
+
+          class Spec::ExampleCommand < Ephesus::Core::Command
+            example '$COMMAND',
+              description: 'Does something.'
+
+            example '$COMMAND else',
+              description: 'Does something else',
+              header:      'Doing Something Else'
+          end
+
+          class Spec::ExampleController < Ephesus::Core::Controller
+            command :do_something, Spec::ExampleCommand
+          end
+
+          RSpec.describe Spec::ExampleController do
+            include Ephesus::Core::RSpec::Examples::ControllerExamples
+
+            subject(:instance) do
+              described_class.new(state, dispatcher: dispatcher)
+            end
+
+            let(:state)      { {} }
+            let(:dispatcher) { double('dispatcher') }
+
+            include_examples 'should have available command', :do_something
+          end
+        RUBY
+      end
+
+      it { expect(output).to include '4 examples, 0 failures' }
     end
   end
 end

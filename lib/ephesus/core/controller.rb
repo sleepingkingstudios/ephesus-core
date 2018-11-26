@@ -68,7 +68,7 @@ module Ephesus::Core
 
     attr_reader :state
 
-    def available_commands # rubocop:disable Metrics/MethodLength
+    def available_commands
       self
         .class
         .send(:command_definitions)
@@ -78,9 +78,7 @@ module Ephesus::Core
         next unless available?(definition)
 
         hsh[command_name] =
-          definition
-          .fetch(:properties, {})
-          .merge(aliases: definition.fetch(:aliases, []))
+          available_definition(definition, command_name: command_name)
       end
     end
 
@@ -105,6 +103,18 @@ module Ephesus::Core
       return false if defn.key?(:unless) && defn[:unless].call(state)
 
       true
+    end
+
+    def available_definition(defn, command_name:)
+      hsh      =
+        defn.fetch(:properties, {}).merge(aliases: defn.fetch(:aliases, []))
+      examples = hsh.fetch(:examples, [])
+
+      return hsh if examples.empty?
+
+      hsh.merge(
+        examples: interpolate_examples(examples, command_name: command_name)
+      )
     end
 
     def build_command(command_class, *args, &block)
@@ -143,6 +153,23 @@ module Ephesus::Core
       end
 
       Ephesus::Core::Commands::UnavailableCommandResult.new
+    end
+
+    def interpolate_command(string, command_name:)
+      command_name = command_name.to_s.tr('_', ' ')
+
+      string.gsub('$COMMAND', command_name)
+    end
+
+    def interpolate_examples(examples, command_name:)
+      examples.map do |hsh|
+        hsh.merge(
+          command: interpolate_command(
+            hsh[:command],
+            command_name: command_name
+          )
+        )
+      end
     end
 
     def split_arguments(arguments)

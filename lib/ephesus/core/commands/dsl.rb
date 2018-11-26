@@ -17,8 +17,11 @@ module Ephesus::Core::Commands
         return @properties if @properties
 
         @properties = {
-          arguments: [],
-          keywords:  {}
+          arguments:        [],
+          description:      nil,
+          examples:         [],
+          full_description: nil,
+          keywords:         {}
         }
       end
 
@@ -28,21 +31,39 @@ module Ephesus::Core::Commands
 
       private
 
-      def argument(name, required: true)
+      def argument(name, description: nil, required: true)
         name = normalize_name(name)
 
         properties[:arguments] << {
-          name:     name,
-          required: required
+          name:        name,
+          description: description,
+          required:    required
         }
       end
 
-      def keyword(name, required: false)
+      def description(string)
+        properties[:description] = string
+      end
+
+      def example(command, description:, header: nil)
+        properties[:examples] << {
+          command:     command,
+          header:      header,
+          description: description
+        }
+      end
+
+      def full_description(string)
+        properties[:full_description] = string
+      end
+
+      def keyword(name, description: nil, required: false)
         name = normalize_name(name)
 
         properties[:keywords][name] = {
-          name:     name,
-          required: required
+          name:        name,
+          description: description,
+          required:    required
         }
       end
 

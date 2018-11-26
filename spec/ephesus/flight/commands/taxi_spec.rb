@@ -14,8 +14,39 @@ RSpec.describe Ephesus::Flight::Commands::Taxi do
   let(:state) { Hamster::Hash.new(location: 'hangar') }
 
   describe '::properties' do
-    let(:keywords) { { to: { name: :to, required: true } } }
-    let(:expected) { { arguments: [], keywords: keywords } }
+    let(:examples) do
+      [
+        {
+          command:     'taxi to tarmac',
+          description: 'Move to the tarmac.',
+          header:      nil
+        }
+      ]
+    end
+    let(:full_description) do
+      <<~DESCRIPTION
+        Move to another part of the airport. You can move to the hangar, the
+        tarmac, and the runway.
+      DESCRIPTION
+    end
+    let(:keywords) do
+      {
+        to: {
+          name:        :to,
+          description: 'The destination to taxi to.',
+          required:    true
+        }
+      }
+    end
+    let(:expected) do
+      {
+        arguments:        [],
+        description:      'Move to another part of the airport.',
+        examples:         examples,
+        full_description: full_description,
+        keywords:         keywords
+      }
+    end
 
     it { expect(described_class.properties).to be == expected }
   end

@@ -6,6 +6,8 @@ require 'ephesus/flight/state/actions'
 
 module Ephesus::Flight::Commands
   class Land < Ephesus::Core::Command
+    description 'Land on the runway.'
+
     private
 
     def process
