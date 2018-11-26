@@ -82,17 +82,27 @@ module Ephesus::Core
       end
     end
 
+    # rubocop:disable Metrics/MethodLength
     def execute_command(command_name, *args)
       definition = definition_for(command_name)
       arguments, keywords = split_arguments(args)
 
-      wrap_result(command_name, arguments, keywords) do
+      result = \
         handle_invalid_command(definition) ||
-          handle_unavailable_command(definition) ||
-          handle_invalid_arguments(definition, arguments, keywords) ||
-          send(command_name).call(*args)
-      end
+        handle_unavailable_command(definition) ||
+        handle_invalid_arguments(definition, arguments, keywords) ||
+        (command = send(command_name)).call(*args)
+
+      update_result_data(
+        result,
+        arguments:     arguments,
+        command_class: command&.class&.name,
+        command_name:  command_name,
+        controller:    self.class.name,
+        keywords:      keywords
+      )
     end
+    # rubocop:enable Metrics/MethodLength
 
     private
 
@@ -178,11 +188,11 @@ module Ephesus::Core
       [arguments[0...-1], arguments.last]
     end
 
-    def wrap_result(command_name, arguments, keywords)
-      yield.tap do |result|
-        result.command_name = command_name
-        result.arguments    = arguments
-        result.keywords     = keywords
+    def update_result_data(result, data)
+      result.tap do
+        data.each do |key, value|
+          result.send(:"#{key}=", value)
+        end
       end
     end
   end

@@ -13,7 +13,8 @@ RSpec.describe Ephesus::Core::Commands::Result do
       expect(described_class)
         .to be_constructible
         .with(0..1).arguments
-        .and_keywords(:command_name, :arguments, :errors, :keywords)
+        .and_keywords(:errors)
+        .and_any_keywords
     end
   end
 
@@ -44,10 +45,31 @@ RSpec.describe Ephesus::Core::Commands::Result do
     it { expect(instance.send(:build_errors)).to be_empty }
   end
 
+  describe '#command_class' do
+    include_examples 'should have property', :command_class, nil
+
+    context 'when initialized with a command class' do
+      let(:command_class) { 'Spec::Commands::DoSomething' }
+      let(:instance) do
+        described_class.new(value, command_class: command_class, errors: errors)
+      end
+
+      it { expect(instance.command_class).to be command_class }
+    end
+
+    context 'when the command class is set' do
+      let(:command_class) { 'Spec::Commands::DoSomething' }
+
+      before(:example) { instance.command_class = command_class }
+
+      it { expect(instance.command_class).to be command_class }
+    end
+  end
+
   describe '#command_name' do
     include_examples 'should have property', :command_name, nil
 
-    context 'when initialized with an command name' do
+    context 'when initialized with a command name' do
       let(:command_name) { :do_something }
       let(:instance) do
         described_class.new(value, command_name: command_name, errors: errors)
@@ -65,12 +87,35 @@ RSpec.describe Ephesus::Core::Commands::Result do
     end
   end
 
+  describe '#controller' do
+    include_examples 'should have property', :controller, nil
+
+    context 'when initialized with a controller' do
+      let(:controller) { 'Spec::ExampleController' }
+      let(:instance) do
+        described_class.new(value, controller: controller, errors: errors)
+      end
+
+      it { expect(instance.controller).to be controller }
+    end
+
+    context 'when the controller is set' do
+      let(:controller) { 'Spec::ExampleController' }
+
+      before(:example) { instance.controller = controller }
+
+      it { expect(instance.controller).to be controller }
+    end
+  end
+
   describe '#data' do
     let(:expected) do
       {
-        arguments:    [],
-        command_name: nil,
-        keywords:     {}
+        arguments:     [],
+        command_class: nil,
+        command_name:  nil,
+        controller:    nil,
+        keywords:      {}
       }
     end
 
@@ -95,7 +140,26 @@ RSpec.describe Ephesus::Core::Commands::Result do
       it { expect(instance.data).to be == expected }
     end
 
-    context 'when initialized with an command name' do
+    context 'when initialized with a command class' do
+      let(:command_class) { 'Spec::Commands::DoSomething' }
+      let(:instance) do
+        described_class.new(value, command_class: command_class, errors: errors)
+      end
+      let(:expected) { super().merge command_class: command_class }
+
+      it { expect(instance.data).to be == expected }
+    end
+
+    context 'when the command class is set' do
+      let(:command_class) { 'Spec::Commands::DoSomething' }
+      let(:expected)      { super().merge command_class: command_class }
+
+      before(:example) { instance.command_class = command_class }
+
+      it { expect(instance.data).to be == expected }
+    end
+
+    context 'when initialized with a command name' do
       let(:command_name) { :do_something }
       let(:instance) do
         described_class.new(value, command_name: command_name, errors: errors)
@@ -110,6 +174,25 @@ RSpec.describe Ephesus::Core::Commands::Result do
       let(:expected)     { super().merge command_name: command_name }
 
       before(:example) { instance.command_name = command_name }
+
+      it { expect(instance.data).to be == expected }
+    end
+
+    context 'when initialized with a controller' do
+      let(:controller) { 'Spec::ExampleController' }
+      let(:instance) do
+        described_class.new(value, controller: controller, errors: errors)
+      end
+      let(:expected) { super().merge controller: controller }
+
+      it { expect(instance.data).to be == expected }
+    end
+
+    context 'when the controller is set' do
+      let(:controller) { 'Spec::ExampleController' }
+      let(:expected)   { super().merge controller: controller }
+
+      before(:example) { instance.controller = controller }
 
       it { expect(instance.data).to be == expected }
     end
