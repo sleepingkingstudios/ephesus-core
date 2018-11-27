@@ -11,17 +11,17 @@ module Ephesus::Core
   # user to interact with the game state.
   class Controller < Cuprum::CommandFactory
     class << self
-      def command(name, command_class, **metadata)
-        unless command_class?(command_class)
-          raise ArgumentError,
-            'expected command class to be a subclass of ' \
-            "Ephesus::Core::Command, but was #{command_class.inspect}"
-        end
+      def command(name, command_class, **metadata, &block)
+        guard_command_class(command_class)
 
         metadata =
           merge_metadata(metadata, command_class: command_class, name: name)
 
-        super(name, command_class, metadata)
+        if block_given?
+          super(name, metadata, &block)
+        else
+          super(name, command_class, metadata)
+        end
       end
 
       private :command_class # rubocop:disable Style/AccessModifierDeclarations
@@ -32,6 +32,14 @@ module Ephesus::Core
         return false unless value.is_a?(Class)
 
         value < Ephesus::Core::Command
+      end
+
+      def guard_command_class(command_class)
+        return if command_class?(command_class)
+
+        raise ArgumentError,
+          'expected command class to be a subclass of ' \
+          "Ephesus::Core::Command, but was #{command_class.inspect}"
       end
 
       def merge_aliases(command_name, aliases)
