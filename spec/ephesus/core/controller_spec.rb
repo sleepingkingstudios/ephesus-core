@@ -62,7 +62,7 @@ RSpec.describe Ephesus::Core::Controller do
     end
   end
 
-  shared_examples 'should define the helper method' do
+  shared_examples 'should define the helper method' do |proc|
     describe '#${command_name}' do
       before(:example) { define_command }
 
@@ -73,6 +73,8 @@ RSpec.describe Ephesus::Core::Controller do
       it { expect(instance).to respond_to(command_name).with(0).arguments }
 
       it { expect(build_command).to be_a command_class }
+
+      instance_exec(&proc) if proc.is_a?(Proc)
     end
   end
 
@@ -133,6 +135,7 @@ RSpec.describe Ephesus::Core::Controller do
         .to respond_to(:command)
         .with(2).arguments
         .and_any_keywords
+        .and_a_block
     end
 
     describe 'with an invalid command class' do
@@ -148,7 +151,117 @@ RSpec.describe Ephesus::Core::Controller do
       end
     end
 
-    describe 'with a name and a command class' do
+    describe 'with an invalid command class and a block' do
+      let(:command_class) { Cuprum::Command }
+      let(:error_message) do
+        'expected command class to be a subclass of Ephesus::Core::Command, ' \
+        "but was #{command_class.inspect}"
+      end
+
+      def define_command
+        described_class.command(command_name, command_class) { |*_args| }
+      end
+
+      it 'should raise an error' do
+        expect { define_command }.to raise_error ArgumentError, error_message
+      end
+    end
+
+    describe 'with a block' do
+      let(:command_class) { Spec::DanceCommand }
+
+      def define_command
+        klass = command_class
+
+        described_class.command(command_name, command_class) do |*args|
+          klass.new(*args, dance: 'the Mario')
+        end
+      end
+
+      example_class 'Spec::DanceCommand', Ephesus::Core::Command do |klass|
+        klass.class_eval do
+          def initialize(dance:, **options)
+            @dance   = dance
+            @options = options
+          end
+
+          attr_reader :dance
+        end
+      end
+
+      include_examples 'should define the helper method', lambda {
+        it { expect(build_command.dance).to be == 'the Mario' }
+      }
+
+      it 'should set the definition' do
+        define_command
+
+        expect(definition).to be_a Hash
+      end
+
+      it 'should not set the class definition' do
+        define_command
+
+        expect(definition[:__const_defn__]).to be nil
+      end
+
+      it 'should set the metadata' do
+        define_command
+
+        expect(definition.reject { |k, _| k == :__const_defn__ })
+          .to be == expected_metadata
+      end
+    end
+
+    describe 'with a block and metadata' do
+      let(:command_class) { Spec::DanceCommand }
+      let(:metadata)      { { key: 'value', opt: 5 } }
+
+      def define_command
+        klass = command_class
+
+        described_class.command(command_name, command_class, **metadata) \
+        do |*args|
+          klass.new(*args, dance: 'the Mario')
+        end
+      end
+
+      example_class 'Spec::DanceCommand', Ephesus::Core::Command do |klass|
+        klass.class_eval do
+          def initialize(dance:, **options)
+            @dance   = dance
+            @options = options
+          end
+
+          attr_reader :dance
+        end
+      end
+
+      include_examples 'should define the helper method', lambda {
+        it { expect(build_command.dance).to be == 'the Mario' }
+      }
+
+      it 'should set the definition' do
+        define_command
+
+        expect(definition).to be_a Hash
+      end
+
+      it 'should not set the class definition' do
+        define_command
+
+        expect(definition[:__const_defn__]).to be nil
+      end
+
+      it 'should set the metadata' do
+        define_command
+
+        expect(definition.reject { |k, _| k == :__const_defn__ })
+          .to be == expected_metadata
+      end
+    end
+
+    describe 'with a valid command class' do
       def define_command
         described_class.command(command_name, command_class)
       end
@@ -177,7 +290,7 @@ RSpec.describe Ephesus::Core::Controller do
       end
     end
 
-    describe 'with a name, a command class, and metadata' do
+    describe 'with a valid command class and metadata' do
       let(:metadata) { { key: 'value', opt: 5 } }
 
       def define_command
