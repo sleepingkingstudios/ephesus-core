@@ -7,7 +7,8 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     before(:example) do
       description = 'Some argument, apparently.'
 
-      command_class.send :argument, :some_argument, description: description
+      Spec::ExampleCommand
+        .send :argument, :some_argument, description: description
 
       properties[:arguments] << {
         name:        :some_argument,
@@ -19,9 +20,9 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
 
   shared_context 'when the command defines many arguments' do
     before(:example) do
-      command_class.send :argument, :argument_one
-      command_class.send :argument, :argument_two,   required: true
-      command_class.send :argument, :argument_three, required: false
+      Spec::ExampleCommand.send :argument, :argument_one
+      Spec::ExampleCommand.send :argument, :argument_two,   required: true
+      Spec::ExampleCommand.send :argument, :argument_three, required: false
 
       properties[:arguments] << {
         name:        :argument_one,
@@ -47,7 +48,7 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
     before(:example) do
       description = 'An option, apparently.'
 
-      command_class.send :keyword, :with_option, description: description
+      Spec::ExampleCommand.send :keyword, :with_option, description: description
 
       properties[:keywords][:with_option] = {
         name:        :with_option,
@@ -59,9 +60,9 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
 
   shared_context 'when the command defines many keywords' do
     before(:example) do
-      command_class.send :keyword, :keyword_one
-      command_class.send :keyword, :keyword_two,   required: false
-      command_class.send :keyword, :keyword_three, required: true
+      Spec::ExampleCommand.send :keyword, :keyword_one
+      Spec::ExampleCommand.send :keyword, :keyword_two,   required: false
+      Spec::ExampleCommand.send :keyword, :keyword_three, required: true
 
       properties[:keywords][:keyword_one] = {
         name:        :keyword_one,
@@ -85,9 +86,9 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
 
   shared_context 'when the command has a description' do
     before(:example) do
-      description = 'Does something, probably.'
+      description = 'Definitely does something.'
 
-      command_class.send :description, description
+      Spec::ExampleCommand.send :description, description
 
       properties[:description] = description
     end
@@ -96,9 +97,9 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
   shared_context 'when the command has a full description' do
     before(:example) do
       description =
-        'Does something, probably. With a few details here and there.'
+        'Definitely does something. Not sure what. But something.'
 
-      command_class.send :full_description, description
+      Spec::ExampleCommand.send :full_description, description
 
       properties[:full_description] = description
     end
@@ -109,7 +110,7 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
       command     = 'an example'
       description = 'An example description'
 
-      command_class.send :example, command, description: description
+      Spec::ExampleCommand.send :example, command, description: description
 
       properties[:examples] << {
         command:     command,
@@ -121,16 +122,16 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
 
   shared_context 'when the command has many examples' do
     before(:example) do
-      command_class.send :example,
+      Spec::ExampleCommand.send :example,
         'basic example',
         description: 'A basic example'
 
-      command_class.send :example,
+      Spec::ExampleCommand.send :example,
         'example with header',
         description: 'An example with a header',
         header:      'Example With Header'
 
-      command_class.send :example,
+      Spec::ExampleCommand.send :example,
         'another example',
         description: 'Another example',
         header:      'Another Example'
@@ -153,34 +154,48 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
         header:      'Another Example'
       }
     end
+  end
+
+  shared_context 'when the command has many properties' do
+    include_context 'when the command defines many arguments'
+    include_context 'when the command defines many keywords'
+    include_context 'when the command has a description'
+    include_context 'when the command has a full description'
+    include_context 'when the command has many examples'
+  end
+
+  shared_context 'with a subclass of the command' do
+    let(:command_class) { Spec::CommandSubclass }
+
+    example_class 'Spec::CommandSubclass', 'Spec::ExampleCommand'
+  end
+
+  shared_context 'with manually edited properties' do
+    include_context 'when the command has many properties'
 
     before(:example) do
-      command_class.send :argument, :argument_one
-      command_class.send :argument, :argument_two,   required: true
-      command_class.send :argument, :argument_three, required: false
+      Spec::ExampleCommand.instance_eval do
+        properties[:arguments]
+          .find { |hsh| hsh[:name] == :argument_two }
+          .update(required: false)
 
-      properties[:arguments] << {
-        name:        :argument_one,
-        description: nil,
-        required:    true
-      }
+        properties[:description] = 'Do something else.'
+      end
 
-      properties[:arguments] << {
-        name:        :argument_two,
-        description: nil,
-        required:    true
-      }
+      properties[:arguments]
+        .find { |hsh| hsh[:name] == :argument_two }
+        .update(required: false)
 
-      properties[:arguments] << {
-        name:        :argument_three,
-        description: nil,
-        required:    false
-      }
+      properties[:description] = 'Do something else.'
     end
   end
 
-  let(:command_class) { Class.new(Ephesus::Core::Command) }
-  let(:properties) do
+  let(:command_class) { Spec::ExampleCommand }
+  let(:properties)    { build_properties }
+
+  example_class 'Spec::ExampleCommand', Ephesus::Core::Command
+
+  def build_properties
     {
       arguments:        [],
       description:      nil,
@@ -300,6 +315,27 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
           .to include expected
       end
     end
+
+    wrap_context 'with a subclass of the command' do
+      it 'should add the argument to the properties' do
+        expect { command_class.send(:argument, name) }
+          .to change { command_class.properties[:arguments] }
+          .to include expected
+      end
+
+      wrap_context 'when the command defines an argument' do
+        it 'should not change the properties of the parent command' do
+          expect { command_class.send(:argument, name) }
+            .not_to change(Spec::ExampleCommand, :properties)
+        end
+
+        it 'should add the argument to the properties' do
+          expect { command_class.send(:argument, name) }
+            .to change { command_class.properties[:arguments] }
+            .to include expected
+        end
+      end
+    end
   end
 
   describe '::description' do
@@ -317,6 +353,27 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
       expect { command_class.send(:description, string) }
         .to change { command_class.properties[:description] }
         .to be == string
+    end
+
+    wrap_context 'with a subclass of the command' do
+      it 'should add the description to the properties' do
+        expect { command_class.send(:description, string) }
+          .to change { command_class.properties[:description] }
+          .to be == string
+      end
+
+      wrap_context 'when the command has a description' do
+        it 'should not change the properties of the parent command' do
+          expect { command_class.send(:description, string) }
+            .not_to change(Spec::ExampleCommand, :properties)
+        end
+
+        it 'should add the description to the properties' do
+          expect { command_class.send(:description, string) }
+            .to change { command_class.properties[:description] }
+            .to be == string
+        end
+      end
     end
   end
 
@@ -424,6 +481,33 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
         # rubocop:enable RSpec/ExampleLength
       end
     end
+
+    wrap_context 'with a subclass of the command' do
+      it 'should add the example to the properties' do
+        expect do
+          command_class.send(:example, command, description: description)
+        end
+          .to change { command_class.properties[:examples] }
+          .to include expected
+      end
+
+      wrap_context 'when the command has an example' do
+        it 'should not change the properties of the parent command' do
+          expect do
+            command_class.send(:example, command, description: description)
+          end
+            .not_to change(Spec::ExampleCommand, :properties)
+        end
+
+        it 'should add the example to the properties' do
+          expect do
+            command_class.send(:example, command, description: description)
+          end
+            .to change { command_class.properties[:examples] }
+            .to include expected
+        end
+      end
+    end
   end
 
   describe '::full_description' do
@@ -443,6 +527,27 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
       expect { command_class.send(:full_description, string) }
         .to change { command_class.properties[:full_description] }
         .to be == string
+    end
+
+    wrap_context 'with a subclass of the command' do
+      it 'should add the full_description to the properties' do
+        expect { command_class.send(:full_description, string) }
+          .to change { command_class.properties[:full_description] }
+          .to be == string
+      end
+
+      wrap_context 'when the command has a full description' do
+        it 'should not change the properties of the parent command' do
+          expect { command_class.send(:full_description, string) }
+            .not_to change(Spec::ExampleCommand, :properties)
+        end
+
+        it 'should add the full_description to the properties' do
+          expect { command_class.send(:full_description, string) }
+            .to change { command_class.properties[:full_description] }
+            .to be == string
+        end
+      end
     end
   end
 
@@ -555,6 +660,27 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
           .to include(expected[:name] => expected)
       end
     end
+
+    wrap_context 'with a subclass of the command' do
+      it 'should add the keyword to the properties' do
+        expect { command_class.send(:keyword, name) }
+          .to change { command_class.properties[:keywords] }
+          .to include(expected[:name] => expected)
+      end
+
+      wrap_context 'when the command defines a keyword' do
+        it 'should not change the properties of the parent command' do
+          expect { command_class.send(:keyword, name) }
+            .not_to change(Spec::ExampleCommand, :properties)
+        end
+
+        it 'should add the keyword to the properties' do
+          expect { command_class.send(:keyword, name) }
+            .to change { command_class.properties[:keywords] }
+            .to include(expected[:name] => expected)
+        end
+      end
+    end
   end
 
   describe '::properties' do
@@ -601,6 +727,65 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
 
     wrap_context 'when the command has many examples' do
       it { expect(command_class.properties).to be == expected }
+    end
+
+    wrap_context 'when the command has many properties' do
+      it { expect(command_class.properties).to be == expected }
+    end
+
+    wrap_context 'with manually edited properties' do
+      it { expect(command_class.properties).to be == expected }
+    end
+
+    wrap_context 'with a subclass of the command' do
+      it { expect(command_class.properties).to be == expected }
+
+      wrap_context 'when the command defines an argument' do
+        it { expect(command_class.properties).to be == expected }
+      end
+
+      wrap_context 'when the command defines many arguments' do
+        it { expect(command_class.properties).to be == expected }
+      end
+
+      wrap_context 'when the command defines a keyword' do
+        it { expect(command_class.properties).to be == expected }
+      end
+
+      wrap_context 'when the command defines many keywords' do
+        it { expect(command_class.properties).to be == expected }
+      end
+
+      context 'when the command defines many arguments and keywords' do
+        include_context 'when the command defines many arguments'
+        include_context 'when the command defines many keywords'
+
+        it { expect(command_class.properties).to be == expected }
+      end
+
+      wrap_context 'when the command has a description' do
+        it { expect(command_class.properties).to be == expected }
+      end
+
+      wrap_context 'when the command has a full description' do
+        it { expect(command_class.properties).to be == expected }
+      end
+
+      wrap_context 'when the command has an example' do
+        it { expect(command_class.properties).to be == expected }
+      end
+
+      wrap_context 'when the command has many examples' do
+        it { expect(command_class.properties).to be == expected }
+      end
+
+      wrap_context 'when the command has many properties' do
+        it { expect(command_class.properties).to be == expected }
+      end
+
+      wrap_context 'with manually edited properties' do
+        it { expect(command_class.properties).to be == expected }
+      end
     end
   end
 
@@ -681,6 +866,49 @@ RSpec.describe Ephesus::Core::Commands::Dsl do
 
       it 'should return the required keywords' do
         expect(signature.required_keywords).to contain_exactly(:keyword_three)
+      end
+    end
+  end
+
+  describe 'manually editing properties' do
+    let(:expected) do
+      properties.dup.tap do |hsh|
+        hsh[:arguments][1][:required] = false
+
+        hsh[:description] = 'Do something else.'
+      end
+    end
+
+    def edit_properties
+      command_class.instance_eval do
+        properties[:arguments]
+          .find { |hsh| hsh[:name] == :argument_two }
+          .update(required: false)
+
+        properties[:description] = 'Do something else.'
+      end
+    end
+
+    wrap_context 'when the command has many properties' do
+      it 'should update the properties' do
+        expect { edit_properties }
+          .to change(command_class, :properties)
+          .to be == expected
+      end
+    end
+
+    wrap_context 'with a subclass of the command' do
+      wrap_context 'when the command has many properties' do
+        it 'should not change the properties of the parent command' do
+          expect { edit_properties }
+            .not_to change(Spec::ExampleCommand, :properties)
+        end
+
+        it 'should update the properties' do
+          expect { edit_properties }
+            .to change(command_class, :properties)
+            .to be == expected
+        end
       end
     end
   end
