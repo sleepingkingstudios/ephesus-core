@@ -16,13 +16,7 @@ module Ephesus::Core::Commands
       def properties
         return @properties if @properties
 
-        @properties = {
-          arguments:        [],
-          description:      nil,
-          examples:         [],
-          full_description: nil,
-          keywords:         {}
-        }
+        @properties = build_properties
       end
 
       def signature
@@ -38,6 +32,20 @@ module Ephesus::Core::Commands
           name:        name,
           description: description,
           required:    required
+        }
+      end
+
+      def build_properties
+        if superclass.respond_to?(:properties)
+          return tools.hash.deep_dup(superclass.properties)
+        end
+
+        {
+          arguments:        [],
+          description:      nil,
+          examples:         [],
+          full_description: nil,
+          keywords:         {}
         }
       end
 
