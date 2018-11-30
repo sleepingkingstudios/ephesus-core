@@ -7,6 +7,12 @@ RSpec.describe Ephesus::Core::Commands::BuiltIn::CommandData do
 
   let(:available_commands) { {} }
 
+  describe '::COMMAND_NOT_FOUND_ERROR' do
+    include_examples 'should define immutable constant',
+      :COMMAND_NOT_FOUND_ERROR,
+      'ephesus.core.commands.command_data.command_not_found'
+  end
+
   describe '::new' do
     it { expect(described_class).to be_constructible.with(1).argument }
   end
@@ -32,12 +38,6 @@ RSpec.describe Ephesus::Core::Commands::BuiltIn::CommandData do
     end
 
     it { expect(described_class.properties).to be == expected }
-  end
-
-  describe '::COMMAND_NOT_FOUND_ERROR' do
-    include_examples 'should define immutable constant',
-      :COMMAND_NOT_FOUND_ERROR,
-      'ephesus.core.commands.command_data.command_not_found'
   end
 
   describe '#available_commands' do
@@ -94,6 +94,11 @@ RSpec.describe Ephesus::Core::Commands::BuiltIn::CommandData do
           }
         }
       end
+      let(:expected) do
+        available_commands
+          .fetch(:do_something)
+          .merge(command_name: 'do something')
+      end
 
       # rubocop:disable RSpec/NestedGroups
       describe 'with nil' do
@@ -129,23 +134,19 @@ RSpec.describe Ephesus::Core::Commands::BuiltIn::CommandData do
       end
 
       describe 'with a valid command name as a symbol' do
-        let(:expected) { available_commands.fetch(:do_something) }
-
         it { expect(instance.call(:do_something).value).to be == expected }
 
         it { expect(instance.call(:do_something).success?).to be true }
       end
 
       describe 'with a valid command name as a string' do
-        let(:expected) { available_commands.fetch(:do_something) }
-
         it { expect(instance.call('do something').value).to be == expected }
 
         it { expect(instance.call('do something').success?).to be true }
       end
 
       describe 'with a valid command alias' do
-        let(:expected) { available_commands.fetch(:do_something) }
+        let(:expected) { super().merge(command_name: 'do the mario') }
 
         it { expect(instance.call('do the Mario').value).to be == expected }
 

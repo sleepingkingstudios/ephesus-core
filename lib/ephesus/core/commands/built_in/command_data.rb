@@ -39,7 +39,7 @@ module Ephesus::Core::Commands::BuiltIn
       command_name = normalize_command_name(command)
       definition   = matching_command(command_name)
 
-      return definition if definition
+      return definition.merge(command_name: command_name) if definition
 
       result.errors.add(COMMAND_NOT_FOUND_ERROR, command: command)
 
